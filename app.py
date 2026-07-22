@@ -519,7 +519,7 @@ try:
                 with col4:
             
                     st.info(
-                        f"PENDING ({len(no_response_players)})"
+                        f"No Response ({len(no_response_players)})"
                     )
             
                     for player in no_response_players:
