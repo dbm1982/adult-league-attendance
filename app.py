@@ -200,7 +200,7 @@ player_names = [
 ]
 
 selected_player = st.selectbox(
-    "👥 Select Your Name",
+    " Select Your Name",
     player_names,
     index=None,
     placeholder="Choose your name..."
@@ -235,7 +235,7 @@ with col1:
     st.markdown(f"## ⚽ {selected_team}")
 
 with col2:
-    st.markdown(f"## 👥 {selected_player}")
+    st.markdown(f"## 📋 {selected_player}")
 
 # --------------------------------------------------
 # CAPTAIN OPTIONS
