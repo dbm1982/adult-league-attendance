@@ -8,7 +8,7 @@ from datetime import datetime
 # --------------------------------------------------
 
 st.set_page_config(
-    page_title="South Shore Adult Soccer League Attendance",
+    page_title="South Shore Adult Soccer League Portal",
     page_icon="⚽",
     layout="wide"
 )
@@ -164,7 +164,7 @@ teams = sorted(teams)
 # PAGE HEADER
 # --------------------------------------------------
 
-st.title("⚽ South Shore Adult Soccer League Attendance")
+st.title("⚽ South Shore Adult Soccer League Portal")
 
 st.caption(
     "Select your team and your name to view upcoming games and attendance."
