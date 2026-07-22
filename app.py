@@ -112,7 +112,7 @@ SCOPES = [
 ]
 
 creds = Credentials.from_service_account_info(
-    dict(st.secrets),
+    dict(st.secrets["gcp_service_account"]),
     scopes=SCOPES
 )
 
