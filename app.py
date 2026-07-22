@@ -235,7 +235,7 @@ with col1:
     st.markdown(f"## ⚽ {selected_team}")
 
 with col2:
-    st.markdown(f"## 🧍 {selected_player}")
+    st.markdown(f"## 🏃‍➡️ {selected_player}")
 
 # --------------------------------------------------
 # CAPTAIN OPTIONS
