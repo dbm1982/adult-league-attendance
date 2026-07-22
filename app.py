@@ -194,9 +194,10 @@ team_players = [
     == str(selected_team).strip()
 ]
 
-player_names = sorted(
-    [p["player_name"] for p in team_players]
-)
+player_names = [
+    p["player_name"]
+    for p in team_players
+]
 
 selected_player = st.selectbox(
     "👤 Select Your Name",
