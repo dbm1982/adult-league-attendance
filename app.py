@@ -8,8 +8,8 @@ from datetime import datetime
 # --------------------------------------------------
 
 st.set_page_config(
-    page_title="South Shore Attendance",
-    page_icon="🏐",
+    page_title="South Shore Adult Soccer League Attendance",
+    page_icon="⚽",
     layout="wide"
 )
 
