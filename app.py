@@ -271,9 +271,19 @@ try:
         == str(selected_team).strip()
     ]
 
+    today = datetime.now().date()
+
+    team_games = [
+        g for g in team_games
+        if datetime.strptime(
+            str(g["date"]),
+            "%Y-%m-%d"
+        ).date() >= today
+    ]
+    
     team_games = sorted(
         team_games,
-        key=lambda x: str(x.get("date", ""))
+        key=lambda x: x["date"]
     )
 
     if not team_games:
