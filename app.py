@@ -400,190 +400,95 @@ try:
 
                     st.rerun()
 
-                else:
-                
-                    yes_players = []
-                    no_players = []
-                    maybe_players = []
-                    no_response_players = []
-                
-                    for player in team_players:
-                
-                        player_status = ""
-                
-                        for record in attendance:
-                
-                            if (
-                                str(record["player_id"])
-                                ==
-                                str(player["player_id"])
-                                and
-                                str(record["game_id"])
-                                ==
-                                str(game["game_id"])
-                            ):
-                                player_status = str(
-                                    record["status"]
-                                ).strip()
-                                break
-                
-                        if player_status == "None":
-                            player_status = ""
-                
-                        player_data = {
-                            "name": player["player_name"],
-                            "id": player["player_id"]
-                        }
-                
-                        if player_status == "Yes":
-                
-                            yes_players.append(player_data)
-                
-                        elif player_status == "No":
-                
-                            no_players.append(player_data)
-                
-                        elif player_status == "Maybe":
-                
-                            maybe_players.append(player_data)
-                
-                        else:
-                
-                            no_response_players.append(player_data)
-                
-                    col1, col2, col3, col4 = st.columns(4)
-                
-                    with col1:
-                
-                        st.success(f"YES ({len(yes_players)})")
-                
-                        for player in yes_players:
-                
-                            c1, c2 = st.columns([5, 1])
-                
-                            with c1:
-                                st.write(player["name"])
-                
-                            with c2:
-                
-                                if st.button(
-                                    "✏️",
-                                    key=f"yes_{game['game_id']}_{player['id']}"
-                                ):
-                                    st.session_state[
-                                        f"edit_player_{game['game_id']}"
-                                    ] = player
-                
-                    with col2:
-                
-                        st.error(f"NO ({len(no_players)})")
-                
-                        for player in no_players:
-                
-                            c1, c2 = st.columns([5, 1])
-                
-                            with c1:
-                                st.write(player["name"])
-                
-                            with c2:
-                
-                                if st.button(
-                                    "✏️",
-                                    key=f"no_{game['game_id']}_{player['id']}"
-                                ):
-                                    st.session_state[
-                                        f"edit_player_{game['game_id']}"
-                                    ] = player
-                
-                    with col3:
-                
-                        st.warning(f"MAYBE ({len(maybe_players)})")
-                
-                        for player in maybe_players:
-                
-                            c1, c2 = st.columns([5, 1])
-                
-                            with c1:
-                                st.write(player["name"])
-                
-                            with c2:
-                
-                                if st.button(
-                                    "✏️",
-                                    key=f"maybe_{game['game_id']}_{player['id']}"
-                                ):
-                                    st.session_state[
-                                        f"edit_player_{game['game_id']}"
-                                    ] = player
-                
-                    with col4:
-                
-                        st.info(
-                            f"PENDING ({len(no_response_players)})"
-                        )
-                
-                        for player in no_response_players:
-                
-                            c1, c2 = st.columns([5, 1])
-                
-                            with c1:
-                                st.write(player["name"])
-                
-                            with c2:
-                
-                                if st.button(
-                                    "✏️",
-                                    key=f"pending_{game['game_id']}_{player['id']}"
-                                ):
-                                    st.session_state[
-                                        f"edit_player_{game['game_id']}"
-                                    ] = player
-                
-                    edit_player = st.session_state.get(
-                        f"edit_player_{game['game_id']}"
-                    )
-                
-                    if edit_player:
-                
-                        st.markdown("---")
-                
-                        st.subheader(
-                            f"Captain Override: {edit_player['name']}"
-                        )
-                
-                        override_status = st.radio(
-                            "Move Player To",
-                            [
-                                "Yes",
-                                "No",
-                                "Maybe",
-                                "No Response"
-                            ],
-                            horizontal=True,
-                            key=f"override_{game['game_id']}"
-                        )
-                
-                        if st.button(
-                            "💾 Save Captain Override",
-                            key=f"save_override_{game['game_id']}"
+            else:
+
+                yes_players = []
+                no_players = []
+                maybe_players = []
+                no_response_players = []
+
+                for player in team_players:
+
+                    player_status = ""
+
+                    for record in attendance:
+
+                        if (
+                            str(record["player_id"])
+                            ==
+                            str(player["player_id"])
+                            and
+                            str(record["game_id"])
+                            ==
+                            str(game["game_id"])
                         ):
-                
-                            save_attendance(
-                                attendance_sheet,
-                                edit_player["id"],
-                                game["game_id"],
-                                override_status
-                            )
-                
-                            st.success(
-                                f"{edit_player['name']} updated."
-                            )
-                
-                            del st.session_state[
-                                f"edit_player_{game['game_id']}"
-                            ]
-                
-                            st.rerun()
+                            player_status = str(
+                                record["status"]
+                            ).strip()
+                            break
+
+                    if player_status == "Yes":
+
+                        yes_players.append(
+                            player["player_name"]
+                        )
+
+                    elif player_status == "No":
+
+                        no_players.append(
+                            player["player_name"]
+                        )
+
+                    elif player_status == "Maybe":
+
+                        maybe_players.append(
+                            player["player_name"]
+                        )
+
+                    else:
+
+                        no_response_players.append(
+                            player["player_name"]
+                        )
+
+                col1, col2, col3, col4 = st.columns(4)
+
+                with col1:
+
+                    st.success(
+                        f"YES ({len(yes_players)})"
+                    )
+
+                    for p in yes_players:
+                        st.write(p)
+
+                with col2:
+
+                    st.error(
+                        f"NO ({len(no_players)})"
+                    )
+
+                    for p in no_players:
+                        st.write(p)
+
+                with col3:
+
+                    st.warning(
+                        f"MAYBE ({len(maybe_players)})"
+                    )
+
+                    for p in maybe_players:
+                        st.write(p)
+
+                with col4:
+
+                    st.info(
+                        f"PENDING ({len(no_response_players)})"
+                    )
+
+                    for p in no_response_players:
+                        st.write(p)
+
 except Exception as e:
 
     st.error(
