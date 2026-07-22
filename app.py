@@ -164,7 +164,7 @@ teams = sorted(teams)
 # PAGE HEADER
 # --------------------------------------------------
 
-st.title("🏐 South Shore Adult Attendance")
+st.title("⚽ South Shore Adult Soccer League Attendance")
 
 st.caption(
     "Select your team and your name to view upcoming games and attendance."
@@ -175,7 +175,7 @@ st.caption(
 # --------------------------------------------------
 
 selected_team = st.selectbox(
-    "🏐 Select Your Team",
+    "⚽ Select Your Team",
     teams,
     index=None,
     placeholder="Choose your team..."
@@ -231,7 +231,7 @@ st.markdown("---")
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown(f"## 🏐 {selected_team}")
+    st.markdown(f"## ⚽ {selected_team}")
 
 with col2:
     st.markdown(f"## 👤 {selected_player}")
