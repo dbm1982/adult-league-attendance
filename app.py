@@ -111,8 +111,8 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-creds = Credentials.from_service_account_file(
-    "south-shore-attendance-a89adc007c7f.json",
+creds = Credentials.from_service_account_info(
+    dict(st.secrets),
     scopes=SCOPES
 )
 
