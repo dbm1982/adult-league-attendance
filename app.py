@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# CSS — AGGRESSIVE COMPRESSION + MOBILE FIX + GAME CALLOUT FIX
+# CSS — ULTRA COMPRESSION (B + 2 + H2 + C2)
 # --------------------------------------------------
 
 st.markdown("""
@@ -24,41 +24,38 @@ st.markdown("""
    GLOBAL STREAMLIT SPACING REDUCTION
 -------------------------------------------------- */
 
-/* Remove padding inside Streamlit columns */
 .css-1kyxreq, .css-1r6slb0, .css-12w0qpk {
     padding: 0 !important;
     margin: 0 !important;
+    gap: 2px !important; /* H2 horizontal compression */
 }
 
-/* Remove padding inside column containers */
 div[data-testid="column"] {
     padding: 0 !important;
     margin: 0 !important;
 }
 
-/* Remove padding inside row blocks */
 div[data-testid="stVerticalBlock"] {
     padding: 0 !important;
     margin: 0 !important;
 }
 
-/* Remove padding inside block container */
 .block-container {
-    padding-top: 0.25rem !important;
+    padding-top: 0.2rem !important;
     padding-bottom: 0 !important;
     margin: 0 !important;
 }
 
 /* --------------------------------------------------
-   BUTTON COMPRESSION
+   BUTTON COMPRESSION (B)
 -------------------------------------------------- */
 
 div.stButton > button {
-    padding: 1px 4px !important;
-    font-size: 11px !important;
-    border-radius: 4px !important;
-    height: 22px !important;
-    line-height: 16px !important;
+    padding: 1px 3px !important;
+    font-size: 10px !important;
+    border-radius: 3px !important;
+    height: 18px !important;
+    line-height: 14px !important;
     margin: 0 !important;
 }
 
@@ -81,41 +78,41 @@ div.stButton > button {
 }
 
 /* --------------------------------------------------
-   PLAYER ROW COMPRESSION
+   PLAYER ROW COMPRESSION (2)
 -------------------------------------------------- */
 
 .player-row {
     margin: 0 !important;
-    padding: 1px 0 !important;
+    padding: 2px 0 !important;
 }
 
 .player-name {
-    font-size: 13px !important;
+    font-size: 12px !important;
     margin: 0 0 1px 0 !important;
     padding: 0 !important;
 }
 
 /* --------------------------------------------------
-   CAPTAIN COLUMN COMPRESSION
+   CAPTAIN COLUMN COMPRESSION (C2)
 -------------------------------------------------- */
 
 .captain-column {
-    padding: 4px 6px !important;
+    padding: 3px 5px !important;
     margin: 0 0 4px 0 !important;
     background-color: #ffffff;
-    border: 1px solid #d0d0d0;
-    border-radius: 8px;
+    border: 1px solid #c8c8c8;
+    border-radius: 6px;
 }
 
 .captain-title {
-    font-size: 15px !important;
+    font-size: 14px !important;
     margin: 0 0 3px 0 !important;
     padding: 0 !important;
     font-weight: 600;
 }
 
 /* --------------------------------------------------
-   GAME CALLOUT (FIXED COLORING)
+   GAME CALLOUT
 -------------------------------------------------- */
 
 .game-callout {
@@ -136,16 +133,15 @@ div.stButton > button {
     .captain-column {
         width: 100% !important;
         display: block !important;
-        margin-bottom: 8px !important;
+        margin-bottom: 6px !important;
     }
 
-    /* Force Streamlit columns to stack */
     .css-1kyxreq, .css-1r6slb0, .css-12w0qpk {
         flex-direction: column !important;
         width: 100% !important;
+        gap: 1px !important;
     }
 
-    /* Make buttons full-width on mobile */
     div.stButton > button {
         width: 100% !important;
         margin-bottom: 2px !important;
@@ -337,16 +333,16 @@ try:
                 break
 
         # --------------------------------------------------
-        # GAME CALLOUT HEADER (FIXED COLORING)
+        # GAME CALLOUT HEADER
         # --------------------------------------------------
 
         st.markdown(
             f"""
             <div class="game-callout">
-                <span style="font-size:20px; font-weight:700;">
+                <span style="font-size:18px; font-weight:700;">
                     GAME: {format_date(game.get('date',''))} — {game.get('time','')}
                 </span><br>
-                <span style="font-size:16px; font-weight:500;">
+                <span style="font-size:14px; font-weight:500;">
                     Field {game.get('field','')} • Opponent: {game.get('opponent','')}
                 </span>
             </div>
@@ -386,7 +382,7 @@ try:
                 st.rerun()
 
         # --------------------------------------------------
-        # CAPTAIN VIEW — COMPACT VERSION
+        # CAPTAIN VIEW — ULTRA COMPACT VERSION
         # --------------------------------------------------
 
         else:
@@ -420,7 +416,6 @@ try:
                 else:
                     none_players.append(pdata)
 
-            # Four columns: YES, NO, MAYBE, NO RESPONSE (40%)
             col_yes, col_no, col_maybe, col_none = st.columns([1, 1, 1, 2])
 
             def render_column(col, title, color, players_list):
@@ -435,7 +430,7 @@ try:
                         st.markdown('<div class="player-row">', unsafe_allow_html=True)
                         st.markdown(f'<div class="player-name">{p["name"]}</div>', unsafe_allow_html=True)
 
-                        b_yes, b_no, b_maybe, b_none = st.columns(4)
+                        b_yes, b_no, b_maybe, b_none = st.columns([1,1,1,1])
 
                         with b_yes:
                             st.markdown('<div class="btn-yes">', unsafe_allow_html=True)
@@ -465,11 +460,10 @@ try:
                                 st.rerun()
                             st.markdown('</div>', unsafe_allow_html=True)
 
-                        st.markdown('</div>', unsafe_allow_html=True)  # player-row
+                        st.markdown('</div>', unsafe_allow_html=True)
 
-                    st.markdown('</div>', unsafe_allow_html=True)  # captain-column
+                    st.markdown('</div>', unsafe_allow_html=True)
 
-            # FIXED — all four arguments included
             render_column(col_yes, "YES", "green", yes_players)
             render_column(col_no, "NO", "red", no_players)
             render_column(col_maybe, "MAYBE", "orange", maybe_players)
