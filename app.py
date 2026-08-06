@@ -14,140 +14,51 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# CSS — COMPACT GRID CAPTAIN VIEW
+# CSS — COMPACT CAPTAIN VIEW
 # --------------------------------------------------
 
 st.markdown("""
 <style>
 
-/* Base font */
-html, body, [class*="css"] {
-    font-size: 17px;
+/* Shrink all Streamlit buttons */
+div.stButton > button {
+    padding: 2px 6px !important;
+    font-size: 12px !important;
+    border-radius: 4px !important;
+    height: 24px !important;
+    line-height: 18px !important;
 }
 
-/* Game card */
-.game-card {
-    padding: 1rem;
-    border-radius: 12px;
-    background-color: #ffffff;
-    margin-bottom: 1.25rem;
-    border: 1px solid #e0e0e0;
-    box-shadow: 0px 2px 6px rgba(0,0,0,0.06);
+/* Shrink vertical spacing between rows */
+.player-row {
+    margin-bottom: 4px !important;
+    padding-bottom: 0 !important;
 }
 
-/* Captain grid container */
-.captain-grid {
-    display: grid;
-    grid-template-columns: 20% 20% 20% 40%;
-    gap: 8px;
-    width: 100%;
-    margin-top: 0.5rem;
-}
-
-/* Column card */
+/* Shrink captain column padding */
 .captain-column {
+    padding: 4px 6px !important;
+    margin-bottom: 6px !important;
     background-color: #ffffff;
     border: 1px solid #d0d0d0;
     border-radius: 8px;
-    padding: 0.5rem 0.6rem;
-    box-shadow: 0px 1px 4px rgba(0,0,0,0.04);
 }
 
-/* Column title */
-.captain-column-title {
-    font-weight: 600;
-    margin-bottom: 6px;
-    font-size: 15px;
-}
-
-/* Player row */
-.player-row {
-    margin-bottom: 6px;
-}
-
-/* Player name */
+/* Shrink text */
 .player-name {
-    font-size: 14px;
-    font-weight: 500;
-    margin-bottom: 3px;
+    font-size: 14px !important;
+    margin-bottom: 2px !important;
 }
 
-/* Icon row */
-.icon-row {
-    display: flex;
-    flex-direction: row;
-    gap: 4px;
+.captain-title {
+    font-size: 15px !important;
+    margin-bottom: 4px !important;
+    font-weight: 600;
 }
 
-/* Square icon button */
-.icon-btn {
-    width: 18px;
-    height: 18px;
-    border-radius: 0px; /* sharp corners */
-    border: 1px solid #999;
-    cursor: pointer;
-    display: inline-block;
-}
-
-/* Colors */
-.icon-yes {
-    background-color: #4CAF50;
-}
-.icon-no {
-    background-color: #F44336;
-}
-.icon-maybe {
-    background-color: #FFB300;
-}
-.icon-none {
-    background-color: #E0E0E0;
-}
-
-/* Tooltip wrapper */
-.icon-wrapper {
-    position: relative;
-    display: inline-block;
-}
-
-/* Tooltip text */
-.icon-wrapper .tooltip-text {
-    visibility: hidden;
-    width: 80px;
-    background-color: #333;
-    color: #fff;
-    text-align: center;
-    border-radius: 4px;
-    padding: 3px 5px;
-    position: absolute;
-    z-index: 1;
-    bottom: 125%;
-    left: 50%;
-    margin-left: -40px;
-    font-size: 11px;
-}
-
-/* Tooltip arrow */
-.icon-wrapper .tooltip-text::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    margin-left: -5px;
-    border-width: 5px;
-    border-style: solid;
-    border-color: #333 transparent transparent transparent;
-}
-
-/* Show tooltip on hover (desktop) */
-.icon-wrapper:hover .tooltip-text {
-    visibility: visible;
-}
-
-/* Mobile stacking */
-@media (max-width: 799px) {
-    .captain-grid {
-        grid-template-columns: 1fr;
-    }
+/* Make columns tighter */
+.block-container {
+    padding-top: 0.5rem !important;
 }
 
 </style>
@@ -378,7 +289,7 @@ try:
                 st.rerun()
 
         # --------------------------------------------------
-        # CAPTAIN VIEW — CSS GRID
+        # CAPTAIN VIEW — COMPACT VERSION
         # --------------------------------------------------
 
         else:
@@ -412,64 +323,51 @@ try:
                 else:
                     none_players.append(pdata)
 
-            # Render grid container
-            st.markdown('<div class="captain-grid">', unsafe_allow_html=True)
+            # Four columns: YES, NO, MAYBE, NO RESPONSE (40%)
+            col_yes, col_no, col_maybe, col_none = st.columns([1, 1, 1, 2])
 
-            def render_column(title, color, players_list):
-                st.markdown(f'<div class="captain-column">', unsafe_allow_html=True)
-                st.markdown(
-                    f'<div class="captain-column-title" style="color:{color};">{title} ({len(players_list)})</div>',
-                    unsafe_allow_html=True
-                )
+            def render_column(col, title, color, players_list):
+                with col:
+                    st.markdown(f'<div class="captain-column">', unsafe_allow_html=True)
+                    st.markdown(
+                        f'<div class="captain-title" style="color:{color};">{title} ({len(players_list)})</div>',
+                        unsafe_allow_html=True
+                    )
 
-                for p in players_list:
-                    st.markdown('<div class="player-row">', unsafe_allow_html=True)
-                    st.markdown(f'<div class="player-name">{p["name"]}</div>', unsafe_allow_html=True)
+                    for p in players_list:
+                        st.markdown('<div class="player-row">', unsafe_allow_html=True)
+                        st.markdown(f'<div class="player-name">{p["name"]}</div>', unsafe_allow_html=True)
 
-                    # Icon row rendered via HTML; clicks handled by invisible buttons
-                    st.markdown('<div class="icon-row">', unsafe_allow_html=True)
+                        b_yes, b_no, b_maybe, b_none = st.columns(4)
 
-                    # We still need Streamlit buttons to capture clicks, but keep layout compact
-                    cols = st.columns(4)
-                    statuses = [
-                        ("Yes", "icon-yes", "Yes"),
-                        ("No", "icon-no", "No"),
-                        ("Maybe", "icon-maybe", "Maybe"),
-                        ("No Response", "icon-none", "No Response")
-                    ]
-
-                    for i, (status_value, css_class, tooltip) in enumerate(statuses):
-                        with cols[i]:
-                            # HTML square with tooltip
-                            st.markdown(
-                                f"""
-                                <div class="icon-wrapper">
-                                    <div class="icon-btn {css_class}"></div>
-                                    <div class="tooltip-text">{tooltip}</div>
-                                </div>
-                                """,
-                                unsafe_allow_html=True
-                            )
-                            # Invisible button overlay to actually trigger the update
-                            if st.button(
-                                " ",
-                                key=f"{title}_{game['game_id']}_{p['id']}_{status_value}",
-                            ):
-                                save_attendance(attendance_sheet, p["id"], game["game_id"], status_value)
-                                st.success(f"{p['name']} set to {status_value}.")
+                        with b_yes:
+                            if st.button("Yes", key=f"{title}_yes_{game['game_id']}_{p['id']}"):
+                                save_attendance(attendance_sheet, p["id"], game["game_id"], "Yes")
                                 st.rerun()
 
-                    st.markdown('</div>', unsafe_allow_html=True)  # icon-row
-                    st.markdown('</div>', unsafe_allow_html=True)  # player-row
+                        with b_no:
+                            if st.button("No", key=f"{title}_no_{game['game_id']}_{p['id']}"):
+                                save_attendance(attendance_sheet, p["id"], game["game_id"], "No")
+                                st.rerun()
 
-                st.markdown('</div>', unsafe_allow_html=True)  # captain-column
+                        with b_maybe:
+                            if st.button("Maybe", key=f"{title}_maybe_{game['game_id']}_{p['id']}"):
+                                save_attendance(attendance_sheet, p["id"], game["game_id"], "Maybe")
+                                st.rerun()
 
-            render_column("YES", "green", yes_players)
-            render_column("NO", "red", no_players)
-            render_column("MAYBE", "orange", maybe_players)
-            render_column("No Response", "gray", none_players)
+                        with b_none:
+                            if st.button("No Resp", key=f"{title}_none_{game['game_id']}_{p['id']}"):
+                                save_attendance(attendance_sheet, p["id"], game["game_id"], "No Response")
+                                st.rerun()
 
-            st.markdown('</div>', unsafe_allow_html=True)  # captain-grid
+                        st.markdown('</div>', unsafe_allow_html=True)  # player-row
+
+                    st.markdown('</div>', unsafe_allow_html=True)  # captain-column
+
+            render_column(col_yes, "YES", "green", yes_players)
+            render_column(col_no, "NO", "red", no_players)
+            render_column(col_maybe, "MAYBE", "orange", maybe_players)
+            render_column(col_none, "No Response", "gray", none_players)
 
 except Exception as e:
     st.error(f"Games error: {e}")
