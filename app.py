@@ -14,30 +14,30 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# CSS — ULTRA COMPRESSION (B + 2 + H2 + C2 + T2 + W3)
+# CSS — COMPRESSION + FIXED OVERLAP/BOX SHRINK
 # --------------------------------------------------
 
 st.markdown("""
 <style>
 
-/* --------------------------------------------------
-   GLOBAL STREAMLIT SPACING REDUCTION
--------------------------------------------------- */
+/* Global spacing reduction */
 
 .css-1kyxreq, .css-1r6slb0, .css-12w0qpk {
     padding: 0 !important;
     margin: 0 !important;
-    gap: 2px !important; /* H2 horizontal compression */
+    gap: 2px !important;
 }
 
 div[data-testid="column"] {
     padding: 0 !important;
     margin: 0 !important;
+    min-width: 0 !important;
 }
 
 div[data-testid="stVerticalBlock"] {
     padding: 0 !important;
     margin: 0 !important;
+    gap: 2px !important;
 }
 
 .block-container {
@@ -46,9 +46,7 @@ div[data-testid="stVerticalBlock"] {
     margin: 0 !important;
 }
 
-/* --------------------------------------------------
-   BUTTON COMPRESSION (B)
--------------------------------------------------- */
+/* Buttons: extra-small */
 
 div.stButton > button {
     padding: 1px 3px !important;
@@ -60,6 +58,7 @@ div.stButton > button {
 }
 
 /* Color-coded buttons */
+
 .btn-yes > button {
     background-color: #4CAF50 !important;
     color: white !important;
@@ -77,27 +76,28 @@ div.stButton > button {
     color: #555 !important;
 }
 
-/* --------------------------------------------------
-   PLAYER ROW COMPRESSION (2)
--------------------------------------------------- */
+/* Player row compression + name protection */
 
 .player-row {
     margin: 0 !important;
     padding: 2px 0 !important;
+    display: flex !important;
+    align-items: center !important;
 }
 
 .player-name {
     font-size: 12px !important;
-    margin: 0 0 1px 0 !important;
+    margin: 0 4px 0 0 !important;
     padding: 0 !important;
+    min-width: 140px !important;  /* N2 */
+    display: inline-block !important;
+    white-space: nowrap !important;
 }
 
-/* --------------------------------------------------
-   CAPTAIN COLUMN COMPRESSION (C2)
--------------------------------------------------- */
+/* Captain column compression + padding (P2) */
 
 .captain-column {
-    padding: 3px 5px !important;
+    padding: 6px 8px !important;
     margin: 0 0 4px 0 !important;
     background-color: #ffffff;
     border: 1px solid #c8c8c8;
@@ -111,39 +111,23 @@ div.stButton > button {
     font-weight: 600;
 }
 
-/* --------------------------------------------------
-   INNER WRAPPER COMPRESSION (T2)
--------------------------------------------------- */
+/* Inner wrapper compression */
 
 div[data-testid="stHorizontalBlock"] {
+    padding: 0 !important;
+    margin: 0 !important;
     gap: 2px !important;
-    padding: 0 !important;
-    margin: 0 !important;
+    flex-wrap: nowrap !important;
 }
 
-div[data-testid="stVerticalBlock"] {
-    gap: 2px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-}
-
-div[data-testid="column"] > div {
-    padding: 0 !important;
-    margin: 0 !important;
-}
-
-/* --------------------------------------------------
-   WEIGHTED COLUMN WIDTHS (W3)
--------------------------------------------------- */
+/* Weighted column widths (W3) */
 
 .weight-yes   { flex: 1 !important; }
 .weight-no    { flex: 1 !important; }
 .weight-maybe { flex: 1 !important; }
 .weight-none  { flex: 2 !important; }
 
-/* --------------------------------------------------
-   GAME CALLOUT
--------------------------------------------------- */
+/* Game callout */
 
 .game-callout {
     background: #e8f5e9;
@@ -154,9 +138,7 @@ div[data-testid="column"] > div {
     color: #1b5e20;
 }
 
-/* --------------------------------------------------
-   MOBILE STACKING + MOBILE COMPRESSION
--------------------------------------------------- */
+/* Mobile */
 
 @media (max-width: 600px) {
 
@@ -174,6 +156,15 @@ div[data-testid="column"] > div {
 
     div.stButton > button {
         width: 100% !important;
+        margin-bottom: 2px !important;
+    }
+
+    .player-row {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+
+    .player-name {
         margin-bottom: 2px !important;
     }
 }
@@ -353,7 +344,7 @@ try:
 
     for game in team_games:
 
-        # Find current status for selected player
+        # Current status for selected player
         current_status = ""
         for record in attendance:
             if str(record["player_id"]) == str(selected_player_id) and str(record["game_id"]) == str(game["game_id"]):
@@ -362,10 +353,7 @@ try:
                     current_status = ""
                 break
 
-        # --------------------------------------------------
-        # GAME CALLOUT HEADER
-        # --------------------------------------------------
-
+        # Game callout
         st.markdown(
             f"""
             <div class="game-callout">
@@ -412,7 +400,7 @@ try:
                 st.rerun()
 
         # --------------------------------------------------
-        # CAPTAIN VIEW — ULTRA COMPACT VERSION
+        # CAPTAIN VIEW
         # --------------------------------------------------
 
         else:
@@ -447,18 +435,11 @@ try:
                     none_players.append(pdata)
 
             # Weighted widths (W3)
-            col_yes, col_no, col_maybe, col_none = st.columns(
-                [
-                    1,  # YES
-                    1,  # NO
-                    1,  # MAYBE
-                    2   # No Response
-                ]
-            )
+            col_yes, col_no, col_maybe, col_none = st.columns([1, 1, 1, 2])
 
             def render_column(col, title, color, players_list):
                 with col:
-                    st.markdown(f'<div class="captain-column">', unsafe_allow_html=True)
+                    st.markdown('<div class="captain-column">', unsafe_allow_html=True)
                     st.markdown(
                         f'<div class="captain-title" style="color:{color};">{title} ({len(players_list)})</div>',
                         unsafe_allow_html=True
@@ -468,7 +449,7 @@ try:
                         st.markdown('<div class="player-row">', unsafe_allow_html=True)
                         st.markdown(f'<div class="player-name">{p["name"]}</div>', unsafe_allow_html=True)
 
-                        b_yes, b_no, b_maybe, b_none = st.columns([1,1,1,1])
+                        b_yes, b_no, b_maybe, b_none = st.columns([1, 1, 1, 1])
 
                         with b_yes:
                             st.markdown('<div class="btn-yes">', unsafe_allow_html=True)
