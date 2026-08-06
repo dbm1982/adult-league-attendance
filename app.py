@@ -4,51 +4,46 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime
 
 # --------------------------------------------------
-# PAGE CONFIG (mobile optimized)
+# PAGE CONFIG (keep wide for mobile)
 # --------------------------------------------------
 
 st.set_page_config(
     page_title="South Shore Adult Soccer League Portal",
     page_icon="⚽",
-    layout="centered"
+    layout="wide"
 )
 
 # --------------------------------------------------
-# MOBILE CSS
+# LIGHTWEIGHT MOBILE CSS (no layout breakage)
 # --------------------------------------------------
 
 st.markdown("""
 <style>
-/* Larger base font */
+/* Slightly larger base font */
 html, body, [class*="css"] {
-    font-size: 18px;
+    font-size: 17px;
 }
 
-/* More spacing */
-.block-container {
-    padding-top: 1rem;
-    padding-bottom: 2rem;
+/* Game card container */
+.game-card {
+    padding: 1rem;
+    border-radius: 10px;
+    background-color: #f8f8f8;
+    margin-bottom: 1.25rem;
+    border: 1px solid #e0e0e0;
 }
 
 /* Full-width buttons */
 .stButton>button {
     width: 100%;
-    padding: 0.75rem 1rem;
-    font-size: 18px;
+    padding: 0.6rem 1rem;
+    font-size: 17px;
     border-radius: 8px;
 }
 
 /* Radio buttons spacing */
 .stRadio > div {
-    gap: 0.5rem;
-}
-
-/* Game card styling */
-.game-card {
-    padding: 1rem;
-    border-radius: 10px;
-    background-color: #f7f7f7;
-    margin-bottom: 1.5rem;
+    gap: 0.4rem;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -235,7 +230,10 @@ try:
                     current_status = ""
                 break
 
-        # Game Card
+        # --------------------------------------------------
+        # GAME CARD (clean, mobile-friendly)
+        # --------------------------------------------------
+
         st.markdown(f"""
         <div class="game-card">
             <h3>📅 {format_date(game.get('date', ''))}</h3>
@@ -251,7 +249,6 @@ try:
 
         if view_mode == "My Availability":
 
-            # Current response
             if current_status == "Yes":
                 st.success("Current Response: Yes")
             elif current_status == "No":
@@ -278,7 +275,7 @@ try:
                 st.rerun()
 
         # --------------------------------------------------
-        # CAPTAIN VIEW
+        # CAPTAIN VIEW (stacked, clean)
         # --------------------------------------------------
 
         else:
@@ -308,7 +305,7 @@ try:
                 else:
                     no_response_players.append(player_data)
 
-            # Mobile-friendly stacked sections
+            # Mobile-friendly stacked groups
             def show_group(title, color, group):
                 st.markdown(f"### <span style='color:{color};'>{title} ({len(group)})</span>", unsafe_allow_html=True)
                 for player in group:
@@ -336,7 +333,8 @@ try:
                 if st.button("💾 Save Captain Override", key=f"save_override_{game['game_id']}"):
                     save_attendance(attendance_sheet, edit_player["id"], game["game_id"], override_status)
                     st.success(f"{edit_player['name']} updated.")
-                    del st.session_state[f"edit_player_{game['game_id']}"]
+                    del st.session_state[f"edit_player_{game['game_id']}"
+                    ]
                     st.rerun()
 
 except Exception as e:
