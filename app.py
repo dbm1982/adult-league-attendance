@@ -4,7 +4,7 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime
 
 # --------------------------------------------------
-# PAGE CONFIG (keep wide for mobile)
+# PAGE CONFIG
 # --------------------------------------------------
 
 st.set_page_config(
@@ -14,18 +14,19 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# MOBILE-FRIENDLY CSS (modern cards + color-coded buttons)
+# CSS — MODERN + COMPACT + COLUMN LAYOUT
 # --------------------------------------------------
 
 st.markdown("""
 <style>
-/* Slightly larger base font */
+
+/* Base font */
 html, body, [class*="css"] {
     font-size: 17px;
 }
 
-/* Game and captain cards */
-.game-card, .captain-card {
+/* Game card */
+.game-card {
     padding: 1rem;
     border-radius: 12px;
     background-color: #ffffff;
@@ -34,79 +35,107 @@ html, body, [class*="css"] {
     box-shadow: 0px 2px 6px rgba(0,0,0,0.06);
 }
 
-/* Card titles */
-.game-card h3, .captain-card h3 {
-    margin-top: 0;
-    margin-bottom: 8px;
-}
-
-/* Card text spacing */
-.game-card p, .captain-card p {
-    margin: 4px 0;
-    font-size: 16px;
-}
-
-/* Full-width buttons (general) */
-.stButton>button {
-    padding: 0.5rem 0.8rem;
-    font-size: 15px;
-    border-radius: 8px;
-}
-
-/* Inline status buttons container */
-.player-row {
+/* Captain column container */
+.captain-columns {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    flex-direction: row;
+    gap: 12px;
+    width: 100%;
+}
+
+/* Column widths (desktop) */
+.column-yes, .column-no, .column-maybe {
+    width: 20%;
+}
+
+.column-none {
+    width: 40%;
+}
+
+/* Column card */
+.captain-card {
+    padding: 0.6rem;
+    border-radius: 10px;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0px 2px 6px rgba(0,0,0,0.06);
+}
+
+/* Column title */
+.captain-card h3 {
+    margin-top: 0;
     margin-bottom: 10px;
 }
 
-/* Player name */
-.player-name {
-    font-weight: 600;
-    margin-bottom: 4px;
+/* Player row — compact desktop */
+@media (min-width: 800px) {
+    .player-row {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 8px;
+    }
+
+    .player-name {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .player-buttons {
+        display: flex;
+        flex-direction: row;
+        gap: 4px;
+    }
+
+    .player-buttons button {
+        padding: 3px 6px !important;
+        font-size: 13px !important;
+        border-radius: 6px !important;
+        min-width: 70px !important;
+    }
 }
 
-/* Inline buttons row */
-.player-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+/* Mobile layout */
+@media (max-width: 799px) {
+    .captain-columns {
+        flex-direction: column;
+    }
+
+    .player-row {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 12px;
+    }
+
+    .player-buttons button {
+        padding: 6px 10px !important;
+        font-size: 15px !important;
+        border-radius: 8px !important;
+        min-width: 100px !important;
+    }
 }
 
-/* Color-coded inline status buttons */
+/* Color-coded buttons */
 .status-yes > button {
-    background-color: #4CAF50 !important;   /* green */
+    background-color: #4CAF50 !important;
     color: white !important;
 }
 
 .status-no > button {
-    background-color: #F44336 !important;   /* red */
+    background-color: #F44336 !important;
     color: white !important;
 }
 
 .status-maybe > button {
-    background-color: #FFB300 !important;   /* amber/yellow */
+    background-color: #FFB300 !important;
     color: black !important;
 }
 
 .status-none > button {
-    background-color: #E0E0E0 !important;   /* pale grey */
+    background-color: #E0E0E0 !important;
     color: #555 !important;
 }
 
-/* Make Save Response button full width */
-.save-response-btn > button {
-    width: 100%;
-    padding: 0.7rem 1rem;
-    font-size: 17px;
-    border-radius: 10px;
-}
-
-/* Radio buttons spacing */
-.stRadio > div {
-    gap: 0.4rem;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -159,7 +188,6 @@ creds = Credentials.from_service_account_info(
 )
 
 client = gspread.authorize(creds)
-
 spreadsheet = client.open_by_key("1afoSDWnUlB6ZN5Wlz4CDyX1whhzNNHxm6vCINs-2LDM")
 
 # --------------------------------------------------
@@ -213,7 +241,7 @@ if not selected_team:
     st.stop()
 
 # --------------------------------------------------
-# PLAYERS
+# PLAYER SELECTION
 # --------------------------------------------------
 
 team_players = [p for p in players if str(p["team_id"]).strip() == str(selected_team).strip()]
@@ -293,7 +321,7 @@ try:
                 break
 
         # --------------------------------------------------
-        # GAME CARD (clean, mobile-friendly)
+        # GAME CARD
         # --------------------------------------------------
 
         with st.container():
@@ -336,14 +364,14 @@ try:
                 st.rerun()
 
         # --------------------------------------------------
-        # CAPTAIN VIEW (modern cards + inline color-coded buttons)
+        # CAPTAIN VIEW — 4 COLUMNS
         # --------------------------------------------------
 
         else:
             yes_players = []
             no_players = []
             maybe_players = []
-            no_response_players = []
+            none_players = []
 
             for player in team_players:
                 player_status = ""
@@ -352,73 +380,65 @@ try:
                         player_status = str(record["status"]).strip()
                         break
 
-                if player_status == "None":
-                    player_status = ""
+                if player_status == "None" or player_status == "":
+                    player_status = "No Response"
 
-                player_data = {
+                pdata = {
                     "name": player["player_name"],
                     "id": player["player_id"],
-                    "status": player_status if player_status else "No Response"
+                    "status": player_status
                 }
 
-                if player_data["status"] == "Yes":
-                    yes_players.append(player_data)
-                elif player_data["status"] == "No":
-                    no_players.append(player_data)
-                elif player_data["status"] == "Maybe":
-                    maybe_players.append(player_data)
+                if player_status == "Yes":
+                    yes_players.append(pdata)
+                elif player_status == "No":
+                    no_players.append(pdata)
+                elif player_status == "Maybe":
+                    maybe_players.append(pdata)
                 else:
-                    no_response_players.append(player_data)
+                    none_players.append(pdata)
 
-            def show_group(title, color, group):
-                with st.container():
-                    st.markdown('<div class="captain-card">', unsafe_allow_html=True)
-                    st.markdown(
-                        f"### <span style='color:{color};'>{title} ({len(group)})</span>",
-                        unsafe_allow_html=True
-                    )
+            # Column rendering
+            st.markdown('<div class="captain-columns">', unsafe_allow_html=True)
 
-                    for player in group:
-                        st.markdown(
-                            f"<div class='player-row'>"
-                            f"<div class='player-name'>{player['name']}</div>",
-                            unsafe_allow_html=True
-                        )
+            def render_column(title, color, players, css_class):
+                st.markdown(f'<div class="{css_class}">', unsafe_allow_html=True)
+                st.markdown(f'<div class="captain-card"><h3 style="color:{color};">{title} ({len(players)})</h3>', unsafe_allow_html=True)
 
-                        # Inline color-coded buttons
-                        cols = st.columns(4)
-                        status_map = {
-                            "Yes": "status-yes",
-                            "No": "status-no",
-                            "Maybe": "status-maybe",
-                            "No Response": "status-none"
-                        }
+                for p in players:
+                    st.markdown('<div class="player-row">', unsafe_allow_html=True)
+                    st.markdown(f'<div class="player-name">{p["name"]}</div>', unsafe_allow_html=True)
 
-                        for i, status in enumerate(status_map.keys()):
-                            with cols[i]:
-                                st.markdown(f"<div class='{status_map[status]}'>", unsafe_allow_html=True)
-                                if st.button(
-                                    status,
-                                    key=f"{title}_{game['game_id']}_{player['id']}_{status}"
-                                ):
-                                    save_attendance(
-                                        attendance_sheet,
-                                        player["id"],
-                                        game["game_id"],
-                                        status
-                                    )
-                                    st.success(f"{player['name']} set to {status}.")
-                                    st.rerun()
-                                st.markdown("</div>", unsafe_allow_html=True)
+                    cols = st.columns(4)
+                    status_map = {
+                        "Yes": "status-yes",
+                        "No": "status-no",
+                        "Maybe": "status-maybe",
+                        "No Response": "status-none"
+                    }
 
-                        st.markdown("</div>", unsafe_allow_html=True)
+                    for i, status in enumerate(status_map.keys()):
+                        with cols[i]:
+                            st.markdown(f"<div class='{status_map[status]}'>", unsafe_allow_html=True)
+                            if st.button(
+                                status,
+                                key=f"{title}_{game['game_id']}_{p['id']}_{status}"
+                            ):
+                                save_attendance(attendance_sheet, p["id"], game["game_id"], status)
+                                st.success(f"{p['name']} set to {status}.")
+                                st.rerun()
+                            st.markdown("</div>", unsafe_allow_html=True)
 
                     st.markdown('</div>', unsafe_allow_html=True)
 
-            show_group("YES", "green", yes_players)
-            show_group("NO", "red", no_players)
-            show_group("MAYBE", "orange", maybe_players)
-            show_group("No Response", "gray", no_response_players)
+                st.markdown('</div></div>', unsafe_allow_html=True)
+
+            render_column("YES", "green", yes_players, "column-yes")
+            render_column("NO", "red", no_players, "column-no")
+            render_column("MAYBE", "orange", maybe_players, "column-maybe")
+            render_column("No Response", "gray", none_players, "column-none")
+
+            st.markdown('</div>', unsafe_allow_html=True)
 
 except Exception as e:
     st.error(f"Games error: {e}")
