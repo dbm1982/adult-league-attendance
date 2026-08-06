@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# CSS — COMPRESSION + FIXED HEADER + FIXED OVERLAP
+# CSS — CLEAN, READABLE, NON‑OVERLAPPING CAPTAIN VIEW
 # --------------------------------------------------
 
 st.markdown("""
@@ -43,42 +43,30 @@ div[data-testid="stSelectbox"] {
 }
 
 /* --------------------------------------------------
-   GLOBAL STREAMLIT SPACING REDUCTION (Captain View Only)
+   GLOBAL SPACING (SAFE VERSION)
 -------------------------------------------------- */
 
 .css-1kyxreq, .css-1r6slb0, .css-12w0qpk {
     padding: 0 !important;
     margin: 0 !important;
-    gap: 2px !important;
+    gap: 6px !important;   /* CV‑B */
 }
 
 div[data-testid="column"] {
     padding: 0 !important;
     margin: 0 !important;
-    min-width: 0 !important;
-}
-
-div[data-testid="stVerticalBlock"] {
-    padding: 0 !important;
-    margin: 0 !important;
-    gap: 2px !important;
-}
-
-.block-container {
-    padding-bottom: 0 !important;
-    margin: 0 !important;
 }
 
 /* --------------------------------------------------
-   BUTTON COMPRESSION (B)
+   BUTTONS — SMALL BUT NOT TINY (CV‑B)
 -------------------------------------------------- */
 
 div.stButton > button {
-    padding: 1px 3px !important;
-    font-size: 10px !important;
-    border-radius: 3px !important;
-    height: 18px !important;
-    line-height: 14px !important;
+    padding: 3px 6px !important;
+    font-size: 11px !important;
+    border-radius: 4px !important;
+    height: 22px !important;
+    line-height: 16px !important;
     margin: 0 !important;
 }
 
@@ -89,53 +77,48 @@ div.stButton > button {
 .btn-none > button { background-color: #E0E0E0 !important; color: #555 !important; }
 
 /* --------------------------------------------------
-   PLAYER ROW COMPRESSION + NAME PROTECTION (N2)
+   PLAYER ROW — CLEAN, NON‑OVERLAPPING (CV‑B)
 -------------------------------------------------- */
 
 .player-row {
     margin: 0 !important;
-    padding: 2px 0 !important;
+    padding: 4px 0 !important;
     display: flex !important;
     align-items: center !important;
+    gap: 6px !important;
 }
 
 .player-name {
-    font-size: 12px !important;
-    margin: 0 4px 0 0 !important;
-    padding: 0 !important;
-    min-width: 140px !important;  /* N2 */
-    display: inline-block !important;
+    font-size: 13px !important;
+    min-width: 140px !important;   /* N2 */
     white-space: nowrap !important;
 }
 
 /* --------------------------------------------------
-   CAPTAIN COLUMN COMPRESSION + PADDING (P2)
+   CAPTAIN COLUMN — CLEAN, NON‑COLLAPSING (CV‑B)
 -------------------------------------------------- */
 
 .captain-column {
-    padding: 6px 8px !important;  /* P2 */
-    margin: 0 0 4px 0 !important;
+    padding: 10px 12px !important;   /* CV‑B */
+    margin-bottom: 10px !important;
     background-color: #ffffff;
     border: 1px solid #c8c8c8;
-    border-radius: 6px;
+    border-radius: 8px;
 }
 
 .captain-title {
-    font-size: 14px !important;
-    margin: 0 0 3px 0 !important;
-    padding: 0 !important;
+    font-size: 15px !important;
+    margin-bottom: 8px !important;
     font-weight: 600;
 }
 
 /* --------------------------------------------------
-   INNER WRAPPER COMPRESSION (T2)
+   INNER WRAPPERS — SAFE COMPRESSION
 -------------------------------------------------- */
 
 div[data-testid="stHorizontalBlock"] {
-    padding: 0 !important;
-    margin: 0 !important;
-    gap: 2px !important;
-    flex-wrap: nowrap !important;
+    gap: 6px !important;   /* CV‑B */
+    flex-wrap: wrap !important;   /* FIX OVERLAP */
 }
 
 /* --------------------------------------------------
@@ -153,43 +136,37 @@ div[data-testid="stHorizontalBlock"] {
 
 .game-callout {
     background: #e8f5e9;
-    padding: 10px 14px;
+    padding: 12px 16px;
     border-radius: 10px;
-    margin: 0 0 10px 0 !important;
+    margin-bottom: 12px !important;
     border-left: 6px solid #2e7d32;
     color: #1b5e20;
 }
 
 /* --------------------------------------------------
-   MOBILE STACKING + MOBILE COMPRESSION
+   MOBILE — M1 (STACK COLUMNS)
 -------------------------------------------------- */
 
 @media (max-width: 600px) {
 
     .captain-column {
         width: 100% !important;
-        display: block !important;
-        margin-bottom: 6px !important;
-    }
-
-    .css-1kyxreq, .css-1r6slb0, .css-12w0qpk {
-        flex-direction: column !important;
-        width: 100% !important;
-        gap: 1px !important;
-    }
-
-    div.stButton > button {
-        width: 100% !important;
-        margin-bottom: 2px !important;
+        margin-bottom: 14px !important;
     }
 
     .player-row {
         flex-direction: column !important;
         align-items: flex-start !important;
+        gap: 4px !important;
     }
 
     .player-name {
-        margin-bottom: 2px !important;
+        margin-bottom: 4px !important;
+    }
+
+    div.stButton > button {
+        width: 100% !important;
+        margin-bottom: 4px !important;
     }
 }
 
