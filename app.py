@@ -29,9 +29,27 @@ div.stButton > button {
     line-height: 18px !important;
 }
 
+/* Color-coded buttons */
+.btn-yes > button {
+    background-color: #4CAF50 !important;
+    color: white !important;
+}
+.btn-no > button {
+    background-color: #F44336 !important;
+    color: white !important;
+}
+.btn-maybe > button {
+    background-color: #FFB300 !important;
+    color: black !important;
+}
+.btn-none > button {
+    background-color: #E0E0E0 !important;
+    color: #555 !important;
+}
+
 /* Shrink vertical spacing between rows */
 .player-row {
-    margin-bottom: 4px !important;
+    margin-bottom: 3px !important;
     padding-bottom: 0 !important;
 }
 
@@ -46,8 +64,8 @@ div.stButton > button {
 
 /* Shrink text */
 .player-name {
-    font-size: 14px !important;
-    margin-bottom: 2px !important;
+    font-size: 13px !important;
+    margin-bottom: 1px !important;
 }
 
 .captain-title {
@@ -56,9 +74,18 @@ div.stButton > button {
     font-weight: 600;
 }
 
-/* Make columns tighter */
+/* Reduce page padding */
 .block-container {
     padding-top: 0.5rem !important;
+}
+
+/* Game callout */
+.game-callout {
+    background:#f0f0f0;
+    padding:12px 16px;
+    border-radius:10px;
+    margin-bottom:14px;
+    border-left:6px solid #4CAF50;
 }
 
 </style>
@@ -246,16 +273,22 @@ try:
                 break
 
         # --------------------------------------------------
-        # GAME CARD
+        # GAME CALLOUT HEADER
         # --------------------------------------------------
 
-        with st.container():
-            st.markdown('<div class="game-card">', unsafe_allow_html=True)
-            st.markdown(f"### 📅 {format_date(game.get('date', ''))}")
-            st.markdown(f"**⏰ {game.get('time', '')}**")
-            st.markdown(f"**📍 {game.get('field', '')}**")
-            st.markdown(f"**Opponent:** {game.get('opponent', '')}")
-            st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div class="game-callout">
+                <span style="font-size:20px; font-weight:700;">
+                    GAME: {format_date(game.get('date',''))} — {game.get('time','')}
+                </span><br>
+                <span style="font-size:16px;">
+                    Field {game.get('field','')} • Opponent: {game.get('opponent','')}
+                </span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
         # --------------------------------------------------
         # PLAYER VIEW
@@ -341,24 +374,32 @@ try:
                         b_yes, b_no, b_maybe, b_none = st.columns(4)
 
                         with b_yes:
+                            st.markdown('<div class="btn-yes">', unsafe_allow_html=True)
                             if st.button("Yes", key=f"{title}_yes_{game['game_id']}_{p['id']}"):
                                 save_attendance(attendance_sheet, p["id"], game["game_id"], "Yes")
                                 st.rerun()
+                            st.markdown('</div>', unsafe_allow_html=True)
 
                         with b_no:
+                            st.markdown('<div class="btn-no">', unsafe_allow_html=True)
                             if st.button("No", key=f"{title}_no_{game['game_id']}_{p['id']}"):
                                 save_attendance(attendance_sheet, p["id"], game["game_id"], "No")
                                 st.rerun()
+                            st.markdown('</div>', unsafe_allow_html=True)
 
                         with b_maybe:
+                            st.markdown('<div class="btn-maybe">', unsafe_allow_html=True)
                             if st.button("Maybe", key=f"{title}_maybe_{game['game_id']}_{p['id']}"):
                                 save_attendance(attendance_sheet, p["id"], game["game_id"], "Maybe")
                                 st.rerun()
+                            st.markdown('</div>', unsafe_allow_html=True)
 
                         with b_none:
+                            st.markdown('<div class="btn-none">', unsafe_allow_html=True)
                             if st.button("No Resp", key=f"{title}_none_{game['game_id']}_{p['id']}"):
                                 save_attendance(attendance_sheet, p["id"], game["game_id"], "No Response")
                                 st.rerun()
+                            st.markdown('</div>', unsafe_allow_html=True)
 
                         st.markdown('</div>', unsafe_allow_html=True)  # player-row
 
