@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# CSS — COMPACT CAPTAIN VIEW
+# CSS — COMPACT CAPTAIN VIEW + MOBILE FIX + GAME CALLOUT FIX
 # --------------------------------------------------
 
 st.markdown("""
@@ -79,13 +79,36 @@ div.stButton > button {
     padding-top: 0.5rem !important;
 }
 
-/* Game callout */
+/* GAME CALLOUT — FIXED COLORING */
 .game-callout {
-    background:#f0f0f0;
-    padding:12px 16px;
-    border-radius:10px;
-    margin-bottom:14px;
-    border-left:6px solid #4CAF50;
+    background: #e8f5e9;              /* soft green tint */
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    border-left: 6px solid #2e7d32;   /* darker green accent */
+    color: #1b5e20;                   /* strong readable text */
+}
+
+/* MOBILE FIX — stack captain columns vertically */
+@media (max-width: 600px) {
+
+    .captain-column {
+        width: 100% !important;
+        display: block !important;
+        margin-bottom: 12px !important;
+    }
+
+    /* Force Streamlit columns to stack */
+    .css-1kyxreq, .css-1r6slb0, .css-12w0qpk {
+        flex-direction: column !important;
+        width: 100% !important;
+    }
+
+    /* Make buttons full-width on mobile */
+    div.stButton > button {
+        width: 100% !important;
+        margin-bottom: 4px !important;
+    }
 }
 
 </style>
@@ -273,7 +296,7 @@ try:
                 break
 
         # --------------------------------------------------
-        # GAME CALLOUT HEADER
+        # GAME CALLOUT HEADER (FIXED COLORING)
         # --------------------------------------------------
 
         st.markdown(
@@ -282,7 +305,7 @@ try:
                 <span style="font-size:20px; font-weight:700;">
                     GAME: {format_date(game.get('date',''))} — {game.get('time','')}
                 </span><br>
-                <span style="font-size:16px;">
+                <span style="font-size:16px; font-weight:500;">
                     Field {game.get('field','')} • Opponent: {game.get('opponent','')}
                 </span>
             </div>
