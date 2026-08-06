@@ -112,6 +112,27 @@ div.stButton > button {
 .captain-none  { background-color: #BDBDBD !important; }
 
 /* --------------------------------------------------
+   MINI SUMMARY BAR
+-------------------------------------------------- */
+
+.game-mini-summary {
+    font-size: 12px !important;
+    margin: 4px 0 10px 0 !important;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.game-mini-summary span {
+    font-weight: 600;
+}
+
+.summary-yes { color: #2e7d32 !important; }
+.summary-no { color: #c62828 !important; }
+.summary-maybe { color: #f9a825 !important; }
+.summary-none { color: #616161 !important; }
+
+/* --------------------------------------------------
    INNER WRAPPERS — SAFE WRAP (fix overlap)
 -------------------------------------------------- */
 
@@ -369,6 +390,52 @@ try:
         )
 
         # --------------------------------------------------
+        # MINI SUMMARY BAR
+        # --------------------------------------------------
+
+        # Count responses
+        yes_players = []
+        no_players = []
+        maybe_players = []
+        none_players = []
+
+        for player in team_players:
+            player_status = ""
+            for record in attendance:
+                if str(record["player_id"]) == str(player["player_id"]) and str(record["game_id"]) == str(game["game_id"]):
+                    player_status = str(record["status"]).strip()
+                    break
+
+            if player_status == "None" or player_status == "":
+                player_status = "No Response"
+
+            if player_status == "Yes":
+                yes_players.append(player)
+            elif player_status == "No":
+                no_players.append(player)
+            elif player_status == "Maybe":
+                maybe_players.append(player)
+            else:
+                none_players.append(player)
+
+        yes_count = len(yes_players)
+        no_count = len(no_players)
+        maybe_count = len(maybe_players)
+        none_count = len(none_players)
+
+        st.markdown(
+            f"""
+            <div class="game-mini-summary">
+                <span class="summary-yes">YES: {yes_count}</span>
+                <span class="summary-no">NO: {no_count}</span>
+                <span class="summary-maybe">MAYBE: {maybe_count}</span>
+                <span class="summary-none">NR: {none_count}</span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # --------------------------------------------------
         # PLAYER VIEW
         # --------------------------------------------------
 
@@ -404,35 +471,6 @@ try:
         # --------------------------------------------------
 
         else:
-            yes_players = []
-            no_players = []
-            maybe_players = []
-            none_players = []
-
-            for player in team_players:
-                player_status = ""
-                for record in attendance:
-                    if str(record["player_id"]) == str(player["player_id"]) and str(record["game_id"]) == str(game["game_id"]):
-                        player_status = str(record["status"]).strip()
-                        break
-
-                if player_status == "None" or player_status == "":
-                    player_status = "No Response"
-
-                pdata = {
-                    "name": player["player_name"],
-                    "id": player["player_id"],
-                    "status": player_status
-                }
-
-                if player_status == "Yes":
-                    yes_players.append(pdata)
-                elif player_status == "No":
-                    no_players.append(pdata)
-                elif player_status == "Maybe":
-                    maybe_players.append(pdata)
-                else:
-                    none_players.append(pdata)
 
             # Weighted widths (W3)
             col_yes, col_no, col_maybe, col_none = st.columns([1, 1, 1, 2])
@@ -447,28 +485,28 @@ try:
 
                     for p in players_list:
                         st.markdown('<div class="player-row">', unsafe_allow_html=True)
-                        st.markdown(f'<div class="player-name">{p["name"]}</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="player-name">{p["player_name"]}</div>', unsafe_allow_html=True)
 
                         b_yes, b_no, b_maybe, b_none = st.columns([1, 1, 1, 1])
 
                         with b_yes:
-                            if st.button("Yes", key=f"{title}_yes_{game['game_id']}_{p['id']}"):
-                                save_attendance(attendance_sheet, p["id"], game["game_id"], "Yes")
+                            if st.button("Yes", key=f"{title}_yes_{game['game_id']}_{p['player_id']}"):
+                                save_attendance(attendance_sheet, p["player_id"], game["game_id"], "Yes")
                                 st.rerun()
 
                         with b_no:
-                            if st.button("No", key=f"{title}_no_{game['game_id']}_{p['id']}"):
-                                save_attendance(attendance_sheet, p["id"], game["game_id"], "No")
+                            if st.button("No", key=f"{title}_no_{game['game_id']}_{p['player_id']}"):
+                                save_attendance(attendance_sheet, p["player_id"], game["game_id"], "No")
                                 st.rerun()
 
                         with b_maybe:
-                            if st.button("Maybe", key=f"{title}_maybe_{game['game_id']}_{p['id']}"):
-                                save_attendance(attendance_sheet, p["id"], game["game_id"], "Maybe")
+                            if st.button("Maybe", key=f"{title}_maybe_{game['game_id']}_{p['player_id']}"):
+                                save_attendance(attendance_sheet, p["player_id"], game["game_id"], "Maybe")
                                 st.rerun()
 
                         with b_none:
-                            if st.button("No Resp", key=f"{title}_none_{game['game_id']}_{p['id']}"):
-                                save_attendance(attendance_sheet, p["id"], game["game_id"], "No Response")
+                            if st.button("No Resp", key=f"{title}_none_{game['game_id']}_{p['player_id']}"):
+                                save_attendance(attendance_sheet, p["player_id"], game["game_id"], "No Response")
                                 st.rerun()
 
                         st.markdown('</div>', unsafe_allow_html=True)
