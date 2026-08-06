@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# LIGHTWEIGHT MOBILE CSS (no layout breakage)
+# MOBILE-FRIENDLY CSS (modern cards + buttons)
 # --------------------------------------------------
 
 st.markdown("""
@@ -24,21 +24,62 @@ html, body, [class*="css"] {
     font-size: 17px;
 }
 
-/* Game card container */
-.game-card {
+/* Game and captain cards */
+.game-card, .captain-card {
     padding: 1rem;
-    border-radius: 10px;
-    background-color: #f8f8f8;
+    border-radius: 12px;
+    background-color: #ffffff;
     margin-bottom: 1.25rem;
     border: 1px solid #e0e0e0;
+    box-shadow: 0px 2px 6px rgba(0,0,0,0.06);
 }
 
-/* Full-width buttons */
+/* Card titles */
+.game-card h3, .captain-card h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+
+/* Card text spacing */
+.game-card p, .captain-card p {
+    margin: 4px 0;
+    font-size: 16px;
+}
+
+/* Full-width buttons (general) */
 .stButton>button {
-    width: 100%;
-    padding: 0.6rem 1rem;
-    font-size: 17px;
+    padding: 0.5rem 0.8rem;
+    font-size: 15px;
     border-radius: 8px;
+}
+
+/* Inline status buttons container */
+.player-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+/* Player name */
+.player-name {
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+/* Inline buttons row */
+.player-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+/* Make Save Response button full width */
+.save-response-btn > button {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    font-size: 17px;
+    border-radius: 10px;
 }
 
 /* Radio buttons spacing */
@@ -221,7 +262,7 @@ try:
 
     for game in team_games:
 
-        # Find current status
+        # Find current status for selected player
         current_status = ""
         for record in attendance:
             if str(record["player_id"]) == str(selected_player_id) and str(record["game_id"]) == str(game["game_id"]):
@@ -234,14 +275,13 @@ try:
         # GAME CARD (clean, mobile-friendly)
         # --------------------------------------------------
 
-        st.markdown(f"""
-        <div class="game-card">
-            <h3>📅 {format_date(game.get('date', ''))}</h3>
-            <p><b>⏰ {game.get('time', '')}</b></p>
-            <p><b>📍 {game.get('field', '')}</b></p>
-            <p><b>Opponent:</b> {game.get('opponent', '')}</p>
-        </div>
-        """, unsafe_allow_html=True)
+        with st.container():
+            st.markdown('<div class="game-card">', unsafe_allow_html=True)
+            st.markdown(f"### 📅 {format_date(game.get('date', ''))}")
+            st.markdown(f"**⏰ {game.get('time', '')}**")
+            st.markdown(f"**📍 {game.get('field', '')}**")
+            st.markdown(f"**Opponent:** {game.get('opponent', '')}")
+            st.markdown('</div>', unsafe_allow_html=True)
 
         # --------------------------------------------------
         # PLAYER VIEW
@@ -269,13 +309,14 @@ try:
                 key=f"attendance_{game['game_id']}"
             )
 
-            if st.button("💾 Save Response", key=f"save_{game['game_id']}"):
-                save_attendance(attendance_sheet, selected_player_id, game["game_id"], selected_status)
-                st.success("Attendance saved successfully.")
-                st.rerun()
+            if st.container():
+                if st.button("💾 Save Response", key=f"save_{game['game_id']}", type="primary"):
+                    save_attendance(attendance_sheet, selected_player_id, game["game_id"], selected_status)
+                    st.success("Attendance saved successfully.")
+                    st.rerun()
 
         # --------------------------------------------------
-        # CAPTAIN VIEW (stacked, clean)
+        # CAPTAIN VIEW (modern cards + inline buttons)
         # --------------------------------------------------
 
         else:
@@ -294,48 +335,63 @@ try:
                 if player_status == "None":
                     player_status = ""
 
-                player_data = {"name": player["player_name"], "id": player["player_id"]}
+                player_data = {
+                    "name": player["player_name"],
+                    "id": player["player_id"],
+                    "status": player_status if player_status else "No Response"
+                }
 
-                if player_status == "Yes":
+                if player_data["status"] == "Yes":
                     yes_players.append(player_data)
-                elif player_status == "No":
+                elif player_data["status"] == "No":
                     no_players.append(player_data)
-                elif player_status == "Maybe":
+                elif player_data["status"] == "Maybe":
                     maybe_players.append(player_data)
                 else:
                     no_response_players.append(player_data)
 
-            # Mobile-friendly stacked groups
             def show_group(title, color, group):
-                st.markdown(f"### <span style='color:{color};'>{title} ({len(group)})</span>", unsafe_allow_html=True)
-                for player in group:
-                    if st.button(f"✏️ {player['name']}", key=f"{title}_{game['game_id']}_{player['id']}"):
-                        st.session_state[f"edit_player_{game['game_id']}"] = player
+                with st.container():
+                    st.markdown('<div class="captain-card">', unsafe_allow_html=True)
+                    st.markdown(
+                        f"### <span style='color:{color};'>{title} ({len(group)})</span>",
+                        unsafe_allow_html=True
+                    )
+
+                    for player in group:
+                        st.markdown(
+                            f"<div class='player-row'>"
+                            f"<div class='player-name'>{player['name']}</div>",
+                            unsafe_allow_html=True
+                        )
+
+                        # Inline buttons row
+                        btn_col = st.container()
+                        with btn_col:
+                            cols = st.columns(4)
+                            statuses = ["Yes", "No", "Maybe", "No Response"]
+                            for i, status in enumerate(statuses):
+                                if cols[i].button(
+                                    status,
+                                    key=f"{title}_{game['game_id']}_{player['id']}_{status}"
+                                ):
+                                    save_attendance(
+                                        attendance_sheet,
+                                        player["id"],
+                                        game["game_id"],
+                                        status
+                                    )
+                                    st.success(f"{player['name']} set to {status}.")
+                                    st.rerun()
+
+                        st.markdown("</div>", unsafe_allow_html=True)
+
+                    st.markdown('</div>', unsafe_allow_html=True)
 
             show_group("YES", "green", yes_players)
             show_group("NO", "red", no_players)
             show_group("MAYBE", "orange", maybe_players)
             show_group("No Response", "gray", no_response_players)
-
-            edit_player = st.session_state.get(f"edit_player_{game['game_id']}")
-
-            if edit_player:
-                st.markdown("---")
-                st.subheader(f"Captain Override: {edit_player['name']}")
-
-                override_status = st.radio(
-                    "Move Player To",
-                    ["Yes", "No", "Maybe", "No Response"],
-                    horizontal=False,
-                    key=f"override_{game['game_id']}"
-                )
-
-                if st.button("💾 Save Captain Override", key=f"save_override_{game['game_id']}"):
-                    save_attendance(attendance_sheet, edit_player["id"], game["game_id"], override_status)
-                    st.success(f"{edit_player['name']} updated.")
-                    del st.session_state[f"edit_player_{game['game_id']}"
-                    ]
-                    st.rerun()
 
 except Exception as e:
     st.error(f"Games error: {e}")
