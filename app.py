@@ -14,14 +14,14 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# CSS — CLEAN, READABLE, NON‑OVERLAPPING CAPTAIN VIEW
+# CSS — CLEAN, COLORED, NON‑OVERLAPPING CAPTAIN VIEW
 # --------------------------------------------------
 
 st.markdown("""
 <style>
 
 /* --------------------------------------------------
-   RESTORE NORMAL READABLE HEADER SPACING
+   READABLE HEADER SPACING
 -------------------------------------------------- */
 
 h1, .stMarkdown h1 {
@@ -43,13 +43,13 @@ div[data-testid="stSelectbox"] {
 }
 
 /* --------------------------------------------------
-   GLOBAL SPACING (SAFE VERSION)
+   GLOBAL SAFE SPACING (CV‑B)
 -------------------------------------------------- */
 
 .css-1kyxreq, .css-1r6slb0, .css-12w0qpk {
     padding: 0 !important;
     margin: 0 !important;
-    gap: 6px !important;   /* CV‑B */
+    gap: 6px !important;
 }
 
 div[data-testid="column"] {
@@ -58,7 +58,7 @@ div[data-testid="column"] {
 }
 
 /* --------------------------------------------------
-   BUTTONS — SMALL BUT NOT TINY (CV‑B)
+   BUTTONS — SMALL, CLEAN (CV‑B)
 -------------------------------------------------- */
 
 div.stButton > button {
@@ -70,55 +70,54 @@ div.stButton > button {
     margin: 0 !important;
 }
 
-/* Color-coded buttons */
-.btn-yes > button { background-color: #4CAF50 !important; color: white !important; }
-.btn-no > button { background-color: #F44336 !important; color: white !important; }
-.btn-maybe > button { background-color: #FFB300 !important; color: black !important; }
-.btn-none > button { background-color: #E0E0E0 !important; color: #555 !important; }
-
 /* --------------------------------------------------
-   PLAYER ROW — CLEAN, NON‑OVERLAPPING (CV‑B)
+   PLAYER ROW — COMPACT, NO VERTICAL SPREAD
 -------------------------------------------------- */
 
 .player-row {
-    margin: 0 !important;
-    padding: 4px 0 !important;
+    padding: 2px 0 !important;
+    gap: 3px !important;
     display: flex !important;
     align-items: center !important;
-    gap: 6px !important;
 }
 
 .player-name {
     font-size: 13px !important;
-    min-width: 140px !important;   /* N2 */
+    min-width: 140px !important;
     white-space: nowrap !important;
 }
 
 /* --------------------------------------------------
-   CAPTAIN COLUMN — CLEAN, NON‑COLLAPSING (CV‑B)
+   COLORED CAPTAIN BOXES (C1 + B1 + T2)
 -------------------------------------------------- */
 
 .captain-column {
-    padding: 10px 12px !important;   /* CV‑B */
-    margin-bottom: 10px !important;
-    background-color: #ffffff;
-    border: 1px solid #c8c8c8;
-    border-radius: 8px;
+    padding: 12px !important;
+    border-radius: 10px !important;
+    margin-bottom: 14px !important;
+    color: black !important;
 }
 
+/* Section title inside colored box */
 .captain-title {
-    font-size: 15px !important;
-    margin-bottom: 8px !important;
-    font-weight: 600;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    margin-bottom: 10px !important;
 }
+
+/* Color themes */
+.captain-yes   { background-color: #4CAF50 !important; }
+.captain-no    { background-color: #F44336 !important; }
+.captain-maybe { background-color: #FFEB3B !important; }
+.captain-none  { background-color: #BDBDBD !important; }
 
 /* --------------------------------------------------
-   INNER WRAPPERS — SAFE COMPRESSION
+   INNER WRAPPERS — SAFE WRAP (fix overlap)
 -------------------------------------------------- */
 
 div[data-testid="stHorizontalBlock"] {
-    gap: 6px !important;   /* CV‑B */
-    flex-wrap: wrap !important;   /* FIX OVERLAP */
+    gap: 6px !important;
+    flex-wrap: wrap !important;
 }
 
 /* --------------------------------------------------
@@ -144,7 +143,7 @@ div[data-testid="stHorizontalBlock"] {
 }
 
 /* --------------------------------------------------
-   MOBILE — M1 (STACK COLUMNS)
+   MOBILE — STACK COLUMNS (M1)
 -------------------------------------------------- */
 
 @media (max-width: 600px) {
@@ -438,11 +437,11 @@ try:
             # Weighted widths (W3)
             col_yes, col_no, col_maybe, col_none = st.columns([1, 1, 1, 2])
 
-            def render_column(col, title, color, players_list):
+            def render_column(col, title, color_class, players_list):
                 with col:
-                    st.markdown('<div class="captain-column">', unsafe_allow_html=True)
+                    st.markdown(f'<div class="captain-column {color_class}">', unsafe_allow_html=True)
                     st.markdown(
-                        f'<div class="captain-title" style="color:{color};">{title} ({len(players_list)})</div>',
+                        f'<div class="captain-title">{title} ({len(players_list)})</div>',
                         unsafe_allow_html=True
                     )
 
@@ -453,41 +452,33 @@ try:
                         b_yes, b_no, b_maybe, b_none = st.columns([1, 1, 1, 1])
 
                         with b_yes:
-                            st.markdown('<div class="btn-yes">', unsafe_allow_html=True)
                             if st.button("Yes", key=f"{title}_yes_{game['game_id']}_{p['id']}"):
                                 save_attendance(attendance_sheet, p["id"], game["game_id"], "Yes")
                                 st.rerun()
-                            st.markdown('</div>', unsafe_allow_html=True)
 
                         with b_no:
-                            st.markdown('<div class="btn-no">', unsafe_allow_html=True)
                             if st.button("No", key=f"{title}_no_{game['game_id']}_{p['id']}"):
                                 save_attendance(attendance_sheet, p["id"], game["game_id"], "No")
                                 st.rerun()
-                            st.markdown('</div>', unsafe_allow_html=True)
 
                         with b_maybe:
-                            st.markdown('<div class="btn-maybe">', unsafe_allow_html=True)
                             if st.button("Maybe", key=f"{title}_maybe_{game['game_id']}_{p['id']}"):
                                 save_attendance(attendance_sheet, p["id"], game["game_id"], "Maybe")
                                 st.rerun()
-                            st.markdown('</div>', unsafe_allow_html=True)
 
                         with b_none:
-                            st.markdown('<div class="btn-none">', unsafe_allow_html=True)
                             if st.button("No Resp", key=f"{title}_none_{game['game_id']}_{p['id']}"):
                                 save_attendance(attendance_sheet, p["id"], game["game_id"], "No Response")
                                 st.rerun()
-                            st.markdown('</div>', unsafe_allow_html=True)
 
                         st.markdown('</div>', unsafe_allow_html=True)
 
                     st.markdown('</div>', unsafe_allow_html=True)
 
-            render_column(col_yes, "YES", "green", yes_players)
-            render_column(col_no, "NO", "red", no_players)
-            render_column(col_maybe, "MAYBE", "orange", maybe_players)
-            render_column(col_none, "No Response", "gray", none_players)
+            render_column(col_yes, "YES", "captain-yes", yes_players)
+            render_column(col_no, "NO", "captain-no", no_players)
+            render_column(col_maybe, "MAYBE", "captain-maybe", maybe_players)
+            render_column(col_none, "No Response", "captain-none", none_players)
 
 except Exception as e:
     st.error(f"Games error: {e}")
