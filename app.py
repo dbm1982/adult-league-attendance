@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# CSS — ULTRA COMPRESSION (B + 2 + H2 + C2)
+# CSS — ULTRA COMPRESSION (B + 2 + H2 + C2 + T2 + W3)
 # --------------------------------------------------
 
 st.markdown("""
@@ -110,6 +110,36 @@ div.stButton > button {
     padding: 0 !important;
     font-weight: 600;
 }
+
+/* --------------------------------------------------
+   INNER WRAPPER COMPRESSION (T2)
+-------------------------------------------------- */
+
+div[data-testid="stHorizontalBlock"] {
+    gap: 2px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+div[data-testid="stVerticalBlock"] {
+    gap: 2px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+div[data-testid="column"] > div {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* --------------------------------------------------
+   WEIGHTED COLUMN WIDTHS (W3)
+-------------------------------------------------- */
+
+.weight-yes   { flex: 1 !important; }
+.weight-no    { flex: 1 !important; }
+.weight-maybe { flex: 1 !important; }
+.weight-none  { flex: 2 !important; }
 
 /* --------------------------------------------------
    GAME CALLOUT
@@ -416,7 +446,15 @@ try:
                 else:
                     none_players.append(pdata)
 
-            col_yes, col_no, col_maybe, col_none = st.columns([1, 1, 1, 2])
+            # Weighted widths (W3)
+            col_yes, col_no, col_maybe, col_none = st.columns(
+                [
+                    1,  # YES
+                    1,  # NO
+                    1,  # MAYBE
+                    2   # No Response
+                ]
+            )
 
             def render_column(col, title, color, players_list):
                 with col:
