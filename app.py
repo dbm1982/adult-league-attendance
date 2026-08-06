@@ -86,12 +86,12 @@ div.stButton > button {
 
 .player-row {
     margin: 0 !important;
-    padding: 2px 0 !important;
+    padding: 1px 0 !important;
 }
 
 .player-name {
     font-size: 13px !important;
-    margin: 0 0 2px 0 !important;
+    margin: 0 0 1px 0 !important;
     padding: 0 !important;
 }
 
@@ -101,7 +101,7 @@ div.stButton > button {
 
 .captain-column {
     padding: 4px 6px !important;
-    margin: 0 0 6px 0 !important;
+    margin: 0 0 4px 0 !important;
     background-color: #ffffff;
     border: 1px solid #d0d0d0;
     border-radius: 8px;
@@ -109,7 +109,7 @@ div.stButton > button {
 
 .captain-title {
     font-size: 15px !important;
-    margin: 0 0 4px 0 !important;
+    margin: 0 0 3px 0 !important;
     padding: 0 !important;
     font-weight: 600;
 }
@@ -120,9 +120,9 @@ div.stButton > button {
 
 .game-callout {
     background: #e8f5e9;
-    padding: 12px 16px;
+    padding: 10px 14px;
     border-radius: 10px;
-    margin: 0 0 12px 0 !important;
+    margin: 0 0 10px 0 !important;
     border-left: 6px solid #2e7d32;
     color: #1b5e20;
 }
@@ -136,7 +136,7 @@ div.stButton > button {
     .captain-column {
         width: 100% !important;
         display: block !important;
-        margin-bottom: 10px !important;
+        margin-bottom: 8px !important;
     }
 
     /* Force Streamlit columns to stack */
@@ -148,7 +148,7 @@ div.stButton > button {
     /* Make buttons full-width on mobile */
     div.stButton > button {
         width: 100% !important;
-        margin-bottom: 3px !important;
+        margin-bottom: 2px !important;
     }
 }
 
@@ -469,10 +469,11 @@ try:
 
                     st.markdown('</div>', unsafe_allow_html=True)  # captain-column
 
+            # FIXED — all four arguments included
             render_column(col_yes, "YES", "green", yes_players)
-            render_column(col_no, "NO", no_players)
-            render_column(col_maybe, "MAYBE", maybe_players)
-            render_column(col_none, "No Response", none_players)
+            render_column(col_no, "NO", "red", no_players)
+            render_column(col_maybe, "MAYBE", "orange", maybe_players)
+            render_column(col_none, "No Response", "gray", none_players)
 
 except Exception as e:
     st.error(f"Games error: {e}")
