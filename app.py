@@ -14,13 +14,37 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# CSS — COMPRESSION + FIXED OVERLAP/BOX SHRINK
+# CSS — COMPRESSION + FIXED HEADER + FIXED OVERLAP
 # --------------------------------------------------
 
 st.markdown("""
 <style>
 
-/* Global spacing reduction */
+/* --------------------------------------------------
+   RESTORE NORMAL READABLE HEADER SPACING
+-------------------------------------------------- */
+
+h1, .stMarkdown h1 {
+    margin-top: 22px !important;
+    margin-bottom: 14px !important;
+}
+
+.stCaption, .stMarkdown p {
+    margin-bottom: 14px !important;
+}
+
+.block-container > div:first-child {
+    margin-top: 18px !important;
+}
+
+div[data-testid="stSelectbox"] {
+    margin-top: 10px !important;
+    margin-bottom: 10px !important;
+}
+
+/* --------------------------------------------------
+   GLOBAL STREAMLIT SPACING REDUCTION (Captain View Only)
+-------------------------------------------------- */
 
 .css-1kyxreq, .css-1r6slb0, .css-12w0qpk {
     padding: 0 !important;
@@ -41,12 +65,13 @@ div[data-testid="stVerticalBlock"] {
 }
 
 .block-container {
-    padding-top: 0.2rem !important;
     padding-bottom: 0 !important;
     margin: 0 !important;
 }
 
-/* Buttons: extra-small */
+/* --------------------------------------------------
+   BUTTON COMPRESSION (B)
+-------------------------------------------------- */
 
 div.stButton > button {
     padding: 1px 3px !important;
@@ -58,25 +83,14 @@ div.stButton > button {
 }
 
 /* Color-coded buttons */
+.btn-yes > button { background-color: #4CAF50 !important; color: white !important; }
+.btn-no > button { background-color: #F44336 !important; color: white !important; }
+.btn-maybe > button { background-color: #FFB300 !important; color: black !important; }
+.btn-none > button { background-color: #E0E0E0 !important; color: #555 !important; }
 
-.btn-yes > button {
-    background-color: #4CAF50 !important;
-    color: white !important;
-}
-.btn-no > button {
-    background-color: #F44336 !important;
-    color: white !important;
-}
-.btn-maybe > button {
-    background-color: #FFB300 !important;
-    color: black !important;
-}
-.btn-none > button {
-    background-color: #E0E0E0 !important;
-    color: #555 !important;
-}
-
-/* Player row compression + name protection */
+/* --------------------------------------------------
+   PLAYER ROW COMPRESSION + NAME PROTECTION (N2)
+-------------------------------------------------- */
 
 .player-row {
     margin: 0 !important;
@@ -94,10 +108,12 @@ div.stButton > button {
     white-space: nowrap !important;
 }
 
-/* Captain column compression + padding (P2) */
+/* --------------------------------------------------
+   CAPTAIN COLUMN COMPRESSION + PADDING (P2)
+-------------------------------------------------- */
 
 .captain-column {
-    padding: 6px 8px !important;
+    padding: 6px 8px !important;  /* P2 */
     margin: 0 0 4px 0 !important;
     background-color: #ffffff;
     border: 1px solid #c8c8c8;
@@ -111,7 +127,9 @@ div.stButton > button {
     font-weight: 600;
 }
 
-/* Inner wrapper compression */
+/* --------------------------------------------------
+   INNER WRAPPER COMPRESSION (T2)
+-------------------------------------------------- */
 
 div[data-testid="stHorizontalBlock"] {
     padding: 0 !important;
@@ -120,14 +138,18 @@ div[data-testid="stHorizontalBlock"] {
     flex-wrap: nowrap !important;
 }
 
-/* Weighted column widths (W3) */
+/* --------------------------------------------------
+   WEIGHTED COLUMN WIDTHS (W3)
+-------------------------------------------------- */
 
 .weight-yes   { flex: 1 !important; }
 .weight-no    { flex: 1 !important; }
 .weight-maybe { flex: 1 !important; }
 .weight-none  { flex: 2 !important; }
 
-/* Game callout */
+/* --------------------------------------------------
+   GAME CALLOUT
+-------------------------------------------------- */
 
 .game-callout {
     background: #e8f5e9;
@@ -138,7 +160,9 @@ div[data-testid="stHorizontalBlock"] {
     color: #1b5e20;
 }
 
-/* Mobile */
+/* --------------------------------------------------
+   MOBILE STACKING + MOBILE COMPRESSION
+-------------------------------------------------- */
 
 @media (max-width: 600px) {
 
