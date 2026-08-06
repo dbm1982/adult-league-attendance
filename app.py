@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# MOBILE-FRIENDLY CSS (modern cards + buttons)
+# MOBILE-FRIENDLY CSS (modern cards + color-coded buttons)
 # --------------------------------------------------
 
 st.markdown("""
@@ -58,20 +58,41 @@ html, body, [class*="css"] {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    margin-bottom: 6px;
+    margin-bottom: 10px;
 }
 
 /* Player name */
 .player-name {
     font-weight: 600;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
 }
 
 /* Inline buttons row */
 .player-buttons {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 6px;
+}
+
+/* Color-coded inline status buttons */
+.status-yes > button {
+    background-color: #4CAF50 !important;   /* green */
+    color: white !important;
+}
+
+.status-no > button {
+    background-color: #F44336 !important;   /* red */
+    color: white !important;
+}
+
+.status-maybe > button {
+    background-color: #FFB300 !important;   /* amber/yellow */
+    color: black !important;
+}
+
+.status-none > button {
+    background-color: #E0E0E0 !important;   /* pale grey */
+    color: #555 !important;
 }
 
 /* Make Save Response button full width */
@@ -309,14 +330,13 @@ try:
                 key=f"attendance_{game['game_id']}"
             )
 
-            if st.container():
-                if st.button("💾 Save Response", key=f"save_{game['game_id']}", type="primary"):
-                    save_attendance(attendance_sheet, selected_player_id, game["game_id"], selected_status)
-                    st.success("Attendance saved successfully.")
-                    st.rerun()
+            if st.button("💾 Save Response", key=f"save_{game['game_id']}", type="primary"):
+                save_attendance(attendance_sheet, selected_player_id, game["game_id"], selected_status)
+                st.success("Attendance saved successfully.")
+                st.rerun()
 
         # --------------------------------------------------
-        # CAPTAIN VIEW (modern cards + inline buttons)
+        # CAPTAIN VIEW (modern cards + inline color-coded buttons)
         # --------------------------------------------------
 
         else:
@@ -365,13 +385,19 @@ try:
                             unsafe_allow_html=True
                         )
 
-                        # Inline buttons row
-                        btn_col = st.container()
-                        with btn_col:
-                            cols = st.columns(4)
-                            statuses = ["Yes", "No", "Maybe", "No Response"]
-                            for i, status in enumerate(statuses):
-                                if cols[i].button(
+                        # Inline color-coded buttons
+                        cols = st.columns(4)
+                        status_map = {
+                            "Yes": "status-yes",
+                            "No": "status-no",
+                            "Maybe": "status-maybe",
+                            "No Response": "status-none"
+                        }
+
+                        for i, status in enumerate(status_map.keys()):
+                            with cols[i]:
+                                st.markdown(f"<div class='{status_map[status]}'>", unsafe_allow_html=True)
+                                if st.button(
                                     status,
                                     key=f"{title}_{game['game_id']}_{player['id']}_{status}"
                                 ):
@@ -383,6 +409,7 @@ try:
                                     )
                                     st.success(f"{player['name']} set to {status}.")
                                     st.rerun()
+                                st.markdown("</div>", unsafe_allow_html=True)
 
                         st.markdown("</div>", unsafe_allow_html=True)
 
