@@ -54,6 +54,13 @@ def format_date(date_str):
     except:
         return str(date_str)
 
+def weekday(date_str):
+    try:
+        dt = datetime.strptime(str(date_str), "%Y-%m-%d")
+        return dt.strftime("%A")
+    except:
+        return ""
+
 def short_name(full):
     parts = full.split()
     return f"{parts[0]} {parts[-1][0]}."
@@ -256,7 +263,7 @@ try:
 
             summary_html += (
                 f'<div style="font-size:15px; margin-bottom:4px;">'
-                f'{icon} {format_date(g["date"])} — {status}'
+                f'{icon} {weekday(g["date"])}, {format_date(g["date"])} — {status}'
                 f'</div>'
             )
 
@@ -276,7 +283,7 @@ try:
                 break
 
         # --------------------------------------------------
-        # GAME HEADER
+        # GAME HEADER (weekday added)
         # --------------------------------------------------
 
         field_clean = str(game.get("field", "")).replace("Field ", "")
@@ -285,7 +292,7 @@ try:
             '<div style="background:#e8f5e9; padding:12px 16px; border-radius:10px; '
             'margin-bottom:12px; border-left:6px solid #2e7d32; color:#1b5e20; font-size:16px;">'
             f'<div style="font-size:18px; font-weight:700; margin-bottom:6px;">'
-            f'🗓️ {format_date(game.get("date",""))} • {game.get("time","")}'
+            f'🗓️ {weekday(game.get("date",""))}, {format_date(game.get("date",""))} • {game.get("time","")}'
             '</div>'
             f'<div style="margin-bottom:4px;">📍 Field {field_clean}</div>'
             f'<div>⚔️ Opponent: {game.get("opponent","")}</div>'
@@ -481,39 +488,4 @@ try:
                         and str(record["game_id"]) == str(game["game_id"])
                     ):
                         s = str(record["status"]).strip()
-                        current_player_status = "No Response" if s in ("", "None") else s
-                        break
-
-            options = ["No Response", "Yes", "No", "Maybe"]
-            default_index = options.index(current_player_status)
-
-            selected_status_for_player = st.radio(
-                "Set status",
-                options,
-                index=default_index,
-                horizontal=True,
-                key=f"captain_status_{game['game_id']}"
-            )
-
-            if st.button("💾 Save Player Status", key=f"captain_save_{game['game_id']}"):
-                save_attendance(
-                    attendance_sheet,
-                    selected_player_record_for_game["player_id"],
-                    game["game_id"],
-                    selected_status_for_player
-                )
-                st.cache_data.clear()
-                st.success(f"Updated {player_to_update} to {selected_status_for_player}.")
-                st.rerun()
-
-        # --------------------------------------------------
-        # DIVIDER
-        # --------------------------------------------------
-
-        st.markdown(
-            '<hr style="border:0; height:3px; background:#0D47A1; margin:40px 0;">',
-            unsafe_allow_html=True
-        )
-
-except Exception as e:
-    st.error(f"Games error: {e}")
+                        current
