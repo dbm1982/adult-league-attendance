@@ -388,101 +388,50 @@ try:
             else:
                 none_players.append(player)
 
-        # Captain alert
-        if is_captain and view_mode == "Team Availability":
-            nr_names = ", ".join([short_name(p["player_name"]) for p in none_players])
-            maybe_names = ", ".join([short_name(p["player_name"]) for p in maybe_players])
 
-            alert_html = (
-                '<div style="background-color:#E3F2FD; border-left:5px solid #64B5F6; '
-                'padding:14px 18px; border-radius:6px; margin:10px 0 18px 0; '
-                'font-size:15px; color:#0D47A1;">'
-                f'<strong>{len(none_players) + len(maybe_players)} players are not confirmed:</strong><br><br>'
-            )
 
-            if none_players:
-                alert_html += f'<strong>No Response (NR):</strong><br>{nr_names}<br><br>'
-            if maybe_players:
-                alert_html += f'<strong>Maybe:</strong><br>{maybe_names}'
 
-            alert_html += '</div>'
-            st.markdown(alert_html, unsafe_allow_html=True)
 
-        # PLAYER VIEW
-        if view_mode == "My Availability":
-            badge_styles = {
-                "Yes": {"bg":"#E8F5E9","color":"#1B5E20","icon":"🟢","text":"You are marked as YES"},
-                "No": {"bg":"#FDECEA","color":"#C62828","icon":"🔴","text":"You are marked as NO"},
-                "Maybe": {"bg":"#FFF8E1","color":"#FF8F00","icon":"🟡","text":"You are marked as MAYBE"},
-                "No Response": {"bg":"#ECEFF1","color":"#37474F","icon":"⚪","text":"You have not responded"}
-            }
 
-            style = badge_styles[current_status]
+        options = ["No Response", "Yes", "No", "Maybe"]
+        selected_status_for_player = st.radio(
+            "Set status",
+            options,
+            index=options.index(current_player_status),
+            horizontal=True,
+            key=f"captain_status_{game_id}"
+        )
 
-            st.markdown(
-                f'<div style="background:{style["bg"]}; color:{style["color"]}; '
-                'padding:12px 16px; border-radius:10px; margin-bottom:12px; '
-                'font-size:16px; font-weight:600;">'
-                f'{style["icon"]} {style["text"]}'
-                '</div>',
-                unsafe_allow_html=True
-            )
+        if st.button("💾 Add Player Change", key=f"captain_save_{game_id}"):
+            st.session_state.pending_updates[(pid, game_id)] = selected_status_for_player
+            st.success(f"Stored change for {player_to_update}. Save all updates at the top.")
 
-            options = ["No Response", "Yes", "No", "Maybe"]
-            selected_status = st.radio(
-                "Can you make this game?",
-                options,
-                index=options.index(current_status),
-                key=f"attendance_{game_id}"
-            )
+    # Divider between games
+    st.markdown(
+        '<hr style="border:0; height:3px; background:#0D47A1; margin:40px 0;">',
+        unsafe_allow_html=True
+    )
 
-            if st.button("💾 Add to Updates", key=f"save_{game_id}", type="primary"):
-                st.session_state.pending_updates[(selected_player_id, game_id)] = selected_status
-                st.success("Change stored. Save all updates at the top.")
+# --------------------------------------------------
+# SAVE ALL UPDATES (BOTTOM — SAFETY NET)
+# --------------------------------------------------
 
-        # CAPTAIN VIEW
-        else:
-            col_yes, col_no, col_maybe, col_none = st.columns(4)
+if st.session_state.pending_updates:
+    st.markdown("### 💾 Save All Updates")
+    if st.button("✅ Save All Updates Now", key="save_all_bottom"):
+        for (pid, gid), status in st.session_state.pending_updates.items():
+            save_attendance(attendance_sheet, pid, gid, status)
+        st.session_state.pending_updates = {}
+        st.success("All updates saved.")
+        st.rerun()
 
-            col_yes.markdown(f'<div class="column-header header-yes">YES ({len(yes_players)})</div>', unsafe_allow_html=True)
-            for p in yes_players:
-                col_yes.markdown(f"- {p['player_name']}")
+# --------------------------------------------------
+# GLOBAL ERROR HANDLER
+# --------------------------------------------------
 
-            col_no.markdown(f'<div class="column-header header-no">NO ({len(no_players)})</div>', unsafe_allow_html=True)
-            for p in no_players:
-                col_no.markdown(f"- {p['player_name']}")
+except Exception as e:
+st.error("⚠️ Something went wrong while loading games. Please try again.")
+if st.button("🔄 Reload games"):
+    st.rerun()
 
-            col_maybe.markdown(f'<div class="column-header header-maybe">MAYBE ({len(maybe_players)})</div>', unsafe_allow_html=True)
-            for p in maybe_players:
-                col_maybe.markdown(f"- {p['player_name']}")
 
-            col_none.markdown(f'<div class="column-header header-nr">NR ({len(none_players)})</div>', unsafe_allow_html=True)
-            for p in none_players:
-                col_none.markdown(f"- {p['player_name']}")
-
-            st.markdown("---")
-            st.markdown("### 🧭 Update a player's status")
-
-            player_to_update = st.selectbox(
-                "Choose a player to update",
-                [p["player_name"] for p in team_players],
-                key=f"captain_player_select_{game_id}"
-            )
-
-            selected_player_record_for_game = next(
-                (p for p in team_players if p["player_name"] == player_to_update),
-                None
-            )
-
-            pid = str(selected_player_record_for_game["player_id"]).strip()
-
-            current_player_status = "No Response"
-            for record in attendance:
-                if str(record["player_id"]).strip() == pid and str(record["game_id"]).strip() == game_id:
-                    s = str(record["status"]).strip()
-                    current_player_status = "No Response" if s in ("", "None") else s
-                    break
-
-            options = ["No Response", "Yes", "No", "Maybe"]
-            selected_status_for_player = st.radio(
-                "Set status",
