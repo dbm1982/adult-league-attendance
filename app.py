@@ -358,25 +358,41 @@ try:
 
         if view_mode == "My Availability":
 
-            # Status badge (Feature #2)
-            badge_icon = {
-                "Yes": "🟢",
-                "No": "🔴",
-                "Maybe": "🟡",
-                "No Response": "⚪"
-            }[current_status]
+            # Status badge (mobile-friendly colors)
+            badge_styles = {
+                "Yes": {
+                    "bg": "#E8F5E9",
+                    "color": "#1B5E20",
+                    "icon": "🟢",
+                    "text": "You are marked as YES for this game"
+                },
+                "No": {
+                    "bg": "#FDECEA",
+                    "color": "#C62828",
+                    "icon": "🔴",
+                    "text": "You are marked as NO for this game"
+                },
+                "Maybe": {
+                    "bg": "#FFF8E1",
+                    "color": "#FF8F00",
+                    "icon": "🟡",
+                    "text": "You are marked as MAYBE for this game"
+                },
+                "No Response": {
+                    "bg": "#ECEFF1",
+                    "color": "#37474F",
+                    "icon": "⚪",
+                    "text": "You have not responded yet"
+                }
+            }
 
-            badge_text = {
-                "Yes": "You are marked as YES for this game",
-                "No": "You are marked as NO for this game",
-                "Maybe": "You are marked as MAYBE for this game",
-                "No Response": "You have not responded yet"
-            }[current_status]
+            style = badge_styles[current_status]
 
             badge_html = (
-                '<div style="background:#f0f0f0; padding:10px 14px; border-radius:8px; '
-                'margin-bottom:10px; font-size:16px; font-weight:600;">'
-                f'{badge_icon} {badge_text}'
+                f'<div style="background:{style["bg"]}; color:{style["color"]}; '
+                'padding:12px 16px; border-radius:10px; margin-bottom:12px; '
+                'font-size:16px; font-weight:600;">'
+                f'{style["icon"]} {style["text"]}'
                 '</div>'
             )
 
