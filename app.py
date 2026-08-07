@@ -228,6 +228,10 @@ def format_date(date_str):
     except:
         return str(date_str)
 
+def short_name(full):
+    parts = full.split()
+    return f"{parts[0]} {parts[-1][0]}."
+
 def save_attendance(attendance_sheet, player_id, game_id, status):
     values = attendance_sheet.get_all_values()
     header = values[0]
@@ -461,7 +465,7 @@ try:
         # --------------------------------------------------
 
         if is_captain and view_mode == "Team Availability" and none_count > 0:
-            nr_names = ", ".join([p["player_name"] for p in none_players])
+            nr_names = ", ".join([short_name(p["player_name"]) for p in none_players])
 
             st.markdown(
                 f"""
