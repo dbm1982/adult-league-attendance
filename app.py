@@ -14,15 +14,13 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# CSS — CLEAN, COMPACT, INLINE BUTTONS
+# CSS — COMPACT ROWS + INLINE STATUS BUTTONS
 # --------------------------------------------------
 
 st.markdown("""
 <style>
 
-/* --------------------------------------------------
-   READABLE HEADER SPACING
--------------------------------------------------- */
+/* Header spacing */
 
 h1, .stMarkdown h1 {
     margin-top: 22px !important;
@@ -42,9 +40,7 @@ div[data-testid="stSelectbox"] {
     margin-bottom: 10px !important;
 }
 
-/* --------------------------------------------------
-   GLOBAL SAFE SPACING (CV‑B)
--------------------------------------------------- */
+/* Global spacing */
 
 .css-1kyxreq, .css-1r6slb0, .css-12w0qpk {
     padding: 0 !important;
@@ -57,28 +53,7 @@ div[data-testid="column"] {
     margin: 0 !important;
 }
 
-/* --------------------------------------------------
-   INLINE BUTTONS — SUPER COMPACT
--------------------------------------------------- */
-
-.inline-buttons {
-    display: flex;
-    gap: 4px;
-    flex-wrap: nowrap;
-}
-
-.inline-buttons button {
-    padding: 1px 4px !important;
-    font-size: 10px !important;
-    height: 20px !important;
-    line-height: 16px !important;
-    border-radius: 4px !important;
-    margin: 0 !important;
-}
-
-/* --------------------------------------------------
-   PLAYER ROW — COMPACT
--------------------------------------------------- */
+/* Player row */
 
 .player-row {
     padding: 1px 0 !important;
@@ -88,13 +63,28 @@ div[data-testid="column"] {
 
 .player-name {
     font-size: 13px !important;
-    min-width: 90px !important;
+    min-width: 110px !important;
     white-space: nowrap !important;
 }
 
-/* --------------------------------------------------
-   COLORED CAPTAIN BOXES
--------------------------------------------------- */
+/* Inline status buttons */
+
+.inline-buttons {
+    display: flex;
+    gap: 4px;
+    flex-wrap: nowrap;
+}
+
+.inline-buttons button {
+    padding: 1px 6px !important;
+    font-size: 11px !important;
+    height: 22px !important;
+    line-height: 16px !important;
+    border-radius: 4px !important;
+    margin: 0 !important;
+}
+
+/* Captain boxes */
 
 .captain-column {
     padding: 12px !important;
@@ -114,9 +104,7 @@ div[data-testid="column"] {
 .captain-maybe { background-color: #FFEB3B !important; }
 .captain-none  { background-color: #BDBDBD !important; }
 
-/* --------------------------------------------------
-   MINI SUMMARY BAR
--------------------------------------------------- */
+/* Mini summary bar */
 
 .game-mini-summary {
     font-size: 12px !important;
@@ -135,9 +123,7 @@ div[data-testid="column"] {
 .summary-maybe { color: #f9a825 !important; }
 .summary-none { color: #616161 !important; }
 
-/* --------------------------------------------------
-   CAPTAIN ALERT BAR
--------------------------------------------------- */
+/* Captain alert bar */
 
 .captain-alert {
     background-color: #f5f5f5;
@@ -157,9 +143,18 @@ div[data-testid="column"] {
     color: #424242;
 }
 
-/* --------------------------------------------------
-   MOBILE — STACK COLUMNS
--------------------------------------------------- */
+/* Game callout */
+
+.game-callout {
+    background: #e8f5e9;
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 12px !important;
+    border-left: 6px solid #2e7d32;
+    color: #1b5e20;
+}
+
+/* Mobile */
 
 @media (max-width: 600px) {
 
@@ -498,8 +493,7 @@ try:
                     for p in players_list:
                         st.markdown('<div class="player-row">', unsafe_allow_html=True)
 
-                        # NAME + BUTTONS IN MICRO-COLUMNS
-                        name_col, btn_col = st.columns([1.3, 2])
+                        name_col, btn_col = st.columns([1.4, 2])
 
                         with name_col:
                             st.markdown(f'<div class="player-name">{p["player_name"]}</div>', unsafe_allow_html=True)
@@ -507,19 +501,20 @@ try:
                         with btn_col:
                             st.markdown('<div class="inline-buttons">', unsafe_allow_html=True)
 
-                            if st.button("Yes", key=f"{title}_yes_{game['game_id']}_{p['player_id']}"):
+                            # Y / N / M / ? buttons (compact)
+                            if st.button("Y", key=f"{title}_yes_{game['game_id']}_{p['player_id']}"):
                                 save_attendance(attendance_sheet, p["player_id"], game["game_id"], "Yes")
                                 st.rerun()
 
-                            if st.button("No", key=f"{title}_no_{game['game_id']}_{p['player_id']}"):
+                            if st.button("N", key=f"{title}_no_{game['game_id']}_{p['player_id']}"):
                                 save_attendance(attendance_sheet, p["player_id"], game["game_id"], "No")
                                 st.rerun()
 
-                            if st.button("Maybe", key=f"{title}_maybe_{game['game_id']}_{p['player_id']}"):
+                            if st.button("M", key=f"{title}_maybe_{game['game_id']}_{p['player_id']}"):
                                 save_attendance(attendance_sheet, p["player_id"], game["game_id"], "Maybe")
                                 st.rerun()
 
-                            if st.button("NR", key=f"{title}_none_{game['game_id']}_{p['player_id']}"):
+                            if st.button("?", key=f"{title}_none_{game['game_id']}_{p['player_id']}"):
                                 save_attendance(attendance_sheet, p["player_id"], game["game_id"], "No Response")
                                 st.rerun()
 
