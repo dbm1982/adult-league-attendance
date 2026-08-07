@@ -278,7 +278,7 @@ try:
                 none_players.append(player)
 
         # --------------------------------------------------
-        # NR + MAYBE SUMMARY BOX (BLUE)
+        # NR + MAYBE SUMMARY BOX (IMPROVED LOGIC)
         # --------------------------------------------------
 
         if is_captain and view_mode == "Team Availability":
@@ -286,28 +286,34 @@ try:
             nr_names = ", ".join([short_name(p["player_name"]) for p in none_players])
             maybe_names = ", ".join([short_name(p["player_name"]) for p in maybe_players])
 
-            st.markdown(
-                f"""
-                <div style="
-                    background-color:#1E88E5;
-                    border-left:5px solid #0D47A1;
-                    padding:14px 18px;
-                    border-radius:6px;
-                    margin:10px 0 18px 0;
-                    font-size:15px;
-                    color:white;">
-                    
-                    <strong>⚠️ {len(none_players) + len(maybe_players)} players are not confirmed:</strong><br><br>
+            alert_html = f"""
+            <div style="
+                background-color:#1E88E5;
+                border-left:5px solid #0D47A1;
+                padding:14px 18px;
+                border-radius:6px;
+                margin:10px 0 18px 0;
+                font-size:15px;
+                color:white;">
+                
+                <strong>⚠️ {len(none_players) + len(maybe_players)} players are not confirmed:</strong><br><br>
+            """
 
-                    <strong>No Response (NR):</strong><br>
-                    <span>{nr_names if nr_names else "None"}</span><br><br>
+            if len(none_players) > 0:
+                alert_html += f"""
+                <strong>No Response (NR):</strong><br>
+                <span>{nr_names}</span><br><br>
+                """
 
-                    <strong>Maybe:</strong><br>
-                    <span>{maybe_names if maybe_names else "None"}</span>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            if len(maybe_players) > 0:
+                alert_html += f"""
+                <strong>Maybe:</strong><br>
+                <span>{maybe_names}</span>
+                """
+
+            alert_html += "</div>"
+
+            st.markdown(alert_html, unsafe_allow_html=True)
 
         # --------------------------------------------------
         # PLAYER VIEW
