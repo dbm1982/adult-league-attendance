@@ -64,12 +64,13 @@ div[data-testid="column"] {
 .inline-buttons {
     display: flex;
     gap: 4px;
+    flex-wrap: nowrap;
 }
 
 .inline-buttons button {
-    padding: 2px 6px !important;
-    font-size: 11px !important;
-    height: 22px !important;
+    padding: 1px 4px !important;
+    font-size: 10px !important;
+    height: 20px !important;
     line-height: 16px !important;
     border-radius: 4px !important;
     margin: 0 !important;
@@ -80,15 +81,14 @@ div[data-testid="column"] {
 -------------------------------------------------- */
 
 .player-row {
-    padding: 2px 0 !important;
-    gap: 6px !important;
+    padding: 1px 0 !important;
     display: flex !important;
     align-items: center !important;
 }
 
 .player-name {
     font-size: 13px !important;
-    min-width: 120px !important;
+    min-width: 90px !important;
     white-space: nowrap !important;
 }
 
@@ -171,7 +171,7 @@ div[data-testid="column"] {
     .player-row {
         flex-direction: column !important;
         align-items: flex-start !important;
-        gap: 4px !important;
+        gap: 2px !important;
     }
 
     .inline-buttons {
@@ -497,28 +497,33 @@ try:
 
                     for p in players_list:
                         st.markdown('<div class="player-row">', unsafe_allow_html=True)
-                        st.markdown(f'<div class="player-name">{p["player_name"]}</div>', unsafe_allow_html=True)
 
-                        # INLINE BUTTON BAR
-                        st.markdown('<div class="inline-buttons">', unsafe_allow_html=True)
+                        # NAME + BUTTONS IN MICRO-COLUMNS
+                        name_col, btn_col = st.columns([1.3, 2])
 
-                        if st.button("Yes", key=f"{title}_yes_{game['game_id']}_{p['player_id']}"):
-                            save_attendance(attendance_sheet, p["player_id"], game["game_id"], "Yes")
-                            st.rerun()
+                        with name_col:
+                            st.markdown(f'<div class="player-name">{p["player_name"]}</div>', unsafe_allow_html=True)
 
-                        if st.button("No", key=f"{title}_no_{game['game_id']}_{p['player_id']}"):
-                            save_attendance(attendance_sheet, p["player_id"], game["game_id"], "No")
-                            st.rerun()
+                        with btn_col:
+                            st.markdown('<div class="inline-buttons">', unsafe_allow_html=True)
 
-                        if st.button("Maybe", key=f"{title}_maybe_{game['game_id']}_{p['player_id']}"):
-                            save_attendance(attendance_sheet, p["player_id"], game["game_id"], "Maybe")
-                            st.rerun()
+                            if st.button("Yes", key=f"{title}_yes_{game['game_id']}_{p['player_id']}"):
+                                save_attendance(attendance_sheet, p["player_id"], game["game_id"], "Yes")
+                                st.rerun()
 
-                        if st.button("NR", key=f"{title}_none_{game['game_id']}_{p['player_id']}"):
-                            save_attendance(attendance_sheet, p["player_id"], game["game_id"], "No Response")
-                            st.rerun()
+                            if st.button("No", key=f"{title}_no_{game['game_id']}_{p['player_id']}"):
+                                save_attendance(attendance_sheet, p["player_id"], game["game_id"], "No")
+                                st.rerun()
 
-                        st.markdown('</div>', unsafe_allow_html=True)
+                            if st.button("Maybe", key=f"{title}_maybe_{game['game_id']}_{p['player_id']}"):
+                                save_attendance(attendance_sheet, p["player_id"], game["game_id"], "Maybe")
+                                st.rerun()
+
+                            if st.button("NR", key=f"{title}_none_{game['game_id']}_{p['player_id']}"):
+                                save_attendance(attendance_sheet, p["player_id"], game["game_id"], "No Response")
+                                st.rerun()
+
+                            st.markdown('</div>', unsafe_allow_html=True)
 
                     st.markdown('</div>', unsafe_allow_html=True)
 
