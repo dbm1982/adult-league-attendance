@@ -286,8 +286,8 @@ try:
             st.markdown(
                 f"""
                 <div style="
-                    background-color:#f5f5f5;
-                    border-left:5px solid #616161;
+                    background-color:#1E88E5;
+                    border-left:5px solid #0D47A1;
                     padding:8px 12px;
                     border-radius:6px;
                     margin:6px 0 14px 0;
