@@ -50,12 +50,7 @@ st.markdown("""
 .header-yes { background-color: #4CAF50; color: white; }
 .header-no { background-color: #F44336; color: white; }
 .header-maybe { background-color: #FFEB3B; color: black; }
-
-/* NR column header (blue) */
-.header-nr { 
-    background-color: #1E88E5; 
-    color: white;
-}
+.header-nr { background-color: #1E88E5; color: white; }
 
 </style>
 """, unsafe_allow_html=True)
@@ -259,7 +254,10 @@ try:
                 current_status = "No Response" if s in ("", "None") else s
                 break
 
-        # Game callout
+        # --------------------------------------------------
+        # GAME HEADER (OPTION 2)
+        # --------------------------------------------------
+
         st.markdown(
             f"""
             <div style="
@@ -268,13 +266,20 @@ try:
                 border-radius:10px;
                 margin-bottom:12px;
                 border-left:6px solid #2e7d32;
-                color:#1b5e20;">
-                <span style="font-size:18px; font-weight:700;">
-                    GAME: {format_date(game.get('date',''))} — {game.get('time','')}
-                </span><br>
-                <span style="font-size:14px; font-weight:500;">
-                    Field {game.get('field','')} • Opponent: {game.get('opponent','')}
-                </span>
+                color:#1b5e20;
+                font-size:16px;
+            ">
+                <div style="font-size:18px; font-weight:700; margin-bottom:6px;">
+                    🗓️ {format_date(game.get('date',''))} • {game.get('time','')}
+                </div>
+
+                <div style="margin-bottom:4px;">
+                    📍 Field {game.get('field','')}
+                </div>
+
+                <div>
+                    ⚔️ Opponent: {game.get('opponent','')}
+                </div>
             </div>
             """,
             unsafe_allow_html=True
@@ -307,7 +312,7 @@ try:
                 none_players.append(player)
 
         # --------------------------------------------------
-        # NR + MAYBE SUMMARY BOX (HTML FIXED)
+        # NR + MAYBE SUMMARY BOX
         # --------------------------------------------------
 
         if is_captain and view_mode == "Team Availability":
@@ -362,7 +367,7 @@ try:
                 st.rerun()
 
         # --------------------------------------------------
-        # CAPTAIN VIEW (LOWEST LOAD + PLAYER LISTINGS)
+        # CAPTAIN VIEW
         # --------------------------------------------------
 
         else:
@@ -449,7 +454,7 @@ try:
                     st.rerun()
 
         # --------------------------------------------------
-        # --- END OF GAME SECTION DIVIDER ---
+        # DIVIDER
         # --------------------------------------------------
 
         st.markdown(
