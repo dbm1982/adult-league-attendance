@@ -318,11 +318,11 @@ try:
                 st.rerun()
 
         # --------------------------------------------------
-        # CAPTAIN VIEW (LOWEST LOAD)
+        # CAPTAIN VIEW (LOWEST LOAD + PLAYER LISTINGS)
         # --------------------------------------------------
 
         else:
-            # Summary counts only
+            # Summary columns with player listings
             col_yes, col_no, col_maybe, col_none = st.columns(4)
 
             with col_yes:
@@ -330,25 +330,34 @@ try:
                     f'<div class="column-header header-yes">YES ({len(yes_players)})</div>',
                     unsafe_allow_html=True
                 )
+                for p in yes_players:
+                    st.markdown(f"- {p['player_name']}")
 
             with col_no:
                 st.markdown(
                     f'<div class="column-header header-no">NO ({len(no_players)})</div>',
                     unsafe_allow_html=True
                 )
+                for p in no_players:
+                    st.markdown(f"- {p['player_name']}")
 
             with col_maybe:
                 st.markdown(
                     f'<div class="column-header header-maybe">MAYBE ({len(maybe_players)})</div>',
                     unsafe_allow_html=True
                 )
+                for p in maybe_players:
+                    st.markdown(f"- {p['player_name']}")
 
             with col_none:
                 st.markdown(
                     f'<div class="column-header header-nr">NR ({len(none_players)})</div>',
                     unsafe_allow_html=True
                 )
+                for p in none_players:
+                    st.markdown(f"- {p['player_name']}")
 
+            st.markdown("---")
             st.markdown("### 🧭 Update a player's status")
 
             # Captain picks ONE player to update
