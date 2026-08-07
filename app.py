@@ -514,17 +514,17 @@ try:
                 st.rerun()
 
             
-                    # --------------------------------------------------
-                    # DIVIDER
-                    # --------------------------------------------------
-            
-                    st.markdown(
-                        '<hr style="border:0; height:3px; background:#0D47A1; margin:40px 0;">',
-                        unsafe_allow_html=True
-                    )
-            
-            except Exception as e:
-                st.error(f"Games error: {e}")
+        # --------------------------------------------------
+        # DIVIDER
+        # --------------------------------------------------
+
+        st.markdown(
+            '<hr style="border:0; height:3px; background:#0D47A1; margin:40px 0;">',
+            unsafe_allow_html=True
+        )
+
+except Exception as e:
+    st.error(f"Games error: {e}")
 
 
 
