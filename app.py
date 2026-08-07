@@ -90,6 +90,57 @@ def save_attendance(attendance_sheet, player_id, game_id, status):
         attendance_sheet.append_row([player_id, game_id, spreadsheet_status, timestamp])
 
 # --------------------------------------------------
+# GOOGLE CONNECTION
+# --------------------------------------------------
+
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
+
+creds = Credentials.from_service_account_info(
+    dict(st.secrets["gcp_service_account"]),
+    scopes=SCOPES
+)
+
+client = gspread.authorize(creds)
+spreadsheet = client.open_by_key("1afoSDWnUlB6ZN5Wlz4CDyX1whhzNNHxm6vCINs-2LDM")
+
+teams_sheet = spreadsheet.worksheet("Teams")
+players_sheet = spreadsheet.worksheet("Players")
+games_sheet = spreadsheet.worksheet("Games")
+attendance_sheet = spreadsheet.worksheet("Attendance")
+
+# --------------------------------------------------
+# CACHING
+# --------------------------------------------------
+
+@st.cache_data(ttl=30)
+def load_sheet_data():
+    teams_data = teams_sheet.get("A2:C100")
+    players = players_sheet.get_all_records()
+    games = games_sheet.get_all_records()
+    attendance = attendance_sheet.get_all_records()
+    return teams_data, players, games, attendance
+
+teams_data, players, games, attendance = load_sheet_data()
+
+# --------------------------------------------------
+# ACTIVE TEAMS
+# --------------------------------------------------
+
+teams = []
+for row in teams_data:
+    if len(row) < 3:
+        continue
+    team_name = str(row[1]).strip()
+    active = str(row[2]).strip().upper()
+    if active == "TRUE":
+        teams.append(team_name)
+
+teams = sorted(teams)
+
+# --------------------------------------------------
 # PAGE HEADER
 # --------------------------------------------------
 
@@ -309,6 +360,78 @@ try:
             st.markdown(alert_html, unsafe_allow_html=True)
 
         # --------------------------------------------------
+        # PLAYER VIEW (with 2 & 4)
+        # --------------------------------------------------
+
+        if view_mode == "My Availability":
+
+            # Status badge (mobile-friendly colors)
+            badge_styles = {
+                "Yes": {
+                    "bg": "#E8F5E9",
+                    "color": "#1B5E20",
+                    "icon": "🟢",
+                    "text": "You are marked as YES for this game"
+                },
+                "No": {
+                    "bg": "#FDECEA",
+                    "color": "#C62828",
+                    "icon": "🔴",
+                    "text": "You are marked as NO for this game"
+                },
+                "Maybe": {
+                    "bg": "#FFF8E1",
+                    "color": "#FF8F00",
+                    "icon": "🟡",
+                    "text": "You are marked as MAYBE for this game"
+                },
+                "No Response": {
+                    "bg": "#ECEFF1",
+                    "color": "#37474F",
+                    "icon": "⚪",
+                    "text": "You have not responded yet"
+                }
+            }
+
+            style = badge_styles[current_status]
+
+            badge_html = (
+                f'<div style="background:{style["bg"]}; color:{style["color"]}; '
+                'padding:12px 16px; border-radius:10px; margin-bottom:12px; '
+                'font-size:16px; font-weight:600;">'
+                f'{style["icon"]} {style["text"]}'
+                '</div>'
+            )
+
+            st.markdown(badge_html, unsafe_allow_html=True)
+
+            options = ["No Response", "Yes", "No", "Maybe"]
+            default_index = options.index(current_status)
+
+            selected_status = st.radio(
+                "Can you make this game?",
+                options,
+                index=default_index,
+                horizontal=False,
+                key=f"attendance_{game['game_id']}"
+            )
+
+            if st.button("💾 Save Response", key=f"save_{game['game_id']}", type="primary"):
+                save_attendance(attendance_sheet, selected_player_id, game["game_id"], selected_status)
+                st.cache_data.clear()
+
+                # subtle highlight (Feature #4)
+                st.markdown(
+                    '<div style="background:#e8f5e9; padding:10px 14px; border-radius:8px; '
+                    'border-left:5px solid #4CAF50; font-size:16px; margin:10px 0;">'
+                    '✨ Status updated!'
+                    '</div>',
+                    unsafe_allow_html=True
+                )
+
+                st.rerun()
+
+        # --------------------------------------------------
         # CAPTAIN VIEW
         # --------------------------------------------------
 
@@ -365,40 +488,47 @@ try:
                         and str(record["game_id"]) == str(game["game_id"])
                     ):
                         s = str(record["status"]).strip()
-                        current_player_status = "No Response" if s in ("", "None") else s
-                        break
-
-            options = ["No Response", "Yes", "No", "Maybe"]
-            default_index = options.index(current_player_status)
-
-            selected_status_for_player = st.radio(
-                "Set status",
-                options,
-                index=default_index,
-                horizontal=True,
-                key=f"captain_status_{game['game_id']}"
-            )
-
-            if st.button("💾 Save Player Status", key=f"captain_save_{game['game_id']}"):
-                save_attendance(
-                    attendance_sheet,
-                    selected_player_record_for_game["player_id"],
-                    game["game_id"],
-                    selected_status_for_player
-                )
-                st.cache_data.clear()
-                st.success(f"Updated {player_to_update} to {selected_status_for_player}.")
-                st.rerun()
-
-        # --------------------------------------------------
-        # DIVIDER
-        # --------------------------------------------------
-
-        st.markdown(
-            '<hr style="border:0; height:3px; background:#0D47A1; margin:40px 0;">',
-            unsafe_allow_html=True
-        )
-
-except Exception as e:
-    st.error(f"Games error: {e}")
-
+                        current_player_status = "No Response"
+                        if selected_player_record_for_game:
+                            for record in attendance:
+                                if (
+                                    str(record["player_id"]) == str(selected_player_record_for_game["player_id"])
+                                    and str(record["game_id"]) == str(game["game_id"])
+                                ):
+                                    s = str(record["status"]).strip()
+                                    current_player_status = "No Response" if s in ("", "None") else s
+                                    break
+            
+                        options = ["No Response", "Yes", "No", "Maybe"]
+                        default_index = options.index(current_player_status)
+            
+                        selected_status_for_player = st.radio(
+                            "Set status",
+                            options,
+                            index=default_index,
+                            horizontal=True,
+                            key=f"captain_status_{game['game_id']}"
+                        )
+            
+                        if st.button("💾 Save Player Status", key=f"captain_save_{game['game_id']}"):
+                            save_attendance(
+                                attendance_sheet,
+                                selected_player_record_for_game["player_id"],
+                                game["game_id"],
+                                selected_status_for_player
+                            )
+                            st.cache_data.clear()
+                            st.success(f"Updated {player_to_update} to {selected_status_for_player}.")
+                            st.rerun()
+            
+                    # --------------------------------------------------
+                    # DIVIDER
+                    # --------------------------------------------------
+            
+                    st.markdown(
+                        '<hr style="border:0; height:3px; background:#0D47A1; margin:40px 0;">',
+                        unsafe_allow_html=True
+                    )
+            
+            except Exception as e:
+                st.error(f"Games error: {e}")
