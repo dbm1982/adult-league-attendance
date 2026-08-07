@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# CSS — CLEAN, COLORED, NON‑OVERLAPPING CAPTAIN VIEW
+# CSS — CLEAN, COMPACT, INLINE BUTTONS
 # --------------------------------------------------
 
 st.markdown("""
@@ -58,37 +58,42 @@ div[data-testid="column"] {
 }
 
 /* --------------------------------------------------
-   BUTTONS — SMALL, CLEAN (CV‑B)
+   INLINE BUTTONS — SUPER COMPACT
 -------------------------------------------------- */
 
-div.stButton > button {
-    padding: 3px 6px !important;
+.inline-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+.inline-buttons button {
+    padding: 2px 6px !important;
     font-size: 11px !important;
-    border-radius: 4px !important;
     height: 22px !important;
     line-height: 16px !important;
+    border-radius: 4px !important;
     margin: 0 !important;
 }
 
 /* --------------------------------------------------
-   PLAYER ROW — COMPACT, NO VERTICAL SPREAD
+   PLAYER ROW — COMPACT
 -------------------------------------------------- */
 
 .player-row {
     padding: 2px 0 !important;
-    gap: 3px !important;
+    gap: 6px !important;
     display: flex !important;
     align-items: center !important;
 }
 
 .player-name {
     font-size: 13px !important;
-    min-width: 140px !important;
+    min-width: 120px !important;
     white-space: nowrap !important;
 }
 
 /* --------------------------------------------------
-   COLORED CAPTAIN BOXES (C1 + B1 + T2)
+   COLORED CAPTAIN BOXES
 -------------------------------------------------- */
 
 .captain-column {
@@ -98,14 +103,12 @@ div.stButton > button {
     color: black !important;
 }
 
-/* Section title inside colored box */
 .captain-title {
     font-size: 16px !important;
     font-weight: 700 !important;
     margin-bottom: 10px !important;
 }
 
-/* Color themes */
 .captain-yes   { background-color: #4CAF50 !important; }
 .captain-no    { background-color: #F44336 !important; }
 .captain-maybe { background-color: #FFEB3B !important; }
@@ -133,7 +136,7 @@ div.stButton > button {
 .summary-none { color: #616161 !important; }
 
 /* --------------------------------------------------
-   CAPTAIN ALERT BAR (NR LIST)
+   CAPTAIN ALERT BAR
 -------------------------------------------------- */
 
 .captain-alert {
@@ -155,38 +158,7 @@ div.stButton > button {
 }
 
 /* --------------------------------------------------
-   INNER WRAPPERS — SAFE WRAP (fix overlap)
--------------------------------------------------- */
-
-div[data-testid="stHorizontalBlock"] {
-    gap: 6px !important;
-    flex-wrap: wrap !important;
-}
-
-/* --------------------------------------------------
-   WEIGHTED COLUMN WIDTHS (W3)
--------------------------------------------------- */
-
-.weight-yes   { flex: 1 !important; }
-.weight-no    { flex: 1 !important; }
-.weight-maybe { flex: 1 !important; }
-.weight-none  { flex: 2 !important; }
-
-/* --------------------------------------------------
-   GAME CALLOUT
--------------------------------------------------- */
-
-.game-callout {
-    background: #e8f5e9;
-    padding: 12px 16px;
-    border-radius: 10px;
-    margin-bottom: 12px !important;
-    border-left: 6px solid #2e7d32;
-    color: #1b5e20;
-}
-
-/* --------------------------------------------------
-   MOBILE — STACK COLUMNS (M1)
+   MOBILE — STACK COLUMNS
 -------------------------------------------------- */
 
 @media (max-width: 600px) {
@@ -202,13 +174,12 @@ div[data-testid="stHorizontalBlock"] {
         gap: 4px !important;
     }
 
-    .player-name {
-        margin-bottom: 4px !important;
+    .inline-buttons {
+        margin-top: 2px !important;
     }
 
-    div.stButton > button {
-        width: 100% !important;
-        margin-bottom: 4px !important;
+    .player-name {
+        margin-bottom: 2px !important;
     }
 }
 
@@ -461,7 +432,7 @@ try:
         )
 
         # --------------------------------------------------
-        # CAPTAIN ALERT BAR (NR LIST) — CAPTAIN ONLY
+        # CAPTAIN ALERT BAR — CAPTAIN ONLY
         # --------------------------------------------------
 
         if is_captain and view_mode == "Team Availability" and none_count > 0:
@@ -528,27 +499,24 @@ try:
                         st.markdown('<div class="player-row">', unsafe_allow_html=True)
                         st.markdown(f'<div class="player-name">{p["player_name"]}</div>', unsafe_allow_html=True)
 
-                        b_yes, b_no, b_maybe, b_none = st.columns([1, 1, 1, 1])
+                        # INLINE BUTTON BAR
+                        st.markdown('<div class="inline-buttons">', unsafe_allow_html=True)
 
-                        with b_yes:
-                            if st.button("Yes", key=f"{title}_yes_{game['game_id']}_{p['player_id']}"):
-                                save_attendance(attendance_sheet, p["player_id"], game["game_id"], "Yes")
-                                st.rerun()
+                        if st.button("Yes", key=f"{title}_yes_{game['game_id']}_{p['player_id']}"):
+                            save_attendance(attendance_sheet, p["player_id"], game["game_id"], "Yes")
+                            st.rerun()
 
-                        with b_no:
-                            if st.button("No", key=f"{title}_no_{game['game_id']}_{p['player_id']}"):
-                                save_attendance(attendance_sheet, p["player_id"], game["game_id"], "No")
-                                st.rerun()
+                        if st.button("No", key=f"{title}_no_{game['game_id']}_{p['player_id']}"):
+                            save_attendance(attendance_sheet, p["player_id"], game["game_id"], "No")
+                            st.rerun()
 
-                        with b_maybe:
-                            if st.button("Maybe", key=f"{title}_maybe_{game['game_id']}_{p['player_id']}"):
-                                save_attendance(attendance_sheet, p["player_id"], game["game_id"], "Maybe")
-                                st.rerun()
+                        if st.button("Maybe", key=f"{title}_maybe_{game['game_id']}_{p['player_id']}"):
+                            save_attendance(attendance_sheet, p["player_id"], game["game_id"], "Maybe")
+                            st.rerun()
 
-                        with b_none:
-                            if st.button("No Resp", key=f"{title}_none_{game['game_id']}_{p['player_id']}"):
-                                save_attendance(attendance_sheet, p["player_id"], game["game_id"], "No Response")
-                                st.rerun()
+                        if st.button("NR", key=f"{title}_none_{game['game_id']}_{p['player_id']}"):
+                            save_attendance(attendance_sheet, p["player_id"], game["game_id"], "No Response")
+                            st.rerun()
 
                         st.markdown('</div>', unsafe_allow_html=True)
 
