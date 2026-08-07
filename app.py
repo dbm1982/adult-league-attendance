@@ -104,7 +104,22 @@ creds = Credentials.from_service_account_info(
 )
 
 client = gspread.authorize(creds)
-spreadsheet = client.open_by_key("1afoSDWnUlB6ZN5Wlz4CDyX1whhzNNHxm6vCINs-2LDM")
+
+def safe_open_sheet(client, key):
+    try:
+        return client.open_by_key(key)
+    except Exception:
+        import time
+        time.sleep(0.5)
+        try:
+            return client.open_by_key(key)
+        except Exception:
+            st.error("⚠️ The league database is temporarily unavailable. Please try again in a moment.")
+            if st.button("🔄 Reload"):
+                st.rerun()
+            st.stop()
+
+spreadsheet = safe_open_sheet(client, "1afoSDWnUlB6ZN5Wlz4CDyX1whhzNNHxm6vCINs-2LDM")
 
 teams_sheet = spreadsheet.worksheet("Teams")
 players_sheet = spreadsheet.worksheet("Players")
@@ -115,13 +130,20 @@ attendance_sheet = spreadsheet.worksheet("Attendance")
 # CACHING
 # --------------------------------------------------
 
-@st.cache_data(ttl=30)
+@st.cache_data(ttl=60)
 def load_sheet_data():
-    teams_data = teams_sheet.get("A2:C100")
-    players = players_sheet.get_all_records()
-    games = games_sheet.get_all_records()
-    attendance = attendance_sheet.get_all_records()
-    return teams_data, players, games, attendance
+    try:
+        teams_data = teams_sheet.get("A2:C100")
+        players = players_sheet.get_all_records()
+        games = games_sheet.get_all_records()
+        attendance = attendance_sheet.get_all_records()
+        return teams_data, players, games, attendance
+    except Exception:
+        st.error("⚠️ There was a problem loading league data. Please try again in a moment.")
+        if st.button("🔄 Reload data"):
+            st.cache_data.clear()
+            st.rerun()
+        st.stop()
 
 teams_data, players, games, attendance = load_sheet_data()
 
@@ -420,7 +442,6 @@ try:
                 save_attendance(attendance_sheet, selected_player_id, game["game_id"], selected_status)
                 st.cache_data.clear()
 
-                # subtle highlight (Feature #4)
                 st.markdown(
                     '<div style="background:#e8f5e9; padding:10px 14px; border-radius:8px; '
                     'border-left:5px solid #4CAF50; font-size:16px; margin:10px 0;">'
@@ -430,7 +451,7 @@ try:
                 )
 
                 st.rerun()
-        
+
         # --------------------------------------------------
         # CAPTAIN VIEW
         # --------------------------------------------------
@@ -513,7 +534,6 @@ try:
                 st.success(f"Updated {player_to_update} to {selected_status_for_player}.")
                 st.rerun()
 
-            
         # --------------------------------------------------
         # DIVIDER
         # --------------------------------------------------
@@ -524,7 +544,6 @@ try:
         )
 
 except Exception as e:
-    st.error(f"Games error: {e}")
-
-
-
+    st.error("⚠️ Something went wrong while loading games. Please try again in a moment.")
+    if st.button("🔄 Reload games"):
+        st.rerun()
