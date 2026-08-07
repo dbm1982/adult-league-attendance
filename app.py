@@ -278,7 +278,7 @@ try:
                 none_players.append(player)
 
         # --------------------------------------------------
-        # NR + MAYBE SUMMARY BOX (IMPROVED LOGIC)
+        # NR + MAYBE SUMMARY BOX (HTML FIXED)
         # --------------------------------------------------
 
         if is_captain and view_mode == "Team Availability":
@@ -286,32 +286,26 @@ try:
             nr_names = ", ".join([short_name(p["player_name"]) for p in none_players])
             maybe_names = ", ".join([short_name(p["player_name"]) for p in maybe_players])
 
-            alert_html = f"""
-            <div style="
-                background-color:#1E88E5;
-                border-left:5px solid #0D47A1;
-                padding:14px 18px;
-                border-radius:6px;
-                margin:10px 0 18px 0;
-                font-size:15px;
-                color:white;">
-                
-                <strong>⚠️ {len(none_players) + len(maybe_players)} players are not confirmed:</strong><br><br>
-            """
+            alert_html = (
+                f'<div style="background-color:#1E88E5; border-left:5px solid #0D47A1; '
+                f'padding:14px 18px; border-radius:6px; margin:10px 0 18px 0; '
+                f'font-size:15px; color:white;">'
+                f'<strong>⚠️ {len(none_players) + len(maybe_players)} players are not confirmed:</strong><br><br>'
+            )
 
             if len(none_players) > 0:
-                alert_html += f"""
-                <strong>No Response (NR):</strong><br>
-                <span>{nr_names}</span><br><br>
-                """
+                alert_html += (
+                    f'<strong>No Response (NR):</strong><br>'
+                    f'{nr_names}<br><br>'
+                )
 
             if len(maybe_players) > 0:
-                alert_html += f"""
-                <strong>Maybe:</strong><br>
-                <span>{maybe_names}</span>
-                """
+                alert_html += (
+                    f'<strong>Maybe:</strong><br>'
+                    f'{maybe_names}'
+                )
 
-            alert_html += "</div>"
+            alert_html += '</div>'
 
             st.markdown(alert_html, unsafe_allow_html=True)
 
