@@ -40,7 +40,7 @@ st.markdown("""
 
 /* ⭐ NR block — BLUE for maximum mobile readability */
 .header-nr { 
-    background-color: #1E88E5; 
+    background-color: ##84B9F2; 
     color: white;
 }
 
@@ -286,7 +286,7 @@ try:
             st.markdown(
                 f"""
                 <div style="
-                    background-color:#1E88E5;
+                    background-color:##84B9F2;
                     border-left:5px solid #0D47A1;
                     padding:8px 12px;
                     border-radius:6px;
