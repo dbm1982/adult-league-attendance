@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# CSS — COMPACT ROWS + INLINE EMOJI STATUS BUTTONS
+# CSS — COMPACT INLINE ROWS
 # --------------------------------------------------
 
 st.markdown("""
@@ -23,7 +23,7 @@ st.markdown("""
 .player-row {
     display: flex;
     align-items: center;
-    padding: 4px 0;
+    padding: 2px 0;
 }
 
 .player-name {
@@ -37,7 +37,7 @@ st.markdown("""
     padding: 2px 6px !important;
     border-radius: 6px !important;
     margin-right: 4px !important;
-    min-width: 36px !important;
+    min-width: 40px !important;
     text-align: center !important;
 }
 
@@ -249,7 +249,7 @@ try:
         # Game callout
         st.markdown(
             f"""
-            <div class="game-callout" style="
+            <div style="
                 background:#e8f5e9;
                 padding:12px 16px;
                 border-radius:10px;
@@ -303,7 +303,13 @@ try:
             nr_names = ", ".join([short_name(p["player_name"]) for p in none_players])
             st.markdown(
                 f"""
-                <div class="captain-alert">
+                <div style="
+                    background-color:#f5f5f5;
+                    border-left:5px solid #616161;
+                    padding:8px 12px;
+                    border-radius:6px;
+                    margin:6px 0 14px 0;
+                    font-size:13px;">
                     <strong>⚠️ {len(none_players)} players have not responded:</strong>
                     <span>{nr_names}</span>
                 </div>
@@ -359,21 +365,25 @@ try:
 
                     st.markdown('<div class="player-row">', unsafe_allow_html=True)
 
-                    # NAME
-                    st.markdown(f'<div class="player-name">{p["player_name"]}</div>', unsafe_allow_html=True)
+                    # NAME + BUTTONS IN MICRO-COLUMNS
+                    name_col, btn_col = st.columns([1.3, 2])
 
-                    # STATUS BUTTONS (EMOJI)
-                    def status_button(label, emoji, status_value):
-                        selected = (current == status_value)
-                        css_class = "status-btn selected-btn" if selected else "status-btn"
-                        if st.button(f"{emoji} {label}", key=f"{p['player_id']}_{game['game_id']}_{label}"):
-                            save_attendance(attendance_sheet, p["player_id"], game["game_id"], status_value)
-                            st.rerun()
+                    with name_col:
+                        st.markdown(f'<div class="player-name">{p["player_name"]}</div>', unsafe_allow_html=True)
 
-                    status_button("Y", "🟩", "Yes")
-                    status_button("N", "🟥", "No")
-                    status_button("M", "🟨", "Maybe")
-                    status_button("?", "🟦", "No Response")
+                    with btn_col:
+
+                        def status_button(label, emoji, status_value):
+                            selected = (current == status_value)
+                            css_class = "status-btn selected-btn" if selected else "status-btn"
+                            if st.button(f"{emoji} {label}", key=f"{p['player_id']}_{game['game_id']}_{label}"):
+                                save_attendance(attendance_sheet, p["player_id"], game["game_id"], status_value)
+                                st.rerun()
+
+                        status_button("Y", "🟩", "Yes")
+                        status_button("N", "🟥", "No")
+                        status_button("M", "🟨", "Maybe")
+                        status_button("?", "🟦", "No Response")
 
                     st.markdown('</div>', unsafe_allow_html=True)
 
