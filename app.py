@@ -532,3 +532,54 @@ try:
                 None
             )
 
+            current_player_status = "No Response"
+            if selected_player_record_for_game:
+                for record in attendance:
+                    if (
+                        str(record["player_id"]) == str(selected_player_record_for_game["player_id"])
+                        and str(record["game_id"]) == str(game["game_id"])
+                    ):
+                        s = str(record["status"]).strip()
+                        current_player_status = "No Response" if s in ("", "None") else s
+                        break
+
+            options = ["No Response", "Yes", "No", "Maybe"]
+            default_index = options.index(current_player_status)
+
+            selected_status_for_player = st.radio(
+                "Set status",
+                options,
+                index=default_index,
+                horizontal=True,
+                key=f"captain_status_{game['game_id']}"
+            )
+
+            if st.button("💾 Save Player Status", key=f"captain_save_{game['game_id']}"):
+                save_attendance(
+                    attendance_sheet,
+                    selected_player_record_for_game["player_id"],
+                    game["game_id"],
+                    selected_status_for_player
+                )
+                st.cache_data.clear()
+                st.success(f"Updated {player_to_update} to {selected_status_for_player}.")
+                st.rerun()
+
+        # --------------------------------------------------
+        # DIVIDER
+        # --------------------------------------------------
+
+        st.markdown(
+            '<hr style="border:0; height:3px; background:#0D47A1; margin:40px 0;">',
+            unsafe_allow_html=True
+        )
+
+# --------------------------------------------------
+# GLOBAL ERROR HANDLER FOR GAME LOOP
+# --------------------------------------------------
+
+except Exception as e:
+    st.error("⚠️ Something went wrong while loading games. Please try again in a moment.")
+    if st.button("🔄 Reload games"):
+        st.rerun()
+
