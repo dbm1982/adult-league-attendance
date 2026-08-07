@@ -132,23 +132,27 @@ div.stButton > button {
 .summary-maybe { color: #f9a825 !important; }
 .summary-none { color: #616161 !important; }
 
-# --------------------------------------------------
-# CAPTAIN ALERT BAR (NR LIST)
-# --------------------------------------------------
+/* --------------------------------------------------
+   CAPTAIN ALERT BAR (NR LIST)
+-------------------------------------------------- */
 
-if is_captain and view_mode == "Team Availability" and none_count > 0:
-    nr_names = ", ".join([p["player_name"] for p in none_players])
+.captain-alert {
+    background-color: #f5f5f5;
+    border-left: 5px solid #616161;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin: 6px 0 14px 0;
+    font-size: 13px;
+}
 
-    st.markdown(
-        f"""
-        <div class="captain-alert">
-            <strong>⚠️ {none_count} players have not responded:</strong>
-            <span>{nr_names}</span>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+.captain-alert strong {
+    font-weight: 700;
+}
 
+.captain-alert span {
+    font-weight: 600;
+    color: #424242;
+}
 
 /* --------------------------------------------------
    INNER WRAPPERS — SAFE WRAP (fix overlap)
@@ -453,10 +457,10 @@ try:
         )
 
         # --------------------------------------------------
-        # CAPTAIN ALERT BAR (NR LIST)
+        # CAPTAIN ALERT BAR (NR LIST) — CAPTAIN ONLY
         # --------------------------------------------------
 
-        if is_captain and none_count > 0:
+        if is_captain and view_mode == "Team Availability" and none_count > 0:
             nr_names = ", ".join([p["player_name"] for p in none_players])
 
             st.markdown(
