@@ -18,7 +18,6 @@ st.set_page_config(
 # --------------------------------------------------
 
 if "selected_team" not in st.session_state:
-:
     st.session_state.selected_team = None
 
 if "selected_player" not in st.session_state:
