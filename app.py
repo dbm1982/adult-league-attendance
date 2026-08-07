@@ -26,15 +26,22 @@ st.markdown("""
     padding-top: 6px;
 }
 
-.status-btn {
+.segmented {
+    display: flex;
+    gap: 6px;
+}
+
+.segmented button {
     font-size: 16px !important;
     padding: 2px 6px !important;
     border-radius: 6px !important;
     min-width: 40px !important;
     text-align: center !important;
+    background: white;
+    border: 1px solid #999;
 }
 
-.selected-btn {
+.segmented .selected {
     border: 2px solid black !important;
 }
 
@@ -97,7 +104,7 @@ def save_attendance(attendance_sheet, player_id, game_id, status):
         attendance_sheet.append_row([player_id, game_id, spreadsheet_status, timestamp])
 
 # --------------------------------------------------
-# GOOGLE CONNECTION (NO CACHING)
+# GOOGLE CONNECTION
 # --------------------------------------------------
 
 SCOPES = [
@@ -356,24 +363,28 @@ try:
                     else:
                         current = "No Response"
 
-                    # ONE-LINE ROW USING 5 COLUMNS
-                    name_col, y_col, n_col, m_col, q_col = st.columns([2, 1, 1, 1, 1])
+                    # ONE-LINE ROW USING 2 COLUMNS
+                    name_col, seg_col = st.columns([2, 3])
 
                     with name_col:
                         st.markdown(f'<div class="player-name">{p["player_name"]}</div>', unsafe_allow_html=True)
 
-                    def status_button(label, emoji, status_value, col):
-                        selected = (current == status_value)
-                        css_class = "status-btn selected-btn" if selected else "status-btn"
-                        with col:
+                    with seg_col:
+                        st.markdown('<div class="segmented">', unsafe_allow_html=True)
+
+                        def seg_button(label, emoji, status_value):
+                            selected = (current == status_value)
+                            css = "selected" if selected else ""
                             if st.button(f"{emoji} {label}", key=f"{p['player_id']}_{game['game_id']}_{label}"):
                                 save_attendance(attendance_sheet, p["player_id"], game["game_id"], status_value)
                                 st.rerun()
 
-                    status_button("Y", "🟩", "Yes", y_col)
-                    status_button("N", "🟥", "No", n_col)
-                    status_button("M", "🟨", "Maybe", m_col)
-                    status_button("?", "🟦", "No Response", q_col)
+                        seg_button("Y", "🟩", "Yes")
+                        seg_button("N", "🟥", "No")
+                        seg_button("M", "🟨", "Maybe")
+                        seg_button("?", "🟦", "No Response")
+
+                        st.markdown('</div>', unsafe_allow_html=True)
 
             col_yes, col_no, col_maybe, col_none = st.columns(4)
 
