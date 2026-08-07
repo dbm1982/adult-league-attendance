@@ -278,7 +278,7 @@ try:
                 none_players.append(player)
 
         # --------------------------------------------------
-        # NR SUMMARY BOX (THIS IS THE FIXED PART)
+        # NR SUMMARY BOX (BLUE)
         # --------------------------------------------------
 
         if is_captain and view_mode == "Team Availability" and len(none_players) > 0:
@@ -408,6 +408,22 @@ try:
                     )
                     st.success(f"Updated {player_to_update} to {selected_status_for_player}.")
                     st.rerun()
+
+        # --------------------------------------------------
+        # --- END OF GAME SECTION DIVIDER ---
+        # --------------------------------------------------
+
+        st.markdown(
+            """
+            <hr style="
+                border: 0;
+                height: 3px;
+                background: #0D47A1;
+                margin: 40px 0;
+            ">
+            """,
+            unsafe_allow_html=True
+        )
 
 except Exception as e:
     st.error(f"Games error: {e}")
