@@ -14,6 +14,19 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
+# SESSION STATE (PRESERVE UI BETWEEN RERUNS)
+# --------------------------------------------------
+
+if "selected_team" not in st.session_state:
+    st.session_state.selected_team = None
+
+if "selected_player" not in st.session_state:
+    st.session_state.selected_player = None
+
+if "view_mode" not in st.session_state:
+    st.session_state.view_mode = "My Availability"
+
+# --------------------------------------------------
 # CSS
 # --------------------------------------------------
 
@@ -150,12 +163,14 @@ st.caption("Select your team and your name to view upcoming games and attendance
 # TEAM SELECTION
 # --------------------------------------------------
 
-selected_team = st.selectbox(
+st.session_state.selected_team = st.selectbox(
     "⚽ Select Your Team",
     teams,
-    index=None,
+    index=teams.index(st.session_state.selected_team) if st.session_state.selected_team in teams else None,
     placeholder="Choose your team..."
 )
+
+selected_team = st.session_state.selected_team
 
 if not selected_team:
     st.stop()
@@ -167,12 +182,14 @@ if not selected_team:
 team_players = [p for p in players if str(p["team_id"]).strip() == str(selected_team).strip()]
 player_names = [p["player_name"] for p in team_players]
 
-selected_player = st.selectbox(
+st.session_state.selected_player = st.selectbox(
     "👤 Select Your Name",
     player_names,
-    index=None,
+    index=player_names.index(st.session_state.selected_player) if st.session_state.selected_player in player_names else None,
     placeholder="Choose your name..."
 )
+
+selected_player = st.session_state.selected_player
 
 if not selected_player:
     st.stop()
@@ -195,13 +212,16 @@ st.markdown("---")
 # --------------------------------------------------
 
 if is_captain:
-    view_mode = st.radio(
+    st.session_state.view_mode = st.radio(
         "Captain Options",
         ["My Availability", "Team Availability"],
+        index=["My Availability", "Team Availability"].index(st.session_state.view_mode),
         horizontal=False
     )
 else:
-    view_mode = "My Availability"
+    st.session_state.view_mode = "My Availability"
+
+view_mode = st.session_state.view_mode
 
 st.markdown("---")
 
@@ -337,6 +357,7 @@ try:
 
             if st.button("💾 Save Response", key=f"save_{game['game_id']}", type="primary"):
                 save_attendance(attendance_sheet, selected_player_id, game["game_id"], selected_status)
+                st.cache_data.clear()
                 st.success("Attendance saved successfully.")
                 st.rerun()
 
@@ -423,6 +444,7 @@ try:
                         game["game_id"],
                         selected_status_for_player
                     )
+                    st.cache_data.clear()
                     st.success(f"Updated {player_to_update} to {selected_status_for_player}.")
                     st.rerun()
 
