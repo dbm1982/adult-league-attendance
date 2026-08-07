@@ -39,9 +39,9 @@ st.markdown("""
 .header-no { background-color: #F44336; color: white; }
 .header-maybe { background-color: #FFEB3B; color: black; }
 
-/* ⭐ Option A — darker NR color for mobile visibility */
+/* ⭐ Option A — dark charcoal NR for strong mobile contrast */
 .header-nr { 
-    background-color: #757575; 
+    background-color: #424242; 
     color: white;
 }
 
