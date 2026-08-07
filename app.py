@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# SESSION STATE (PRESERVE UI BETWEEN RERUNS)
+# SESSION STATE
 # --------------------------------------------------
 
 if "selected_team" not in st.session_state:
@@ -30,30 +30,16 @@ if "view_mode" not in st.session_state:
 # CSS
 # --------------------------------------------------
 
-st.markdown("""
-<style>
-
-.player-name {
-    font-size: 14px;
-    font-weight: 500;
-    padding-top: 6px;
-}
-
-.column-header {
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 16px;
-    margin-bottom: 10px;
-}
-
-.header-yes { background-color: #4CAF50; color: white; }
-.header-no { background-color: #F44336; color: white; }
-.header-maybe { background-color: #FFEB3B; color: black; }
-.header-nr { background-color: #1E88E5; color: white; }
-
-</style>
-""", unsafe_allow_html=True)
+st.markdown(
+    '<style>'
+    '.column-header {padding:8px 12px; border-radius:8px; font-weight:700; font-size:16px; margin-bottom:10px;}'
+    '.header-yes {background-color:#4CAF50; color:white;}'
+    '.header-no {background-color:#F44336; color:white;}'
+    '.header-maybe {background-color:#FFEB3B; color:black;}'
+    '.header-nr {background-color:#1E88E5; color:white;}'
+    '</style>',
+    unsafe_allow_html=True
+)
 
 # --------------------------------------------------
 # HELPERS
@@ -119,7 +105,7 @@ games_sheet = spreadsheet.worksheet("Games")
 attendance_sheet = spreadsheet.worksheet("Attendance")
 
 # --------------------------------------------------
-# CACHING (FIXES GOOGLE QUOTA ERRORS)
+# CACHING
 # --------------------------------------------------
 
 @st.cache_data(ttl=30)
@@ -255,35 +241,23 @@ try:
                 break
 
         # --------------------------------------------------
-        # GAME HEADER (OPTION 2)
+        # GAME HEADER (NO TRIPLE QUOTES)
         # --------------------------------------------------
 
-        st.markdown(
-            f"""
-            <div style="
-                background:#e8f5e9;
-                padding:12px 16px;
-                border-radius:10px;
-                margin-bottom:12px;
-                border-left:6px solid #2e7d32;
-                color:#1b5e20;
-                font-size:16px;
-            ">
-                <div style="font-size:18px; font-weight:700; margin-bottom:6px;">
-                    🗓️ {format_date(game.get('date',''))} • {game.get('time','')}
-                </div>
+        field_clean = str(game.get("field", "")).replace("Field ", "")
 
-                <div style="margin-bottom:4px;">
-                    📍 Field {game.get('field','')}
-                </div>
-
-                <div>
-                    ⚔️ Opponent: {game.get('opponent','')}
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
+        game_html = (
+            '<div style="background:#e8f5e9; padding:12px 16px; border-radius:10px; '
+            'margin-bottom:12px; border-left:6px solid #2e7d32; color:#1b5e20; font-size:16px;">'
+            f'<div style="font-size:18px; font-weight:700; margin-bottom:6px;">'
+            f'🗓️ {format_date(game.get("date",""))} • {game.get("time","")}'
+            '</div>'
+            f'<div style="margin-bottom:4px;">📍 Field {field_clean}</div>'
+            f'<div>⚔️ Opponent: {game.get("opponent","")}</div>'
+            '</div>'
         )
+
+        st.markdown(game_html, unsafe_allow_html=True)
 
         # --------------------------------------------------
         # MINI SUMMARY BAR
@@ -312,7 +286,7 @@ try:
                 none_players.append(player)
 
         # --------------------------------------------------
-        # NR + MAYBE SUMMARY BOX
+        # NR + MAYBE ALERT (NO TRIPLE QUOTES)
         # --------------------------------------------------
 
         if is_captain and view_mode == "Team Availability":
@@ -321,21 +295,21 @@ try:
             maybe_names = ", ".join([short_name(p["player_name"]) for p in maybe_players])
 
             alert_html = (
-                f'<div style="background-color:#1E88E5; border-left:5px solid #0D47A1; '
-                f'padding:14px 18px; border-radius:6px; margin:10px 0 18px 0; '
-                f'font-size:15px; color:white;">'
+                '<div style="background-color:#1E88E5; border-left:5px solid #0D47A1; '
+                'padding:14px 18px; border-radius:6px; margin:10px 0 18px 0; '
+                'font-size:15px; color:white;">'
                 f'<strong>⚠️ {len(none_players) + len(maybe_players)} players are not confirmed:</strong><br><br>'
             )
 
             if len(none_players) > 0:
                 alert_html += (
-                    f'<strong>No Response (NR):</strong><br>'
+                    '<strong>No Response (NR):</strong><br>'
                     f'{nr_names}<br><br>'
                 )
 
             if len(maybe_players) > 0:
                 alert_html += (
-                    f'<strong>Maybe:</strong><br>'
+                    '<strong>Maybe:</strong><br>'
                     f'{maybe_names}'
                 )
 
@@ -350,7 +324,7 @@ try:
         if view_mode == "My Availability":
 
             options = ["No Response", "Yes", "No", "Maybe"]
-            default_index = options.index(current_status) if current_status in options else 0
+            default_index = options.index(current_status)
 
             selected_status = st.radio(
                 "Update Availability",
@@ -373,37 +347,33 @@ try:
         else:
             col_yes, col_no, col_maybe, col_none = st.columns(4)
 
-            with col_yes:
-                st.markdown(
-                    f'<div class="column-header header-yes">YES ({len(yes_players)})</div>',
-                    unsafe_allow_html=True
-                )
-                for p in yes_players:
-                    st.markdown(f"- {p['player_name']}")
+            col_yes.markdown(
+                f'<div class="column-header header-yes">YES ({len(yes_players)})</div>',
+                unsafe_allow_html=True
+            )
+            for p in yes_players:
+                col_yes.markdown(f"- {p['player_name']}")
 
-            with col_no:
-                st.markdown(
-                    f'<div class="column-header header-no">NO ({len(no_players)})</div>',
-                    unsafe_allow_html=True
-                )
-                for p in no_players:
-                    st.markdown(f"- {p['player_name']}")
+            col_no.markdown(
+                f'<div class="column-header header-no">NO ({len(no_players)})</div>',
+                unsafe_allow_html=True
+            )
+            for p in no_players:
+                col_no.markdown(f"- {p['player_name']}")
 
-            with col_maybe:
-                st.markdown(
-                    f'<div class="column-header header-maybe">MAYBE ({len(maybe_players)})</div>',
-                    unsafe_allow_html=True
-                )
-                for p in maybe_players:
-                    st.markdown(f"- {p['player_name']}")
+            col_maybe.markdown(
+                f'<div class="column-header header-maybe">MAYBE ({len(maybe_players)})</div>',
+                unsafe_allow_html=True
+            )
+            for p in maybe_players:
+                col_maybe.markdown(f"- {p['player_name']}")
 
-            with col_none:
-                st.markdown(
-                    f'<div class="column-header header-nr">NR ({len(none_players)})</div>',
-                    unsafe_allow_html=True
-                )
-                for p in none_players:
-                    st.markdown(f"- {p['player_name']}")
+            col_none.markdown(
+                f'<div class="column-header header-nr">NR ({len(none_players)})</div>',
+                unsafe_allow_html=True
+            )
+            for p in none_players:
+                col_none.markdown(f"- {p['player_name']}")
 
             st.markdown("---")
             st.markdown("### 🧭 Update a player's status")
@@ -431,7 +401,7 @@ try:
                         break
 
             options = ["No Response", "Yes", "No", "Maybe"]
-            default_index = options.index(current_player_status) if current_player_status in options else 0
+            default_index = options.index(current_player_status)
 
             selected_status_for_player = st.radio(
                 "Set status",
@@ -442,30 +412,22 @@ try:
             )
 
             if st.button("💾 Save Player Status", key=f"captain_save_{game['game_id']}"):
-                if selected_player_record_for_game:
-                    save_attendance(
-                        attendance_sheet,
-                        selected_player_record_for_game["player_id"],
-                        game["game_id"],
-                        selected_status_for_player
-                    )
-                    st.cache_data.clear()
-                    st.success(f"Updated {player_to_update} to {selected_status_for_player}.")
-                    st.rerun()
+                save_attendance(
+                    attendance_sheet,
+                    selected_player_record_for_game["player_id"],
+                    game["game_id"],
+                    selected_status_for_player
+                )
+                st.cache_data.clear()
+                st.success(f"Updated {player_to_update} to {selected_status_for_player}.")
+                st.rerun()
 
         # --------------------------------------------------
         # DIVIDER
         # --------------------------------------------------
 
         st.markdown(
-            """
-            <hr style="
-                border: 0;
-                height: 3px;
-                background: #0D47A1;
-                margin: 40px 0;
-            ">
-            """,
+            '<hr style="border:0; height:3px; background:#0D47A1; margin:40px 0;">',
             unsafe_allow_html=True
         )
 
