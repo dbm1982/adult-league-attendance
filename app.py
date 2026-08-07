@@ -18,6 +18,7 @@ st.set_page_config(
 # --------------------------------------------------
 
 if "selected_team" not in st.session_state:
+:
     st.session_state.selected_team = None
 
 if "selected_player" not in st.session_state:
@@ -230,6 +231,41 @@ try:
         st.warning("No games found.")
         st.stop()
 
+    # --------------------------------------------------
+    # PLAYER AVAILABILITY SUMMARY (Feature #5)
+    # --------------------------------------------------
+
+    if view_mode == "My Availability":
+        st.markdown("### 🗂️ Your Availability Summary")
+
+        summary_html = '<div style="padding:10px 0;">'
+
+        for g in team_games:
+            status = "No Response"
+            for record in attendance:
+                if str(record["player_id"]) == str(selected_player_id) and str(record["game_id"]) == str(g["game_id"]):
+                    s = str(record["status"]).strip()
+                    status = "No Response" if s in ("", "None") else s
+                    break
+
+            icon = {
+                "Yes": "🟢",
+                "No": "🔴",
+                "Maybe": "🟡",
+                "No Response": "⚪"
+            }[status]
+
+            summary_html += (
+                f'<div style="font-size:15px; margin-bottom:4px;">'
+                f'{icon} {format_date(g["date"])} — {status}'
+                f'</div>'
+            )
+
+        summary_html += '</div>'
+
+        st.markdown(summary_html, unsafe_allow_html=True)
+        st.markdown("---")
+
     for game in team_games:
 
         # Current status for selected player
@@ -241,7 +277,7 @@ try:
                 break
 
         # --------------------------------------------------
-        # GAME HEADER (NO TRIPLE QUOTES)
+        # GAME HEADER
         # --------------------------------------------------
 
         field_clean = str(game.get("field", "")).replace("Field ", "")
@@ -286,7 +322,7 @@ try:
                 none_players.append(player)
 
         # --------------------------------------------------
-        # NR + MAYBE ALERT (NO TRIPLE QUOTES)
+        # NR + MAYBE ALERT
         # --------------------------------------------------
 
         if is_captain and view_mode == "Team Availability":
@@ -318,16 +354,40 @@ try:
             st.markdown(alert_html, unsafe_allow_html=True)
 
         # --------------------------------------------------
-        # PLAYER VIEW
+        # PLAYER VIEW (with 2 & 4)
         # --------------------------------------------------
 
         if view_mode == "My Availability":
+
+            # Status badge (Feature #2)
+            badge_icon = {
+                "Yes": "🟢",
+                "No": "🔴",
+                "Maybe": "🟡",
+                "No Response": "⚪"
+            }[current_status]
+
+            badge_text = {
+                "Yes": "You are marked as YES for this game",
+                "No": "You are marked as NO for this game",
+                "Maybe": "You are marked as MAYBE for this game",
+                "No Response": "You have not responded yet"
+            }[current_status]
+
+            badge_html = (
+                '<div style="background:#f0f0f0; padding:10px 14px; border-radius:8px; '
+                'margin-bottom:10px; font-size:16px; font-weight:600;">'
+                f'{badge_icon} {badge_text}'
+                '</div>'
+            )
+
+            st.markdown(badge_html, unsafe_allow_html=True)
 
             options = ["No Response", "Yes", "No", "Maybe"]
             default_index = options.index(current_status)
 
             selected_status = st.radio(
-                "Update Availability",
+                "Can you make this game?",
                 options,
                 index=default_index,
                 horizontal=False,
@@ -337,7 +397,16 @@ try:
             if st.button("💾 Save Response", key=f"save_{game['game_id']}", type="primary"):
                 save_attendance(attendance_sheet, selected_player_id, game["game_id"], selected_status)
                 st.cache_data.clear()
-                st.success("Attendance saved successfully.")
+
+                # subtle highlight (Feature #4)
+                st.markdown(
+                    '<div style="background:#e8f5e9; padding:10px 14px; border-radius:8px; '
+                    'border-left:5px solid #4CAF50; font-size:16px; margin:10px 0;">'
+                    '✨ Status updated!'
+                    '</div>',
+                    unsafe_allow_html=True
+                )
+
                 st.rerun()
 
         # --------------------------------------------------
