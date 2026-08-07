@@ -32,7 +32,6 @@ st.markdown("""
     font-weight: 700;
     font-size: 16px;
     margin-bottom: 10px;
-    color: black;
 }
 
 .header-yes { background-color: #4CAF50; color: white; }
@@ -327,7 +326,6 @@ try:
         # --------------------------------------------------
 
         else:
-            # Summary columns with player listings
             col_yes, col_no, col_maybe, col_none = st.columns(4)
 
             with col_yes:
@@ -355,9 +353,8 @@ try:
                     st.markdown(f"- {p['player_name']}")
 
             with col_none:
-                st.markdown(
-                    f'<div class="column-header header-nr">NR ({len(none_players)})</div>',
-                    unsafe_allow_html=True
+                st.html(
+                    f'<div class="column-header header-nr">NR ({len(none_players)})</div>'
                 )
                 for p in none_players:
                     st.markdown(f"- {p['player_name']}")
@@ -365,7 +362,6 @@ try:
             st.markdown("---")
             st.markdown("### 🧭 Update a player's status")
 
-            # Captain picks ONE player to update
             player_to_update = st.selectbox(
                 "Choose a player to update",
                 [p["player_name"] for p in team_players],
