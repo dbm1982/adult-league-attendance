@@ -110,10 +110,19 @@ players_sheet = spreadsheet.worksheet("Players")
 games_sheet = spreadsheet.worksheet("Games")
 attendance_sheet = spreadsheet.worksheet("Attendance")
 
-teams_data = teams_sheet.get("A2:C100")
-players = players_sheet.get_all_records()
-games = games_sheet.get_all_records()
-attendance = attendance_sheet.get_all_records()
+# --------------------------------------------------
+# CACHING (FIXES GOOGLE QUOTA ERRORS)
+# --------------------------------------------------
+
+@st.cache_data(ttl=30)
+def load_sheet_data():
+    teams_data = teams_sheet.get("A2:C100")
+    players = players_sheet.get_all_records()
+    games = games_sheet.get_all_records()
+    attendance = attendance_sheet.get_all_records()
+    return teams_data, players, games, attendance
+
+teams_data, players, games, attendance = load_sheet_data()
 
 # --------------------------------------------------
 # ACTIVE TEAMS
