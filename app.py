@@ -72,6 +72,62 @@ def short_name(full):
     parts = full.split()
     return f"{parts[0]} {parts[-1][0]}."
 
+# --------------------------------------------------
+# GOOGLE CONNECTION (CACHED)
+# --------------------------------------------------
+
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
+
+@st.cache_resource
+def get_client_and_spreadsheet():
+    creds = Credentials.from_service_account_info(
+        dict(st.secrets["gcp_service_account"]),
+        scopes=SCOPES
+    )
+    client = gspread.authorize(creds)
+    spreadsheet = client.open_by_key("1afoSDWnUlB6ZN5Wlz4CDyX1whhzNNHxm6vCINs-2LDM")
+    return client, spreadsheet
+
+client, spreadsheet = get_client_and_spreadsheet()
+
+@st.cache_resource
+def get_sheets(spreadsheet):
+    teams_sheet = spreadsheet.worksheet("Teams")
+    players_sheet = spreadsheet.worksheet("Players")
+    games_sheet = spreadsheet.worksheet("Games")
+    attendance_sheet = spreadsheet.worksheet("Attendance")
+    return teams_sheet, players_sheet, games_sheet, attendance_sheet
+
+teams_sheet, players_sheet, games_sheet, attendance_sheet = get_sheets(spreadsheet)
+
+@st.cache_data(ttl=10)
+def load_teams_data():
+    return teams_sheet.get("A2:C100")
+
+@st.cache_data(ttl=10)
+def load_players_data():
+    return players_sheet.get_all_records()
+
+@st.cache_data(ttl=10)
+def load_games_data():
+    return games_sheet.get_all_records()
+
+@st.cache_data(ttl=10)
+def load_attendance_data():
+    return attendance_sheet.get_all_records()
+
+teams_data = load_teams_data()
+players = load_players_data()
+games = load_games_data()
+attendance = load_attendance_data()
+
+# --------------------------------------------------
+# SAVE ATTENDANCE (REDUCED API LOAD)
+# --------------------------------------------------
+
 def save_attendance(attendance_sheet, player_id, game_id, status):
     values = attendance_sheet.get_all_values()
     header = values[0]
@@ -84,44 +140,28 @@ def save_attendance(attendance_sheet, player_id, game_id, status):
     spreadsheet_status = "None" if status == "No Response" else status
     timestamp = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
 
+    row_index = None
     for row_num in range(1, len(values)):
         if str(values[row_num][player_col]) == str(player_id) and str(values[row_num][game_col]) == str(game_id):
-            attendance_sheet.update_cell(row_num + 1, status_col + 1, spreadsheet_status)
-            attendance_sheet.update_cell(row_num + 1, updated_col + 1, timestamp)
-            return
+            row_index = row_num + 1
+            break
 
-    attendance_sheet.append_row([player_id, game_id, spreadsheet_status, timestamp])
+    if row_index:
+        # Batch update two cells in one call
+        attendance_sheet.batch_update([{
+            "range": f"{chr(ord('A') + status_col)}{row_index}",
+            "values": [[spreadsheet_status]]
+        }, {
+            "range": f"{chr(ord('A') + updated_col)}{row_index}",
+            "values": [[timestamp]]
+        }])
+    else:
+        attendance_sheet.append_row([player_id, game_id, spreadsheet_status, timestamp])
 
-# --------------------------------------------------
-# GOOGLE CONNECTION
-# --------------------------------------------------
-
-SCOPES = [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive"
-]
-
-creds = Credentials.from_service_account_info(
-    dict(st.secrets["gcp_service_account"]),
-    scopes=SCOPES
-)
-
-client = gspread.authorize(creds)
-spreadsheet = client.open_by_key("1afoSDWnUlB6ZN5Wlz4CDyX1whhzNNHxm6vCINs-2LDM")
-
-# --------------------------------------------------
-# LOAD SHEETS
-# --------------------------------------------------
-
-teams_sheet = spreadsheet.worksheet("Teams")
-players_sheet = spreadsheet.worksheet("Players")
-games_sheet = spreadsheet.worksheet("Games")
-attendance_sheet = spreadsheet.worksheet("Attendance")
-
-teams_data = teams_sheet.get("A2:C100")
-players = players_sheet.get_all_records()
-games = games_sheet.get_all_records()
-attendance = attendance_sheet.get_all_records()
+    # Refresh cached attendance
+    load_attendance_data.clear()
+    global attendance
+    attendance = load_attendance_data()
 
 # --------------------------------------------------
 # ACTIVE TEAMS
@@ -362,7 +402,6 @@ try:
                     with name_col:
                         st.markdown(f'<div class="player-name">{p["player_name"]}</div>', unsafe_allow_html=True)
 
-                    # BUTTONS — ALWAYS INLINE BECAUSE EACH IS IN ITS OWN COLUMN
                     def status_button(label, emoji, status_value, col):
                         selected = (current == status_value)
                         css_class = "status-btn selected-btn" if selected else "status-btn"
