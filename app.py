@@ -90,7 +90,7 @@ def save_attendance(attendance_sheet, player_id, game_id, status):
         attendance_sheet.append_row([player_id, game_id, spreadsheet_status, timestamp])
 
 # --------------------------------------------------
-# GOOGLE CONNECTION
+# GOOGLE CONNECTION (HARDENED)
 # --------------------------------------------------
 
 SCOPES = [
@@ -127,7 +127,7 @@ games_sheet = spreadsheet.worksheet("Games")
 attendance_sheet = spreadsheet.worksheet("Attendance")
 
 # --------------------------------------------------
-# CACHING
+# CACHING (HARDENED)
 # --------------------------------------------------
 
 @st.cache_data(ttl=60)
@@ -260,7 +260,7 @@ try:
         st.stop()
 
     # --------------------------------------------------
-    # PLAYER AVAILABILITY SUMMARY (Feature #5)
+    # PLAYER AVAILABILITY SUMMARY
     # --------------------------------------------------
 
     if view_mode == "My Availability":
@@ -305,7 +305,7 @@ try:
                 break
 
         # --------------------------------------------------
-        # GAME HEADER (weekday added)
+        # GAME HEADER
         # --------------------------------------------------
 
         field_clean = str(game.get("field", "")).replace("Field ", "")
@@ -350,6 +350,39 @@ try:
                 none_players.append(player)
 
         # --------------------------------------------------
+        # CAPTAIN QUICK SUMMARY (YES COUNTS)
+        # --------------------------------------------------
+
+        if is_captain and view_mode == "Team Availability":
+            st.markdown("### 🟢 Quick Commitment Summary")
+
+            summary_html = '<div style="margin-bottom:20px;">'
+
+            for idx, g in enumerate(team_games):
+                yes_count = 0
+                for record in attendance:
+                    if str(record["game_id"]) == str(g["game_id"]) and str(record["status"]).strip() == "Yes":
+                        yes_count += 1
+
+                highlight = (
+                    'background:#E8F5E9; border-left:6px solid #2E7D32; padding:10px 14px; border-radius:8px;'
+                    if idx == 0 else
+                    'padding:8px 12px;'
+                )
+
+                summary_html += (
+                    f'<div style="{highlight} margin-bottom:6px; font-size:15px;">'
+                    f'<strong>{weekday(g["date"])}, {format_date(g["date"])}</strong> — '
+                    f'{g["time"]} vs {g["opponent"]} — '
+                    f'<strong>{yes_count} Yes</strong>'
+                    f'</div>'
+                )
+
+            summary_html += '</div>'
+
+            st.markdown(summary_html, unsafe_allow_html=True)
+
+        # --------------------------------------------------
         # NR + MAYBE ALERT
         # --------------------------------------------------
 
@@ -382,12 +415,11 @@ try:
             st.markdown(alert_html, unsafe_allow_html=True)
 
         # --------------------------------------------------
-        # PLAYER VIEW (with 2 & 4)
+        # PLAYER VIEW
         # --------------------------------------------------
 
         if view_mode == "My Availability":
 
-            # Status badge (mobile-friendly colors)
             badge_styles = {
                 "Yes": {
                     "bg": "#E8F5E9",
@@ -543,7 +575,7 @@ try:
             unsafe_allow_html=True
         )
 
-except Exception as e:
+except Exception:
     st.error("⚠️ Something went wrong while loading games. Please try again in a moment.")
     if st.button("🔄 Reload games"):
         st.rerun()
