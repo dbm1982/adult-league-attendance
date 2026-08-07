@@ -295,7 +295,7 @@ try:
         st.markdown("---")
 
     # --------------------------------------------------
-    # CAPTAIN QUICK SUMMARY (TOP-ONLY)
+    # CAPTAIN QUICK SUMMARY (TOP ONLY, NEUTRAL, MOBILE-FRIENDLY)
     # --------------------------------------------------
 
     if is_captain and view_mode == "Team Availability":
@@ -309,14 +309,9 @@ try:
                 if str(record["game_id"]) == str(g["game_id"]) and str(record["status"]).strip() == "Yes":
                     yes_count += 1
 
-            highlight = (
-                'background:#E8F5E9; border-left:6px solid #2E7D32; padding:10px 14px; border-radius:8px;'
-                if idx == 0 else
-                'padding:8px 12px;'
-            )
-
             summary_html += (
-                f'<div style="{highlight} margin-bottom:6px; font-size:15px;">'
+                f'<div style="padding:8px 12px; margin-bottom:6px; '
+                'border-left:4px solid #B0BEC5; background:#FAFAFA; font-size:14px;">'
                 f'<strong>{weekday(g["date"])}, {format_date(g["date"])}</strong> — '
                 f'{g["time"]} vs {g["opponent"]} — '
                 f'<strong>{yes_count} Yes</strong>'
@@ -387,7 +382,7 @@ try:
                 none_players.append(player)
 
         # --------------------------------------------------
-        # NR + MAYBE ALERT
+        # NR + MAYBE ALERT (SOFT BLUE)
         # --------------------------------------------------
 
         if is_captain and view_mode == "Team Availability":
@@ -396,10 +391,10 @@ try:
             maybe_names = ", ".join([short_name(p["player_name"]) for p in maybe_players])
 
             alert_html = (
-                '<div style="background-color:#1E88E5; border-left:5px solid #0D47A1; '
+                '<div style="background-color:#E3F2FD; border-left:5px solid #64B5F6; '
                 'padding:14px 18px; border-radius:6px; margin:10px 0 18px 0; '
-                'font-size:15px; color:white;">'
-                f'<strong>⚠️ {len(none_players) + len(maybe_players)} players are not confirmed:</strong><br><br>'
+                'font-size:15px; color:#0D47A1;">'
+                f'<strong>{len(none_players) + len(maybe_players)} players are not confirmed:</strong><br><br>'
             )
 
             if len(none_players) > 0:
@@ -537,49 +532,3 @@ try:
                 None
             )
 
-            current_player_status = "No Response"
-            if selected_player_record_for_game:
-                for record in attendance:
-                    if (
-                        str(record["player_id"]) == str(selected_player_record_for_game["player_id"])
-                        and str(record["game_id"]) == str(game["game_id"])
-                    ):
-                        s = str(record["status"]).strip()
-                        current_player_status = "No Response" if s in ("", "None") else s
-                        break
-
-            options = ["No Response", "Yes", "No", "Maybe"]
-            default_index = options.index(current_player_status)
-
-            selected_status_for_player = st.radio(
-                "Set status",
-                options,
-                index=default_index,
-                horizontal=True,
-                key=f"captain_status_{game['game_id']}"
-            )
-
-            if st.button("💾 Save Player Status", key=f"captain_save_{game['game_id']}"):
-                save_attendance(
-                    attendance_sheet,
-                    selected_player_record_for_game["player_id"],
-                    game["game_id"],
-                    selected_status_for_player
-                )
-                st.cache_data.clear()
-                st.success(f"Updated {player_to_update} to {selected_status_for_player}.")
-                st.rerun()
-
-        # --------------------------------------------------
-        # DIVIDER
-        # --------------------------------------------------
-
-        st.markdown(
-            '<hr style="border:0; height:3px; background:#0D47A1; margin:40px 0;">',
-            unsafe_allow_html=True
-        )
-
-except Exception:
-    st.error("⚠️ Something went wrong while loading games. Please try again in a moment.")
-    if st.button("🔄 Reload games"):
-        st.rerun()
