@@ -77,10 +77,13 @@ def safe_write(func, *args, **kwargs):
         try:
             return func(*args, **kwargs)
         except Exception:
-            st.error("⚠️ Could not save your updates to the league database. Please try again.")
+            st.error("⚠️ Could not save your updates. Please try again.")
             st.stop()
 
 def save_attendance(attendance_sheet, player_id, game_id, status):
+    player_id = str(player_id).strip()
+    game_id = str(game_id).strip()
+
     values = attendance_sheet.get_all_values()
     header = values[0]
 
@@ -94,7 +97,9 @@ def save_attendance(attendance_sheet, player_id, game_id, status):
 
     row_index = None
     for row_num in range(1, len(values)):
-        if str(values[row_num][player_col]) == str(player_id) and str(values[row_num][game_col]) == str(game_id):
+        sheet_pid = str(values[row_num][player_col]).strip()
+        sheet_gid = str(values[row_num][game_col]).strip()
+        if sheet_pid == player_id and sheet_gid == game_id:
             row_index = row_num + 1
             break
 
@@ -111,7 +116,7 @@ def save_attendance(attendance_sheet, player_id, game_id, status):
         )
 
 # --------------------------------------------------
-# GOOGLE CONNECTION (HARDENED)
+# GOOGLE CONNECTION
 # --------------------------------------------------
 
 SCOPES = [
@@ -135,7 +140,7 @@ def safe_open_sheet(client, key):
         try:
             return client.open_by_key(key)
         except Exception:
-            st.error("⚠️ The league database is temporarily unavailable. Please try again in a moment.")
+            st.error("⚠️ The league database is temporarily unavailable. Please try again.")
             if st.button("🔄 Reload"):
                 st.rerun()
             st.stop()
@@ -153,18 +158,11 @@ attendance_sheet = spreadsheet.worksheet("Attendance")
 
 @st.cache_data(ttl=60)
 def load_sheet_data():
-    try:
-        teams_data = teams_sheet.get("A2:C100")
-        players = players_sheet.get_all_records()
-        games = games_sheet.get_all_records()
-        attendance = attendance_sheet.get_all_records()
-        return teams_data, players, games, attendance
-    except Exception:
-        st.error("⚠️ There was a problem loading league data. Please try again in a moment.")
-        if st.button("🔄 Reload data"):
-            st.cache_data.clear()
-            st.rerun()
-        st.stop()
+    teams_data = teams_sheet.get("A2:C100")
+    players = players_sheet.get_all_records()
+    games = games_sheet.get_all_records()
+    attendance = attendance_sheet.get_all_records()
+    return teams_data, players, games, attendance
 
 teams_data, players, games, attendance = load_sheet_data()
 
@@ -226,28 +224,19 @@ if not selected_player:
     st.stop()
 
 selected_player_record = next(p for p in team_players if p["player_name"] == selected_player)
-selected_player_id = selected_player_record["player_id"]
+selected_player_id = str(selected_player_record["player_id"]).strip()
 is_captain = str(selected_player_record.get("is_captain", "")).upper() == "TRUE"
-
-# --------------------------------------------------
-# HEADER
-# --------------------------------------------------
 
 st.markdown("---")
 st.markdown(f"### ⚽ {selected_team}")
 st.markdown(f"### 👤 {selected_player}")
 st.markdown("---")
 
-# --------------------------------------------------
-# CAPTAIN OPTIONS
-# --------------------------------------------------
-
 if is_captain:
     st.session_state.view_mode = st.radio(
         "Captain Options",
         ["My Availability", "Team Availability"],
-        index=["My Availability", "Team Availability"].index(st.session_state.view_mode),
-        horizontal=False
+        index=["My Availability", "Team Availability"].index(st.session_state.view_mode)
     )
 else:
     st.session_state.view_mode = "My Availability"
@@ -281,54 +270,46 @@ try:
         st.stop()
 
     # --------------------------------------------------
-    # PLAYER AVAILABILITY SUMMARY
+    # PLAYER SUMMARY
     # --------------------------------------------------
 
     if view_mode == "My Availability":
         st.markdown("### 🗂️ Your Availability Summary")
 
         summary_html = '<div style="padding:10px 0;">'
-
         for g in team_games:
             status = "No Response"
             for record in attendance:
-                if str(record["player_id"]) == str(selected_player_id) and str(record["game_id"]) == str(g["game_id"]):
+                if str(record["player_id"]).strip() == selected_player_id and str(record["game_id"]).strip() == str(g["game_id"]).strip():
                     s = str(record["status"]).strip()
                     status = "No Response" if s in ("", "None") else s
                     break
 
-            icon = {
-                "Yes": "🟢",
-                "No": "🔴",
-                "Maybe": "🟡",
-                "No Response": "⚪"
-            }[status]
+            icon = {"Yes":"🟢","No":"🔴","Maybe":"🟡","No Response":"⚪"}[status]
 
             summary_html += (
                 f'<div style="font-size:15px; margin-bottom:4px;">'
                 f'{icon} {weekday(g["date"])}, {format_date(g["date"])} — {status}'
                 f'</div>'
             )
-
         summary_html += '</div>'
-
         st.markdown(summary_html, unsafe_allow_html=True)
         st.markdown("---")
 
     # --------------------------------------------------
-    # CAPTAIN QUICK SUMMARY
+    # CAPTAIN SUMMARY
     # --------------------------------------------------
 
     if is_captain and view_mode == "Team Availability":
         st.markdown("### 🟢 Quick Commitment Summary")
 
         summary_html = '<div style="margin-bottom:20px;">'
-
-        for idx, g in enumerate(team_games):
-            yes_count = 0
-            for record in attendance:
-                if str(record["game_id"]) == str(g["game_id"]) and str(record["status"]).strip() == "Yes":
-                    yes_count += 1
+        for g in team_games:
+            yes_count = sum(
+                1 for record in attendance
+                if str(record["game_id"]).strip() == str(g["game_id"]).strip()
+                and str(record["status"]).strip() == "Yes"
+            )
 
             summary_html += (
                 f'<div style="padding:8px 12px; margin-bottom:6px; '
@@ -338,20 +319,33 @@ try:
                 f'<strong>{yes_count} Yes</strong>'
                 f'</div>'
             )
-
         summary_html += '</div>'
-
         st.markdown(summary_html, unsafe_allow_html=True)
+
+    # --------------------------------------------------
+    # SAVE ALL BUTTON (TOP)
+    # --------------------------------------------------
+
+    if st.session_state.pending_updates:
+        st.markdown("### 💾 Save All Updates")
+        if st.button("✅ Save All Updates Now"):
+            for (pid, gid), status in st.session_state.pending_updates.items():
+                save_attendance(attendance_sheet, pid, gid, status)
+            st.session_state.pending_updates = {}
+            st.success("All updates saved.")
+            st.rerun()
 
     # --------------------------------------------------
     # GAME LOOP
     # --------------------------------------------------
 
     for game in team_games:
+        game_id = str(game["game_id"]).strip()
 
+        # Current player status
         current_status = "No Response"
         for record in attendance:
-            if str(record["player_id"]) == str(selected_player_id) and str(record["game_id"]) == str(game["game_id"]):
+            if str(record["player_id"]).strip() == selected_player_id and str(record["game_id"]).strip() == game_id:
                 s = str(record["status"]).strip()
                 current_status = "No Response" if s in ("", "None") else s
                 break
@@ -362,39 +356,40 @@ try:
             '<div style="background:#e8f5e9; padding:12px 16px; border-radius:10px; '
             'margin-bottom:12px; border-left:6px solid #2e7d32; color:#1b5e20; font-size:16px;">'
             f'<div style="font-size:18px; font-weight:700; margin-bottom:6px;">'
-            f'🗓️ {weekday(game.get("date",""))}, {format_date(game.get("date",""))} • {game.get("time","")}'
+            f'🗓️ {weekday(game["date"])}, {format_date(game["date"])} • {game["time"]}'
             '</div>'
             f'<div style="margin-bottom:4px;">📍 Field {field_clean}</div>'
-            f'<div>⚔️ Opponent: {game.get("opponent","")}</div>'
+            f'<div>⚔️ Opponent: {game["opponent"]}</div>'
             '</div>'
         )
-
         st.markdown(game_html, unsafe_allow_html=True)
 
+        # Build team status lists
         yes_players = []
         no_players = []
         maybe_players = []
         none_players = []
 
         for player in team_players:
-            player_status = "No Response"
+            pid = str(player["player_id"]).strip()
+            pstatus = "No Response"
             for record in attendance:
-                if str(record["player_id"]) == str(player["player_id"]) and str(record["game_id"]) == str(game["game_id"]):
+                if str(record["player_id"]).strip() == pid and str(record["game_id"]).strip() == game_id:
                     s = str(record["status"]).strip()
-                    player_status = "No Response" if s in ("", "None") else s
+                    pstatus = "No Response" if s in ("", "None") else s
                     break
 
-            if player_status == "Yes":
+            if pstatus == "Yes":
                 yes_players.append(player)
-            elif player_status == "No":
+            elif pstatus == "No":
                 no_players.append(player)
-            elif player_status == "Maybe":
+            elif pstatus == "Maybe":
                 maybe_players.append(player)
             else:
                 none_players.append(player)
 
+        # Captain alert
         if is_captain and view_mode == "Team Availability":
-
             nr_names = ", ".join([short_name(p["player_name"]) for p in none_players])
             maybe_names = ", ".join([short_name(p["player_name"]) for p in maybe_players])
 
@@ -405,112 +400,63 @@ try:
                 f'<strong>{len(none_players) + len(maybe_players)} players are not confirmed:</strong><br><br>'
             )
 
-            if len(none_players) > 0:
-                alert_html += (
-                    '<strong>No Response (NR):</strong><br>'
-                    f'{nr_names}<br><br>'
-                )
-
-            if len(maybe_players) > 0:
-                alert_html += (
-                    '<strong>Maybe:</strong><br>'
-                    f'{maybe_names}'
-                )
+            if none_players:
+                alert_html += f'<strong>No Response (NR):</strong><br>{nr_names}<br><br>'
+            if maybe_players:
+                alert_html += f'<strong>Maybe:</strong><br>{maybe_names}'
 
             alert_html += '</div>'
-
             st.markdown(alert_html, unsafe_allow_html=True)
 
+        # PLAYER VIEW
         if view_mode == "My Availability":
-
             badge_styles = {
-                "Yes": {
-                    "bg": "#E8F5E9",
-                    "color": "#1B5E20",
-                    "icon": "🟢",
-                    "text": "You are marked as YES for this game"
-                },
-                "No": {
-                    "bg": "#FDECEA",
-                    "color": "#C62828",
-                    "icon": "🔴",
-                    "text": "You are marked as NO for this game"
-                },
-                "Maybe": {
-                    "bg": "#FFF8E1",
-                    "color": "#FF8F00",
-                    "icon": "🟡",
-                    "text": "You are marked as MAYBE for this game"
-                },
-                "No Response": {
-                    "bg": "#ECEFF1",
-                    "color": "#37474F",
-                    "icon": "⚪",
-                    "text": "You have not responded yet"
-                }
+                "Yes": {"bg":"#E8F5E9","color":"#1B5E20","icon":"🟢","text":"You are marked as YES"},
+                "No": {"bg":"#FDECEA","color":"#C62828","icon":"🔴","text":"You are marked as NO"},
+                "Maybe": {"bg":"#FFF8E1","color":"#FF8F00","icon":"🟡","text":"You are marked as MAYBE"},
+                "No Response": {"bg":"#ECEFF1","color":"#37474F","icon":"⚪","text":"You have not responded"}
             }
 
             style = badge_styles[current_status]
 
-            badge_html = (
+            st.markdown(
                 f'<div style="background:{style["bg"]}; color:{style["color"]}; '
                 'padding:12px 16px; border-radius:10px; margin-bottom:12px; '
                 'font-size:16px; font-weight:600;">'
                 f'{style["icon"]} {style["text"]}'
-                '</div>'
+                '</div>',
+                unsafe_allow_html=True
             )
 
-            st.markdown(badge_html, unsafe_allow_html=True)
-
             options = ["No Response", "Yes", "No", "Maybe"]
-            default_index = options.index(current_status)
-
             selected_status = st.radio(
                 "Can you make this game?",
                 options,
-                index=default_index,
-                horizontal=False,
-                key=f"attendance_{game['game_id']}"
+                index=options.index(current_status),
+                key=f"attendance_{game_id}"
             )
 
-            if st.button("💾 Add to Updates", key=f"save_{game['game_id']}", type="primary"):
-                st.session_state.pending_updates[(selected_player_id, game["game_id"])] = selected_status
-                st.markdown(
-                    '<div style="background:#e8f5e9; padding:10px 14px; border-radius:8px; '
-                    'border-left:5px solid #4CAF50; font-size:14px; margin:10px 0;">'
-                    '✅ Change stored. Don’t forget to click "Save All Updates" below.'
-                    '</div>',
-                    unsafe_allow_html=True
-                )
+            if st.button("💾 Add to Updates", key=f"save_{game_id}", type="primary"):
+                st.session_state.pending_updates[(selected_player_id, game_id)] = selected_status
+                st.success("Change stored. Save all updates at the top.")
 
+        # CAPTAIN VIEW
         else:
             col_yes, col_no, col_maybe, col_none = st.columns(4)
 
-            col_yes.markdown(
-                f'<div class="column-header header-yes">YES ({len(yes_players)})</div>',
-                unsafe_allow_html=True
-            )
+            col_yes.markdown(f'<div class="column-header header-yes">YES ({len(yes_players)})</div>', unsafe_allow_html=True)
             for p in yes_players:
                 col_yes.markdown(f"- {p['player_name']}")
 
-            col_no.markdown(
-                f'<div class="column-header header-no">NO ({len(no_players)})</div>',
-                unsafe_allow_html=True
-            )
+            col_no.markdown(f'<div class="column-header header-no">NO ({len(no_players)})</div>', unsafe_allow_html=True)
             for p in no_players:
                 col_no.markdown(f"- {p['player_name']}")
 
-            col_maybe.markdown(
-                f'<div class="column-header header-maybe">MAYBE ({len(maybe_players)})</div>',
-                unsafe_allow_html=True
-            )
+            col_maybe.markdown(f'<div class="column-header header-maybe">MAYBE ({len(maybe_players)})</div>', unsafe_allow_html=True)
             for p in maybe_players:
                 col_maybe.markdown(f"- {p['player_name']}")
 
-            col_none.markdown(
-                f'<div class="column-header header-nr">NR ({len(none_players)})</div>',
-                unsafe_allow_html=True
-            )
+            col_none.markdown(f'<div class="column-header header-nr">NR ({len(none_players)})</div>', unsafe_allow_html=True)
             for p in none_players:
                 col_none.markdown(f"- {p['player_name']}")
 
@@ -520,7 +466,7 @@ try:
             player_to_update = st.selectbox(
                 "Choose a player to update",
                 [p["player_name"] for p in team_players],
-                key=f"captain_player_select_{game['game_id']}"
+                key=f"captain_player_select_{game_id}"
             )
 
             selected_player_record_for_game = next(
@@ -528,72 +474,15 @@ try:
                 None
             )
 
+            pid = str(selected_player_record_for_game["player_id"]).strip()
+
             current_player_status = "No Response"
-            if selected_player_record_for_game:
-                for record in attendance:
-                    if (
-                        str(record["player_id"]) == str(selected_player_record_for_game["player_id"])
-                        and str(record["game_id"]) == str(game["game_id"])
-                    ):
-                        s = str(record["status"]).strip()
-                        current_player_status = "No Response" if s in ("", "None") else s
-                        break
+            for record in attendance:
+                if str(record["player_id"]).strip() == pid and str(record["game_id"]).strip() == game_id:
+                    s = str(record["status"]).strip()
+                    current_player_status = "No Response" if s in ("", "None") else s
+                    break
 
             options = ["No Response", "Yes", "No", "Maybe"]
-            default_index = options.index(current_player_status)
-
             selected_status_for_player = st.radio(
                 "Set status",
-                options,
-                index=default_index,
-                horizontal=True,
-                key=f"captain_status_{game['game_id']}"
-            )
-
-            if st.button("💾 Add Player Change", key=f"captain_save_{game['game_id']}"):
-                st.session_state.pending_updates[
-                    (selected_player_record_for_game["player_id"], game["game_id"])
-                ] = selected_status_for_player
-                st.markdown(
-                    f'<div style="background:#e8f5e9; padding:10px 14px; border-radius:8px; '
-                    'border-left:5px solid #4CAF50; font-size:14px; margin:10px 0;">'
-                    f'✅ Change stored for {player_to_update}. Don’t forget to click "Save All Updates" below.'
-                    '</div>',
-                    unsafe_allow_html=True
-                )
-
-        st.markdown(
-            '<hr style="border:0; height:3px; background:#0D47A1; margin:40px 0;">',
-            unsafe_allow_html=True
-        )
-
-    # --------------------------------------------------
-    # SAVE ALL UPDATES (BOTTOM)
-    # --------------------------------------------------
-
-    if view_mode == "My Availability" and st.session_state.pending_updates:
-        st.markdown("---")
-        st.markdown("### 💾 Save All Updates")
-
-        if st.button("✅ Save All Updates Now"):
-            for (player_id, game_id), status in st.session_state.pending_updates.items():
-                save_attendance(attendance_sheet, player_id, game_id, status)
-            st.session_state.pending_updates = {}
-            st.success("All your updates have been saved.")
-            st.rerun()
-
-    if view_mode == "Team Availability" and st.session_state.pending_updates:
-        st.markdown("---")
-        st.markdown("### 💾 Save All Captain Updates")
-
-        if st.button("✅ Save All Updates Now"):
-            for (player_id, game_id), status in st.session_state.pending_updates.items():
-                save_attendance(attendance_sheet, player_id, game_id, status)
-            st.session_state.pending_updates = {}
-            st.success("All captain updates have been saved.")
-            st.rerun()
-
-except Exception:
-    st.error("⚠️ Something went wrong while loading games. Please try again in a moment.")
-    if st.button("🔄 Reload games"):
-        st.rerun()
