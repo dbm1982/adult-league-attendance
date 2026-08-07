@@ -14,169 +14,50 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# CSS — COMPACT ROWS + INLINE STATUS BUTTONS
+# CSS — COMPACT ROWS + INLINE EMOJI STATUS BUTTONS
 # --------------------------------------------------
 
 st.markdown("""
 <style>
 
-/* Header spacing */
-
-h1, .stMarkdown h1 {
-    margin-top: 22px !important;
-    margin-bottom: 14px !important;
-}
-
-.stCaption, .stMarkdown p {
-    margin-bottom: 14px !important;
-}
-
-.block-container > div:first-child {
-    margin-top: 18px !important;
-}
-
-div[data-testid="stSelectbox"] {
-    margin-top: 10px !important;
-    margin-bottom: 10px !important;
-}
-
-/* Global spacing */
-
-.css-1kyxreq, .css-1r6slb0, .css-12w0qpk {
-    padding: 0 !important;
-    margin: 0 !important;
-    gap: 6px !important;
-}
-
-div[data-testid="column"] {
-    padding: 0 !important;
-    margin: 0 !important;
-}
-
-/* Player row */
-
 .player-row {
-    padding: 1px 0 !important;
-    display: flex !important;
-    align-items: center !important;
+    display: flex;
+    align-items: center;
+    padding: 4px 0;
 }
 
 .player-name {
-    font-size: 13px !important;
-    min-width: 110px !important;
-    white-space: nowrap !important;
+    font-size: 14px;
+    font-weight: 500;
+    min-width: 130px;
 }
 
-/* Inline status buttons */
-
-.inline-buttons {
-    display: flex;
-    gap: 4px;
-    flex-wrap: nowrap;
-}
-
-.inline-buttons button {
-    padding: 1px 6px !important;
-    font-size: 11px !important;
-    height: 22px !important;
-    line-height: 16px !important;
-    border-radius: 4px !important;
-    margin: 0 !important;
-}
-
-/* Captain boxes */
-
-.captain-column {
-    padding: 12px !important;
-    border-radius: 10px !important;
-    margin-bottom: 14px !important;
-    color: black !important;
-}
-
-.captain-title {
+.status-btn {
     font-size: 16px !important;
-    font-weight: 700 !important;
-    margin-bottom: 10px !important;
+    padding: 2px 6px !important;
+    border-radius: 6px !important;
+    margin-right: 4px !important;
+    min-width: 36px !important;
+    text-align: center !important;
 }
 
-.captain-yes   { background-color: #4CAF50 !important; }
-.captain-no    { background-color: #F44336 !important; }
-.captain-maybe { background-color: #FFEB3B !important; }
-.captain-none  { background-color: #BDBDBD !important; }
-
-/* Mini summary bar */
-
-.game-mini-summary {
-    font-size: 12px !important;
-    margin: 4px 0 10px 0 !important;
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
+.selected-btn {
+    border: 2px solid black !important;
 }
 
-.game-mini-summary span {
-    font-weight: 600;
-}
-
-.summary-yes { color: #2e7d32 !important; }
-.summary-no { color: #c62828 !important; }
-.summary-maybe { color: #f9a825 !important; }
-.summary-none { color: #616161 !important; }
-
-/* Captain alert bar */
-
-.captain-alert {
-    background-color: #f5f5f5;
-    border-left: 5px solid #616161;
+.column-header {
     padding: 8px 12px;
-    border-radius: 6px;
-    margin: 6px 0 14px 0;
-    font-size: 13px;
-}
-
-.captain-alert strong {
+    border-radius: 8px;
     font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: black;
 }
 
-.captain-alert span {
-    font-weight: 600;
-    color: #424242;
-}
-
-/* Game callout */
-
-.game-callout {
-    background: #e8f5e9;
-    padding: 12px 16px;
-    border-radius: 10px;
-    margin-bottom: 12px !important;
-    border-left: 6px solid #2e7d32;
-    color: #1b5e20;
-}
-
-/* Mobile */
-
-@media (max-width: 600px) {
-
-    .captain-column {
-        width: 100% !important;
-        margin-bottom: 14px !important;
-    }
-
-    .player-row {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 2px !important;
-    }
-
-    .inline-buttons {
-        margin-top: 2px !important;
-    }
-
-    .player-name {
-        margin-bottom: 2px !important;
-    }
-}
+.header-yes { background-color: #4CAF50; }
+.header-no { background-color: #F44336; }
+.header-maybe { background-color: #FFEB3B; }
+.header-nr { background-color: #BDBDBD; }
 
 </style>
 """, unsafe_allow_html=True)
@@ -214,10 +95,9 @@ def save_attendance(attendance_sheet, player_id, game_id, status):
         if str(values[row_num][player_col]) == str(player_id) and str(values[row_num][game_col]) == str(game_id):
             attendance_sheet.update_cell(row_num + 1, status_col + 1, spreadsheet_status)
             attendance_sheet.update_cell(row_num + 1, updated_col + 1, timestamp)
-            return "updated"
+            return
 
     attendance_sheet.append_row([player_id, game_id, spreadsheet_status, timestamp])
-    return "created"
 
 # --------------------------------------------------
 # GOOGLE CONNECTION
@@ -369,7 +249,13 @@ try:
         # Game callout
         st.markdown(
             f"""
-            <div class="game-callout">
+            <div class="game-callout" style="
+                background:#e8f5e9;
+                padding:12px 16px;
+                border-radius:10px;
+                margin-bottom:12px;
+                border-left:6px solid #2e7d32;
+                color:#1b5e20;">
                 <span style="font-size:18px; font-weight:700;">
                     GAME: {format_date(game.get('date',''))} — {game.get('time','')}
                 </span><br>
@@ -409,34 +295,16 @@ try:
             else:
                 none_players.append(player)
 
-        yes_count = len(yes_players)
-        no_count = len(no_players)
-        maybe_count = len(maybe_players)
-        none_count = len(none_players)
-
-        st.markdown(
-            f"""
-            <div class="game-mini-summary">
-                <span class="summary-yes">YES: {yes_count}</span>
-                <span class="summary-no">NO: {no_count}</span>
-                <span class="summary-maybe">MAYBE: {maybe_count}</span>
-                <span class="summary-none">NR: {none_count}</span>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
         # --------------------------------------------------
-        # CAPTAIN ALERT BAR — CAPTAIN ONLY
+        # CAPTAIN ALERT BAR
         # --------------------------------------------------
 
-        if is_captain and view_mode == "Team Availability" and none_count > 0:
+        if is_captain and view_mode == "Team Availability" and len(none_players) > 0:
             nr_names = ", ".join([short_name(p["player_name"]) for p in none_players])
-
             st.markdown(
                 f"""
                 <div class="captain-alert">
-                    <strong>⚠️ {none_count} players have not responded:</strong>
+                    <strong>⚠️ {len(none_players)} players have not responded:</strong>
                     <span>{nr_names}</span>
                 </div>
                 """,
@@ -448,15 +316,6 @@ try:
         # --------------------------------------------------
 
         if view_mode == "My Availability":
-
-            if current_status == "Yes":
-                st.success("Current Response: Yes")
-            elif current_status == "No":
-                st.error("Current Response: No")
-            elif current_status == "Maybe":
-                st.warning("Current Response: Maybe")
-            else:
-                st.info("Current Response: No Response")
 
             options = ["No Response", "Yes", "No", "Maybe"]
             default_index = options.index(current_status) if current_status in options else 0
@@ -480,52 +339,57 @@ try:
 
         else:
 
-            col_yes, col_no, col_maybe, col_none = st.columns([1, 1, 1, 2])
+            def render_column(title, color_class, players_list):
+                st.markdown(
+                    f'<div class="column-header {color_class}">{title} ({len(players_list)})</div>',
+                    unsafe_allow_html=True
+                )
 
-            def render_column(col, title, color_class, players_list):
-                with col:
-                    st.markdown(f'<div class="captain-column {color_class}">', unsafe_allow_html=True)
-                    st.markdown(
-                        f'<div class="captain-title">{title} ({len(players_list)})</div>',
-                        unsafe_allow_html=True
-                    )
+                for p in players_list:
 
-                    for p in players_list:
-                        st.markdown('<div class="player-row">', unsafe_allow_html=True)
+                    # Determine current status
+                    if title == "YES":
+                        current = "Yes"
+                    elif title == "NO":
+                        current = "No"
+                    elif title == "MAYBE":
+                        current = "Maybe"
+                    else:
+                        current = "No Response"
 
-                        name_col, btn_col = st.columns([1.4, 2])
+                    st.markdown('<div class="player-row">', unsafe_allow_html=True)
 
-                        with name_col:
-                            st.markdown(f'<div class="player-name">{p["player_name"]}</div>', unsafe_allow_html=True)
+                    # NAME
+                    st.markdown(f'<div class="player-name">{p["player_name"]}</div>', unsafe_allow_html=True)
 
-                        with btn_col:
-                            st.markdown('<div class="inline-buttons">', unsafe_allow_html=True)
+                    # STATUS BUTTONS (EMOJI)
+                    def status_button(label, emoji, status_value):
+                        selected = (current == status_value)
+                        css_class = "status-btn selected-btn" if selected else "status-btn"
+                        if st.button(f"{emoji} {label}", key=f"{p['player_id']}_{game['game_id']}_{label}"):
+                            save_attendance(attendance_sheet, p["player_id"], game["game_id"], status_value)
+                            st.rerun()
 
-                            # Y / N / M / ? buttons (compact)
-                            if st.button("Y", key=f"{title}_yes_{game['game_id']}_{p['player_id']}"):
-                                save_attendance(attendance_sheet, p["player_id"], game["game_id"], "Yes")
-                                st.rerun()
-
-                            if st.button("N", key=f"{title}_no_{game['game_id']}_{p['player_id']}"):
-                                save_attendance(attendance_sheet, p["player_id"], game["game_id"], "No")
-                                st.rerun()
-
-                            if st.button("M", key=f"{title}_maybe_{game['game_id']}_{p['player_id']}"):
-                                save_attendance(attendance_sheet, p["player_id"], game["game_id"], "Maybe")
-                                st.rerun()
-
-                            if st.button("?", key=f"{title}_none_{game['game_id']}_{p['player_id']}"):
-                                save_attendance(attendance_sheet, p["player_id"], game["game_id"], "No Response")
-                                st.rerun()
-
-                            st.markdown('</div>', unsafe_allow_html=True)
+                    status_button("Y", "🟩", "Yes")
+                    status_button("N", "🟥", "No")
+                    status_button("M", "🟨", "Maybe")
+                    status_button("?", "🟦", "No Response")
 
                     st.markdown('</div>', unsafe_allow_html=True)
 
-            render_column(col_yes, "YES", "captain-yes", yes_players)
-            render_column(col_no, "NO", "captain-no", no_players)
-            render_column(col_maybe, "MAYBE", "captain-maybe", maybe_players)
-            render_column(col_none, "No Response", "captain-none", none_players)
+            col_yes, col_no, col_maybe, col_none = st.columns(4)
+
+            with col_yes:
+                render_column("YES", "header-yes", yes_players)
+
+            with col_no:
+                render_column("NO", "header-no", no_players)
+
+            with col_maybe:
+                render_column("MAYBE", "header-maybe", maybe_players)
+
+            with col_none:
+                render_column("NR", "header-nr", none_players)
 
 except Exception as e:
     st.error(f"Games error: {e}")
