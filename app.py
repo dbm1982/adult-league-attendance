@@ -20,23 +20,16 @@ st.set_page_config(
 st.markdown("""
 <style>
 
-.player-row {
-    display: flex;
-    align-items: center;
-    padding: 2px 0;
-}
-
 .player-name {
     font-size: 14px;
     font-weight: 500;
-    min-width: 130px;
+    padding-top: 6px;
 }
 
 .status-btn {
     font-size: 16px !important;
     padding: 2px 6px !important;
     border-radius: 6px !important;
-    margin-right: 4px !important;
     min-width: 40px !important;
     text-align: center !important;
 }
@@ -363,29 +356,25 @@ try:
                     else:
                         current = "No Response"
 
-                    st.markdown('<div class="player-row">', unsafe_allow_html=True)
-
-                    # NAME + BUTTONS IN MICRO-COLUMNS
-                    name_col, btn_col = st.columns([1.3, 2])
+                    # ONE-LINE ROW USING 5 COLUMNS
+                    name_col, y_col, n_col, m_col, q_col = st.columns([2, 1, 1, 1, 1])
 
                     with name_col:
                         st.markdown(f'<div class="player-name">{p["player_name"]}</div>', unsafe_allow_html=True)
 
-                    with btn_col:
-
-                        def status_button(label, emoji, status_value):
-                            selected = (current == status_value)
-                            css_class = "status-btn selected-btn" if selected else "status-btn"
+                    # BUTTONS — ALWAYS INLINE BECAUSE EACH IS IN ITS OWN COLUMN
+                    def status_button(label, emoji, status_value, col):
+                        selected = (current == status_value)
+                        css_class = "status-btn selected-btn" if selected else "status-btn"
+                        with col:
                             if st.button(f"{emoji} {label}", key=f"{p['player_id']}_{game['game_id']}_{label}"):
                                 save_attendance(attendance_sheet, p["player_id"], game["game_id"], status_value)
                                 st.rerun()
 
-                        status_button("Y", "🟩", "Yes")
-                        status_button("N", "🟥", "No")
-                        status_button("M", "🟨", "Maybe")
-                        status_button("?", "🟦", "No Response")
-
-                    st.markdown('</div>', unsafe_allow_html=True)
+                    status_button("Y", "🟩", "Yes", y_col)
+                    status_button("N", "🟥", "No", n_col)
+                    status_button("M", "🟨", "Maybe", m_col)
+                    status_button("?", "🟦", "No Response", q_col)
 
             col_yes, col_no, col_maybe, col_none = st.columns(4)
 
