@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# CSS — COMPACT INLINE ROWS
+# CSS
 # --------------------------------------------------
 
 st.markdown("""
@@ -24,25 +24,6 @@ st.markdown("""
     font-size: 14px;
     font-weight: 500;
     padding-top: 6px;
-}
-
-.segmented {
-    display: flex;
-    gap: 6px;
-}
-
-.segmented button {
-    font-size: 16px !important;
-    padding: 2px 6px !important;
-    border-radius: 6px !important;
-    min-width: 40px !important;
-    text-align: center !important;
-    background: white;
-    border: 1px solid #999;
-}
-
-.segmented .selected {
-    border: 2px solid black !important;
 }
 
 .column-header {
@@ -238,12 +219,11 @@ try:
     for game in team_games:
 
         # Current status for selected player
-        current_status = ""
+        current_status = "No Response"
         for record in attendance:
             if str(record["player_id"]) == str(selected_player_id) and str(record["game_id"]) == str(game["game_id"]):
-                current_status = str(record["status"]).strip()
-                if current_status == "None":
-                    current_status = ""
+                s = str(record["status"]).strip()
+                current_status = "No Response" if s in ("", "None") else s
                 break
 
         # Game callout
@@ -277,14 +257,12 @@ try:
         none_players = []
 
         for player in team_players:
-            player_status = ""
+            player_status = "No Response"
             for record in attendance:
                 if str(record["player_id"]) == str(player["player_id"]) and str(record["game_id"]) == str(game["game_id"]):
-                    player_status = str(record["status"]).strip()
+                    s = str(record["status"]).strip()
+                    player_status = "No Response" if s in ("", "None") else s
                     break
-
-            if player_status == "None" or player_status == "":
-                player_status = "No Response"
 
             if player_status == "Yes":
                 yes_players.append(player)
@@ -340,65 +318,83 @@ try:
                 st.rerun()
 
         # --------------------------------------------------
-        # CAPTAIN VIEW
+        # CAPTAIN VIEW (LOWEST LOAD)
         # --------------------------------------------------
 
         else:
-
-            def render_column(title, color_class, players_list):
-                st.markdown(
-                    f'<div class="column-header {color_class}">{title} ({len(players_list)})</div>',
-                    unsafe_allow_html=True
-                )
-
-                for p in players_list:
-
-                    # Determine current status
-                    if title == "YES":
-                        current = "Yes"
-                    elif title == "NO":
-                        current = "No"
-                    elif title == "MAYBE":
-                        current = "Maybe"
-                    else:
-                        current = "No Response"
-
-                    # ONE-LINE ROW USING 2 COLUMNS
-                    name_col, seg_col = st.columns([2, 3])
-
-                    with name_col:
-                        st.markdown(f'<div class="player-name">{p["player_name"]}</div>', unsafe_allow_html=True)
-
-                    with seg_col:
-                        st.markdown('<div class="segmented">', unsafe_allow_html=True)
-
-                        def seg_button(label, emoji, status_value):
-                            selected = (current == status_value)
-                            css = "selected" if selected else ""
-                            if st.button(f"{emoji} {label}", key=f"{p['player_id']}_{game['game_id']}_{label}"):
-                                save_attendance(attendance_sheet, p["player_id"], game["game_id"], status_value)
-                                st.rerun()
-
-                        seg_button("Y", "🟩", "Yes")
-                        seg_button("N", "🟥", "No")
-                        seg_button("M", "🟨", "Maybe")
-                        seg_button("?", "🟦", "No Response")
-
-                        st.markdown('</div>', unsafe_allow_html=True)
-
+            # Summary counts only
             col_yes, col_no, col_maybe, col_none = st.columns(4)
 
             with col_yes:
-                render_column("YES", "header-yes", yes_players)
+                st.markdown(
+                    f'<div class="column-header header-yes">YES ({len(yes_players)})</div>',
+                    unsafe_allow_html=True
+                )
 
             with col_no:
-                render_column("NO", "header-no", no_players)
+                st.markdown(
+                    f'<div class="column-header header-no">NO ({len(no_players)})</div>',
+                    unsafe_allow_html=True
+                )
 
             with col_maybe:
-                render_column("MAYBE", "header-maybe", maybe_players)
+                st.markdown(
+                    f'<div class="column-header header-maybe">MAYBE ({len(maybe_players)})</div>',
+                    unsafe_allow_html=True
+                )
 
             with col_none:
-                render_column("NR", "header-nr", none_players)
+                st.markdown(
+                    f'<div class="column-header header-nr">NR ({len(none_players)})</div>',
+                    unsafe_allow_html=True
+                )
+
+            st.markdown("### 🧭 Update a player's status")
+
+            # Captain picks ONE player to update
+            player_to_update = st.selectbox(
+                "Choose a player to update",
+                [p["player_name"] for p in team_players],
+                key=f"captain_player_select_{game['game_id']}"
+            )
+
+            selected_player_record_for_game = next(
+                (p for p in team_players if p["player_name"] == player_to_update),
+                None
+            )
+
+            current_player_status = "No Response"
+            if selected_player_record_for_game:
+                for record in attendance:
+                    if (
+                        str(record["player_id"]) == str(selected_player_record_for_game["player_id"])
+                        and str(record["game_id"]) == str(game["game_id"])
+                    ):
+                        s = str(record["status"]).strip()
+                        current_player_status = "No Response" if s in ("", "None") else s
+                        break
+
+            options = ["No Response", "Yes", "No", "Maybe"]
+            default_index = options.index(current_player_status) if current_player_status in options else 0
+
+            selected_status_for_player = st.radio(
+                "Set status",
+                options,
+                index=default_index,
+                horizontal=True,
+                key=f"captain_status_{game['game_id']}"
+            )
+
+            if st.button("💾 Save Player Status", key=f"captain_save_{game['game_id']}"):
+                if selected_player_record_for_game:
+                    save_attendance(
+                        attendance_sheet,
+                        selected_player_record_for_game["player_id"],
+                        game["game_id"],
+                        selected_status_for_player
+                    )
+                    st.success(f"Updated {player_to_update} to {selected_status_for_player}.")
+                    st.rerun()
 
 except Exception as e:
     st.error(f"Games error: {e}")
