@@ -26,6 +26,9 @@ if "selected_player" not in st.session_state:
 if "view_mode" not in st.session_state:
     st.session_state.view_mode = "My Availability"
 
+if "pending_updates" not in st.session_state:
+    st.session_state.pending_updates = {}
+
 # --------------------------------------------------
 # CSS
 # --------------------------------------------------
@@ -65,6 +68,18 @@ def short_name(full):
     parts = full.split()
     return f"{parts[0]} {parts[-1][0]}."
 
+def safe_write(func, *args, **kwargs):
+    try:
+        return func(*args, **kwargs)
+    except Exception:
+        import time
+        time.sleep(0.3)
+        try:
+            return func(*args, **kwargs)
+        except Exception:
+            st.error("⚠️ Could not save your updates to the league database. Please try again.")
+            st.stop()
+
 def save_attendance(attendance_sheet, player_id, game_id, status):
     values = attendance_sheet.get_all_values()
     header = values[0]
@@ -84,10 +99,16 @@ def save_attendance(attendance_sheet, player_id, game_id, status):
             break
 
     if row_index:
-        attendance_sheet.update_cell(row_index, status_col + 1, spreadsheet_status)
-        attendance_sheet.update_cell(row_index, updated_col + 1, timestamp)
+        safe_write(
+            attendance_sheet.update,
+            f"{chr(ord('A') + status_col)}{row_index}:{chr(ord('A') + updated_col)}{row_index}",
+            [[spreadsheet_status, timestamp]]
+        )
     else:
-        attendance_sheet.append_row([player_id, game_id, spreadsheet_status, timestamp])
+        safe_write(
+            attendance_sheet.append_row,
+            [player_id, game_id, spreadsheet_status, timestamp]
+        )
 
 # --------------------------------------------------
 # GOOGLE CONNECTION (HARDENED)
@@ -127,7 +148,7 @@ games_sheet = spreadsheet.worksheet("Games")
 attendance_sheet = spreadsheet.worksheet("Attendance")
 
 # --------------------------------------------------
-# CACHING (HARDENED)
+# CACHING
 # --------------------------------------------------
 
 @st.cache_data(ttl=60)
@@ -295,7 +316,7 @@ try:
         st.markdown("---")
 
     # --------------------------------------------------
-    # CAPTAIN QUICK SUMMARY (TOP ONLY, NEUTRAL, MOBILE-FRIENDLY)
+    # CAPTAIN QUICK SUMMARY
     # --------------------------------------------------
 
     if is_captain and view_mode == "Team Availability":
@@ -328,17 +349,12 @@ try:
 
     for game in team_games:
 
-        # Current status for selected player
         current_status = "No Response"
         for record in attendance:
             if str(record["player_id"]) == str(selected_player_id) and str(record["game_id"]) == str(game["game_id"]):
                 s = str(record["status"]).strip()
                 current_status = "No Response" if s in ("", "None") else s
                 break
-
-        # --------------------------------------------------
-        # GAME HEADER
-        # --------------------------------------------------
 
         field_clean = str(game.get("field", "")).replace("Field ", "")
 
@@ -354,10 +370,6 @@ try:
         )
 
         st.markdown(game_html, unsafe_allow_html=True)
-
-        # --------------------------------------------------
-        # MINI SUMMARY BAR
-        # --------------------------------------------------
 
         yes_players = []
         no_players = []
@@ -380,10 +392,6 @@ try:
                 maybe_players.append(player)
             else:
                 none_players.append(player)
-
-        # --------------------------------------------------
-        # NR + MAYBE ALERT (SOFT BLUE)
-        # --------------------------------------------------
 
         if is_captain and view_mode == "Team Availability":
 
@@ -412,10 +420,6 @@ try:
             alert_html += '</div>'
 
             st.markdown(alert_html, unsafe_allow_html=True)
-
-        # --------------------------------------------------
-        # PLAYER VIEW
-        # --------------------------------------------------
 
         if view_mode == "My Availability":
 
@@ -469,23 +473,15 @@ try:
                 key=f"attendance_{game['game_id']}"
             )
 
-            if st.button("💾 Save Response", key=f"save_{game['game_id']}", type="primary"):
-                save_attendance(attendance_sheet, selected_player_id, game["game_id"], selected_status)
-                st.cache_data.clear()
-
+            if st.button("💾 Add to Updates", key=f"save_{game['game_id']}", type="primary"):
+                st.session_state.pending_updates[(selected_player_id, game["game_id"])] = selected_status
                 st.markdown(
                     '<div style="background:#e8f5e9; padding:10px 14px; border-radius:8px; '
-                    'border-left:5px solid #4CAF50; font-size:16px; margin:10px 0;">'
-                    '✨ Status updated!'
+                    'border-left:5px solid #4CAF50; font-size:14px; margin:10px 0;">'
+                    '✅ Change stored. Don’t forget to click "Save All Updates" below.'
                     '</div>',
                     unsafe_allow_html=True
                 )
-
-                st.rerun()
-
-        # --------------------------------------------------
-        # CAPTAIN VIEW
-        # --------------------------------------------------
 
         else:
             col_yes, col_no, col_maybe, col_none = st.columns(4)
@@ -554,32 +550,50 @@ try:
                 key=f"captain_status_{game['game_id']}"
             )
 
-            if st.button("💾 Save Player Status", key=f"captain_save_{game['game_id']}"):
-                save_attendance(
-                    attendance_sheet,
-                    selected_player_record_for_game["player_id"],
-                    game["game_id"],
-                    selected_status_for_player
+            if st.button("💾 Add Player Change", key=f"captain_save_{game['game_id']}"):
+                st.session_state.pending_updates[
+                    (selected_player_record_for_game["player_id"], game["game_id"])
+                ] = selected_status_for_player
+                st.markdown(
+                    f'<div style="background:#e8f5e9; padding:10px 14px; border-radius:8px; '
+                    'border-left:5px solid #4CAF50; font-size:14px; margin:10px 0;">'
+                    f'✅ Change stored for {player_to_update}. Don’t forget to click "Save All Updates" below.'
+                    '</div>',
+                    unsafe_allow_html=True
                 )
-                st.cache_data.clear()
-                st.success(f"Updated {player_to_update} to {selected_status_for_player}.")
-                st.rerun()
-
-        # --------------------------------------------------
-        # DIVIDER
-        # --------------------------------------------------
 
         st.markdown(
             '<hr style="border:0; height:3px; background:#0D47A1; margin:40px 0;">',
             unsafe_allow_html=True
         )
 
-# --------------------------------------------------
-# GLOBAL ERROR HANDLER FOR GAME LOOP
-# --------------------------------------------------
+    # --------------------------------------------------
+    # SAVE ALL UPDATES (BOTTOM)
+    # --------------------------------------------------
 
-except Exception as e:
+    if view_mode == "My Availability" and st.session_state.pending_updates:
+        st.markdown("---")
+        st.markdown("### 💾 Save All Updates")
+
+        if st.button("✅ Save All Updates Now"):
+            for (player_id, game_id), status in st.session_state.pending_updates.items():
+                save_attendance(attendance_sheet, player_id, game_id, status)
+            st.session_state.pending_updates = {}
+            st.success("All your updates have been saved.")
+            st.rerun()
+
+    if view_mode == "Team Availability" and st.session_state.pending_updates:
+        st.markdown("---")
+        st.markdown("### 💾 Save All Captain Updates")
+
+        if st.button("✅ Save All Updates Now"):
+            for (player_id, game_id), status in st.session_state.pending_updates.items():
+                save_attendance(attendance_sheet, player_id, game_id, status)
+            st.session_state.pending_updates = {}
+            st.success("All captain updates have been saved.")
+            st.rerun()
+
+except Exception:
     st.error("⚠️ Something went wrong while loading games. Please try again in a moment.")
     if st.button("🔄 Reload games"):
         st.rerun()
-
