@@ -294,6 +294,43 @@ try:
         st.markdown(summary_html, unsafe_allow_html=True)
         st.markdown("---")
 
+    # --------------------------------------------------
+    # CAPTAIN QUICK SUMMARY (TOP-ONLY)
+    # --------------------------------------------------
+
+    if is_captain and view_mode == "Team Availability":
+        st.markdown("### 🟢 Quick Commitment Summary")
+
+        summary_html = '<div style="margin-bottom:20px;">'
+
+        for idx, g in enumerate(team_games):
+            yes_count = 0
+            for record in attendance:
+                if str(record["game_id"]) == str(g["game_id"]) and str(record["status"]).strip() == "Yes":
+                    yes_count += 1
+
+            highlight = (
+                'background:#E8F5E9; border-left:6px solid #2E7D32; padding:10px 14px; border-radius:8px;'
+                if idx == 0 else
+                'padding:8px 12px;'
+            )
+
+            summary_html += (
+                f'<div style="{highlight} margin-bottom:6px; font-size:15px;">'
+                f'<strong>{weekday(g["date"])}, {format_date(g["date"])}</strong> — '
+                f'{g["time"]} vs {g["opponent"]} — '
+                f'<strong>{yes_count} Yes</strong>'
+                f'</div>'
+            )
+
+        summary_html += '</div>'
+
+        st.markdown(summary_html, unsafe_allow_html=True)
+
+    # --------------------------------------------------
+    # GAME LOOP
+    # --------------------------------------------------
+
     for game in team_games:
 
         # Current status for selected player
@@ -348,39 +385,6 @@ try:
                 maybe_players.append(player)
             else:
                 none_players.append(player)
-
-        # --------------------------------------------------
-        # CAPTAIN QUICK SUMMARY (YES COUNTS)
-        # --------------------------------------------------
-
-        if is_captain and view_mode == "Team Availability":
-            st.markdown("### 🟢 Quick Commitment Summary")
-
-            summary_html = '<div style="margin-bottom:20px;">'
-
-            for idx, g in enumerate(team_games):
-                yes_count = 0
-                for record in attendance:
-                    if str(record["game_id"]) == str(g["game_id"]) and str(record["status"]).strip() == "Yes":
-                        yes_count += 1
-
-                highlight = (
-                    'background:#E8F5E9; border-left:6px solid #2E7D32; padding:10px 14px; border-radius:8px;'
-                    if idx == 0 else
-                    'padding:8px 12px;'
-                )
-
-                summary_html += (
-                    f'<div style="{highlight} margin-bottom:6px; font-size:15px;">'
-                    f'<strong>{weekday(g["date"])}, {format_date(g["date"])}</strong> — '
-                    f'{g["time"]} vs {g["opponent"]} — '
-                    f'<strong>{yes_count} Yes</strong>'
-                    f'</div>'
-                )
-
-            summary_html += '</div>'
-
-            st.markdown(summary_html, unsafe_allow_html=True)
 
         # --------------------------------------------------
         # NR + MAYBE ALERT
