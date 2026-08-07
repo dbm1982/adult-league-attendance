@@ -38,9 +38,9 @@ st.markdown("""
 .header-no { background-color: #F44336; color: white; }
 .header-maybe { background-color: #FFEB3B; color: black; }
 
-/* ⭐ NR block — BLUE for maximum mobile readability */
+/* NR column header (blue) */
 .header-nr { 
-    background-color: ##84B9F2; 
+    background-color: #1E88E5; 
     color: white;
 }
 
@@ -278,21 +278,23 @@ try:
                 none_players.append(player)
 
         # --------------------------------------------------
-        # CAPTAIN ALERT BAR
+        # NR SUMMARY BOX (THIS IS THE FIXED PART)
         # --------------------------------------------------
 
         if is_captain and view_mode == "Team Availability" and len(none_players) > 0:
             nr_names = ", ".join([short_name(p["player_name"]) for p in none_players])
+
             st.markdown(
                 f"""
                 <div style="
-                    background-color:##84B9F2;
+                    background-color:#1E88E5;
                     border-left:5px solid #0D47A1;
-                    padding:8px 12px;
+                    padding:12px 16px;
                     border-radius:6px;
-                    margin:6px 0 14px 0;
-                    font-size:13px;">
-                    <strong>⚠️ {len(none_players)} players have not responded:</strong>
+                    margin:10px 0 18px 0;
+                    font-size:15px;
+                    color:white;">
+                    <strong>⚠️ {len(none_players)} players have not responded:</strong><br>
                     <span>{nr_names}</span>
                 </div>
                 """,
@@ -353,8 +355,9 @@ try:
                     st.markdown(f"- {p['player_name']}")
 
             with col_none:
-                st.html(
-                    f'<div class="column-header header-nr">NR ({len(none_players)})</div>'
+                st.markdown(
+                    f'<div class="column-header header-nr">NR ({len(none_players)})</div>',
+                    unsafe_allow_html=True
                 )
                 for p in none_players:
                     st.markdown(f"- {p['player_name']}")
