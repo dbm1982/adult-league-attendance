@@ -35,10 +35,15 @@ st.markdown("""
     color: black;
 }
 
-.header-yes { background-color: #4CAF50; }
-.header-no { background-color: #F44336; }
-.header-maybe { background-color: #FFEB3B; }
-.header-nr { background-color: #BDBDBD; }
+.header-yes { background-color: #4CAF50; color: white; }
+.header-no { background-color: #F44336; color: white; }
+.header-maybe { background-color: #FFEB3B; color: black; }
+
+/* ⭐ Option A — darker NR color for mobile visibility */
+.header-nr { 
+    background-color: #757575; 
+    color: white;
+}
 
 </style>
 """, unsafe_allow_html=True)
