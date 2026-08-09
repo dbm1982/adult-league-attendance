@@ -24,25 +24,24 @@ players_df = pd.DataFrame(players_ws.get_all_records())
 games_df = pd.DataFrame(games_ws.get_all_records())
 attendance_df = pd.DataFrame(attendance_ws.get_all_records())
 
+# ---------------------------------------------------------
+# CLEANUP: strip whitespace + remove blank team_id rows
+# ---------------------------------------------------------
 
-# --- CLEAN & FILTER TEAM DATA ---
-
-# Strip whitespace
+# Strip whitespace from team_id and player_name
 teams_df["team_id"] = teams_df["team_id"].astype(str).str.strip()
 players_df["team_id"] = players_df["team_id"].astype(str).str.strip()
 games_df["team_id"] = games_df["team_id"].astype(str).str.strip()
 players_df["player_name"] = players_df["player_name"].astype(str).str.strip()
 
-# Remove blank team_id rows
+# Remove rows with blank team_id
 teams_df = teams_df[teams_df["team_id"] != ""]
 players_df = players_df[players_df["team_id"] != ""]
 games_df = games_df[games_df["team_id"] != ""]
 
-
-
-# -------------------------------
-# NEW LOGIN FLOW: TEAM → PLAYER
-# -------------------------------
+# ---------------------------------------------------------
+# LOGIN FLOW: TEAM → PLAYER
+# ---------------------------------------------------------
 
 st.title("Adult League Attendance")
 
@@ -52,9 +51,6 @@ selected_team = st.selectbox("Select your team:", active_teams)
 
 # Player dropdown (filtered by team)
 team_players = players_df[players_df["team_id"] == selected_team].copy()
-
-# Clean whitespace
-team_players["player_name"] = team_players["player_name"].astype(str).str.strip()
 
 player_names = team_players["player_name"].tolist()
 selected_player_name = st.selectbox("Select your name:", player_names)
@@ -73,9 +69,9 @@ is_captain = player["is_captain"]
 
 st.success(f"Logged in as {player['player_name']} ({team_id})")
 
-# -------------------------------
+# ---------------------------------------------------------
 # SAVE ATTENDANCE BACK TO SHEET
-# -------------------------------
+# ---------------------------------------------------------
 
 def save_attendance(updates):
     global attendance_df
@@ -104,17 +100,17 @@ def save_attendance(updates):
         attendance_df.values.tolist()
     )
 
-# -------------------------------
+# ---------------------------------------------------------
 # CAPTAIN VIEW
-# -------------------------------
+# ---------------------------------------------------------
 
 if is_captain:
     st.header("Captain View")
     captain_view(players_df, games_df, attendance_df, team_id, save_attendance)
 
-# -------------------------------
+# ---------------------------------------------------------
 # PLAYER VIEW
-# -------------------------------
+# ---------------------------------------------------------
 
 else:
     st.header("Player View")
