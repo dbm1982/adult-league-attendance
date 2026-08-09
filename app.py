@@ -36,6 +36,13 @@ games = data["games"]
 attendance = data["attendance"]
 sheet = data["sheet"]
 
+# ---------------------------------------------------------
+# FILTER ACTIVE TEAMS (RESTORED)
+# ---------------------------------------------------------
+
+active_teams = [t for t in teams if t.get("active", False) == True]
+
+
 # Build a lookup for attendance
 attendance_lookup = {
     (row["player_id"], row["game_id"]): row["status"]
@@ -48,7 +55,7 @@ attendance_lookup = {
 
 st.title("Adult Team Attendance")
 
-team_id = team_selector(teams)
+team_id = team_selector(active_teams)
 player = player_selector(players, team_id)
 player_id = player["player_id"]
 
@@ -61,11 +68,9 @@ st.markdown(f"### Welcome, **{player['player_name']}**")
 
 if player["is_captain"] == True:
 
-    # Initialize toggle state
     if "captain_mode" not in st.session_state:
         st.session_state.captain_mode = False
 
-    # Toggle button
     toggle_label = (
         "Switch to Captain View"
         if not st.session_state.captain_mode
@@ -75,7 +80,6 @@ if player["is_captain"] == True:
     if st.button(toggle_label):
         st.session_state.captain_mode = not st.session_state.captain_mode
 
-    # Show captain tools ONLY when toggle is ON
     if st.session_state.captain_mode:
         st.markdown("## Captain View")
         captain_view(data, player_id)
@@ -103,8 +107,6 @@ for game in team_games:
 if st.button("Save Attendance"):
     save_attendance(sheet, updates)
     st.success("Attendance saved!")
-
-    # Reload data after saving
     st.session_state.league_data = load_all_data()
 
 
