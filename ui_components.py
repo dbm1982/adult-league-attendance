@@ -30,24 +30,22 @@ def game_card(game, attendance_lookup, player_id):
 
     opp_color = OPP_COLORS.get(opponent, "#333")
 
-    st.markdown(
-        f"""
-        <div class="game-card">
-            <span class="opp-badge" style="background-color:{opp_color};">
-                {opponent}
-            </span>
+    # IMPORTANT: HTML must be left-aligned with NO indentation
+    html = f"""
+<div class="game-card">
+    <span class="opp-badge" style="background-color:{opp_color};">
+        {opponent}
+    </span>
+    <span class="time-badge">
+        {game["date"]} — {game["time"]}
+    </span>
+    <span class="field-badge">
+        Field {game["field"]}
+    </span>
+</div>
+"""
 
-            <span class="time-badge">
-                {game["date"]} — {game["time"]}
-            </span>
-
-            <span class="field-badge">
-                Field {game["field"]}
-            </span>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown(html, unsafe_allow_html=True)
 
     return {
         "player_id": player_id,
@@ -65,5 +63,9 @@ def attendance_summary(attendance, games, player_id):
     st.markdown("### Attendance Summary")
 
     for g in games:
-        status = next((a["status"] for a in attendance if a["player_id"] == player_id and a["game_id"] == g["game_id"]), "No response")
+        status = next(
+            (a["status"] for a in attendance
+             if a["player_id"] == player_id and a["game_id"] == g["game_id"]),
+            "No response"
+        )
         st.write(f"{g['date']} — {status}")
