@@ -1,4 +1,5 @@
 # styles.py
+
 SEGMENTED_CONTROL_CSS = """
 <style>
 .segmented-control {
