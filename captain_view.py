@@ -40,7 +40,7 @@ def captain_view(data, captain_player_id):
         if missing:
             st.markdown(f"**{p['player_name']}**")
             for g in missing:
-                st.write(f"{g['date']} {g['time']}")
+                st.write(f"{g['date']} {g['time']} (Field {g['field']})")
 
     st.markdown("---")
 
@@ -51,26 +51,35 @@ def captain_view(data, captain_player_id):
     st.markdown("### Team Attendance Overview")
 
     for g in team_games:
-        st.markdown(f"#### {g['opponent']} — {g['date']} {g['time']} (Field {g['field']})")
+
+        # Correct header: date/time first, opponent small
+        st.markdown(
+            f"#### {g['date']} {g['time']} — Field {g['field']} "
+            f"<span style='color:#888;font-size:14px;'>({g['opponent']})</span>",
+            unsafe_allow_html=True
+        )
 
         # Build table
-        table = []
         for p in team_players:
             status = att_lookup.get((p["player_id"], g["game_id"]), "")
 
-            # Colored buttons
-            yes = st.button("Yes", key=f"yes_{p['player_id']}_{g['game_id']}")
-            no = st.button("No", key=f"no_{p['player_id']}_{g['game_id']}")
-            maybe = st.button("Maybe", key=f"maybe_{p['player_id']}_{g['game_id']}")
-            nr = (status == "")
+            # Color-coded dots
+            def dot(color):
+                return f"<span style='color:{color};font-size:22px;'>●</span>"
+
+            yes_dot = dot("green") if status == "Yes" else dot("#ccc")
+            no_dot = dot("red") if status == "No" else dot("#ccc")
+            maybe_dot = dot("orange") if status == "Maybe" else dot("#ccc")
+            nr_dot = dot("gray") if status == "" else dot("#ccc")
 
             # Display row
-            st.write(
-                f"{p['player_name']} — "
-                f"Yes: {'●' if status=='Yes' else '○'}  "
-                f"No: {'●' if status=='No' else '○'}  "
-                f"Maybe: {'●' if status=='Maybe' else '○'}  "
-                f"NR: {'●' if nr else '○'}"
+            st.markdown(
+                f"<b>{p['player_name']}</b> &nbsp;&nbsp; "
+                f"Yes: {yes_dot} &nbsp;&nbsp; "
+                f"No: {no_dot} &nbsp;&nbsp; "
+                f"Maybe: {maybe_dot} &nbsp;&nbsp; "
+                f"NR: {nr_dot}",
+                unsafe_allow_html=True
             )
 
         st.markdown("---")
