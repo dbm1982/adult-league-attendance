@@ -24,6 +24,22 @@ players_df = pd.DataFrame(players_ws.get_all_records())
 games_df = pd.DataFrame(games_ws.get_all_records())
 attendance_df = pd.DataFrame(attendance_ws.get_all_records())
 
+
+# --- CLEAN & FILTER TEAM DATA ---
+
+# Strip whitespace
+teams_df["team_id"] = teams_df["team_id"].astype(str).str.strip()
+players_df["team_id"] = players_df["team_id"].astype(str).str.strip()
+games_df["team_id"] = games_df["team_id"].astype(str).str.strip()
+players_df["player_name"] = players_df["player_name"].astype(str).str.strip()
+
+# Remove blank team_id rows
+teams_df = teams_df[teams_df["team_id"] != ""]
+players_df = players_df[players_df["team_id"] != ""]
+games_df = games_df[games_df["team_id"] != ""]
+
+
+
 # -------------------------------
 # NEW LOGIN FLOW: TEAM → PLAYER
 # -------------------------------
