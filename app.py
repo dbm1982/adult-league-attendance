@@ -16,7 +16,7 @@ from captain_view import captain_view
 
 
 # ---------------------------------------------------------
-# LOAD DATA ONLY AFTER STREAMLIT INITIALIZES
+# LOAD DATA
 # ---------------------------------------------------------
 
 def get_league_data():
@@ -24,8 +24,6 @@ def get_league_data():
         st.session_state.league_data = load_all_data()
     return st.session_state.league_data
 
-
-# Load data
 data = get_league_data()
 
 teams = data["teams"]
@@ -36,16 +34,13 @@ sheet = data["sheet"]
 
 
 # ---------------------------------------------------------
-# ACTIVE TEAM FILTER (supports TRUE, "TRUE", 1, yes)
+# ACTIVE TEAM FILTER (TRUE / "TRUE" / 1 / yes)
 # ---------------------------------------------------------
 
 def is_active(value):
     return str(value).strip().lower() in ("true", "1", "yes")
 
-active_teams = [
-    t for t in teams
-    if is_active(t.get("active"))
-]
+active_teams = [t for t in teams if is_active(t.get("active"))]
 
 
 # ---------------------------------------------------------
@@ -64,20 +59,17 @@ attendance_lookup = {
 
 st.title("Adult Team Attendance")
 
-# TEAM SELECTOR
 if not active_teams:
     st.error("No active teams found.")
     st.stop()
 
 team_id = team_selector(active_teams)
 
-# PLAYER SAFETY CHECK
 team_players = [p for p in players if p["team_id"] == team_id]
 if not team_players:
     st.error("No players found for this team.")
     st.stop()
 
-# PLAYER SELECTOR
 player = player_selector(players, team_id)
 player_id = player["player_id"]
 
@@ -85,10 +77,13 @@ st.markdown(f"### Welcome, **{player['player_name']}**")
 
 
 # ---------------------------------------------------------
-# CAPTAIN MODE TOGGLE (RESTORED)
+# CAPTAIN MODE TOGGLE (FIXED)
 # ---------------------------------------------------------
 
-if player["is_captain"] is True:
+def is_captain(value):
+    return str(value).strip().lower() in ("true", "1", "yes")
+
+if is_captain(player.get("is_captain")):
 
     if "captain_mode" not in st.session_state:
         st.session_state.captain_mode = False
@@ -133,7 +128,14 @@ if st.button("Save Attendance"):
 
 
 # ---------------------------------------------------------
-# SUMMARY
+# SUMMARY (FIXED — ONLY SHOW THIS TEAM'S GAMES)
 # ---------------------------------------------------------
 
-attendance_summary(attendance, games, player_id)
+team_game_ids = {g["game_id"] for g in team_games}
+
+filtered_attendance = [
+    a for a in attendance
+    if a["player_id"] == player_id and a["game_id"] in team_game_ids
+]
+
+attendance_summary(filtered_attendance, team_games, player_id)
