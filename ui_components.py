@@ -1,68 +1,51 @@
 import streamlit as st
 
-# ---------------------------------------------------------
-# TEAM SELECTOR
-# ---------------------------------------------------------
-
-def team_selector(teams):
-    active_teams = [t for t in teams if t["active"]]
-    team_names = [t["team_id"] for t in active_teams]
-
-    selected = st.selectbox("Select your team", team_names)
-    return selected
-
-
-# ---------------------------------------------------------
-# PLAYER SELECTOR
-# ---------------------------------------------------------
-
-def player_selector(players, team_id):
-    team_players = [p for p in players if p["team_id"] == team_id]
-    names = [p["player_name"] for p in team_players]
-
-    selected_name = st.selectbox("Select your name", names)
-    selected_player = next(p for p in team_players if p["player_name"] == selected_name)
-
-    return selected_player
-
-
-# ---------------------------------------------------------
-# GAME CARD
-# ---------------------------------------------------------
+# Opponent colors from your latest version
+OPP_COLORS = {
+    "Purple": "#800080",
+    "Royal": "#4169E1",
+    "Gray": "#808080",
+    "Red": "#B22222",
+    "Green": "#228B22",
+    "Orange": "#FF8C00",
+    "Blue": "#1E90FF",
+    "Yellow": "#DAA520"
+}
 
 def game_card(game, attendance_lookup, player_id):
-    st.markdown(f"### {game['date']} — {game['time']} — {game['field']}")
-    st.markdown(f"**Opponent:** {game['opponent']}")
+    opponent = game["opponent"]
+    game_id = game["game_id"]
+    status = attendance_lookup.get((player_id, game_id), "")
 
-    key = (player_id, game["game_id"])
-    current_status = attendance_lookup.get(key, "Unknown")
+    opp_color = OPP_COLORS.get(opponent, "#333")
 
-    status = st.radio(
-        "Attendance",
-        ["Yes", "No", "Maybe"],
-        index=["Yes", "No", "Maybe"].index(current_status) if current_status in ["Yes", "No", "Maybe"] else 2,
-        horizontal=True,
-        key=f"{player_id}_{game['game_id']}"
+    st.markdown(
+        f"""
+        <div class="game-card">
+            <span class="opp-badge" style="background-color:{opp_color};">
+                {opponent}
+            </span>
+
+            <span class="time-badge">
+                {game["date"]} — {game["time"]}
+            </span>
+
+            <span class="field-badge">
+                Field {game["field"]}
+            </span>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
     return {
         "player_id": player_id,
-        "game_id": game["game_id"],
-        "status": status
+        "game_id": game_id,
+        "status": st.radio(
+            "Attendance",
+            ["Yes", "No", "Maybe"],
+            horizontal=True,
+            index=["Yes", "No", "Maybe"].index(status) if status in ["Yes", "No", "Maybe"] else 0,
+            key=f"att_{player_id}_{game_id}"
+        )
     }
-
-
-# ---------------------------------------------------------
-# SUMMARY BOX
-# ---------------------------------------------------------
-
-def attendance_summary(attendance, games, player_id):
-    st.markdown("## Your Attendance Summary")
-
-    yes = sum(1 for a in attendance if a["player_id"] == player_id and a["status"] == "Yes")
-    no = sum(1 for a in attendance if a["player_id"] == player_id and a["status"] == "No")
-    maybe = sum(1 for a in attendance if a["player_id"] == player_id and a["status"] == "Maybe")
-
-    st.write(f"**Yes:** {yes}")
-    st.write(f"**No:** {no}")
-    st.write(f"**Maybe:** {maybe}")
