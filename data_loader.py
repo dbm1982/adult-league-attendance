@@ -1,5 +1,4 @@
 import gspread
-from google.oauth2.service_account import Credentials
 import streamlit as st
 
 # ---------------------------------------------------------
@@ -9,15 +8,13 @@ import streamlit as st
 def connect_to_sheet():
     """
     Connects to Google Sheets using the service account stored in Streamlit Secrets.
+    This uses gspread's built-in helper, same style that worked before.
     """
 
-    creds = Credentials.from_service_account_info(
-        st.secrets["gcp_service_account"]
-    )
+    # This is the key: use gspread's helper with the secrets dict
+    client = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
 
-    client = gspread.authorize(creds)
-
-    # IMPORTANT: replace with your actual sheet name
+    # IMPORTANT: replace with your actual sheet name if different
     sheet = client.open("HAYSA League Data")
 
     return sheet
