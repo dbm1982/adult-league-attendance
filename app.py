@@ -9,6 +9,10 @@ from ui_components import (
     attendance_summary
 )
 
+from styles import inject_css
+inject_css()
+
+
 # ---------------------------------------------------------
 # LOAD DATA ONLY AFTER STREAMLIT INITIALIZES
 # ---------------------------------------------------------
