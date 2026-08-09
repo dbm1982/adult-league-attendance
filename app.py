@@ -9,11 +9,11 @@ from ui_components import (
     attendance_summary
 )
 
-# NEW: CSS injection
+# CSS injection
 from styles import inject_css
 inject_css()
 
-# NEW: Captain tools
+# Captain tools
 from captain_view import captain_view
 
 
@@ -56,17 +56,34 @@ st.markdown(f"### Welcome, **{player['player_name']}**")
 
 
 # ---------------------------------------------------------
-# CAPTAIN VIEW (corrected)
+# CAPTAIN MODE TOGGLE (RESTORED)
 # ---------------------------------------------------------
 
-# Your sheet uses: is_captain = TRUE / FALSE
 if player["is_captain"] == True:
-    captain_view(data, player_id)
-    st.markdown("---")
+
+    # Initialize toggle state
+    if "captain_mode" not in st.session_state:
+        st.session_state.captain_mode = False
+
+    # Toggle button
+    toggle_label = (
+        "Switch to Captain View"
+        if not st.session_state.captain_mode
+        else "Return to Player View"
+    )
+
+    if st.button(toggle_label):
+        st.session_state.captain_mode = not st.session_state.captain_mode
+
+    # Show captain tools ONLY when toggle is ON
+    if st.session_state.captain_mode:
+        st.markdown("## Captain View")
+        captain_view(data, player_id)
+        st.markdown("---")
 
 
 # ---------------------------------------------------------
-# SHOW GAMES FOR THIS TEAM
+# SHOW GAMES FOR THIS TEAM (PLAYER VIEW)
 # ---------------------------------------------------------
 
 team_games = [g for g in games if g["team_id"] == team_id]
