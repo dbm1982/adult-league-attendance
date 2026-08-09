@@ -25,7 +25,7 @@ def get_league_data():
     return st.session_state.league_data
 
 
-# Actually load the data
+# Load data
 data = get_league_data()
 
 teams = data["teams"]
@@ -34,21 +34,29 @@ games = data["games"]
 attendance = data["attendance"]
 sheet = data["sheet"]
 
+
 # ---------------------------------------------------------
-# FILTER ACTIVE TEAMS THAT HAVE PLAYERS
+# ACTIVE TEAM FILTER (supports TRUE, "TRUE", 1, yes)
 # ---------------------------------------------------------
+
+def is_active(value):
+    return str(value).strip().lower() in ("true", "1", "yes")
 
 active_teams = [
     t for t in teams
-    if t.get("active", False) is True
-    and any(p["team_id"] == t["team_id"] for p in players)
+    if is_active(t.get("active"))
 ]
 
-# Build a lookup for attendance
+
+# ---------------------------------------------------------
+# ATTENDANCE LOOKUP
+# ---------------------------------------------------------
+
 attendance_lookup = {
     (row["player_id"], row["game_id"]): row["status"]
     for row in attendance
 }
+
 
 # ---------------------------------------------------------
 # UI — TEAM + PLAYER SELECTION
@@ -56,14 +64,20 @@ attendance_lookup = {
 
 st.title("Adult Team Attendance")
 
+# TEAM SELECTOR
+if not active_teams:
+    st.error("No active teams found.")
+    st.stop()
+
 team_id = team_selector(active_teams)
 
-# Safety: if somehow no players for this team, stop cleanly
+# PLAYER SAFETY CHECK
 team_players = [p for p in players if p["team_id"] == team_id]
 if not team_players:
     st.error("No players found for this team.")
     st.stop()
 
+# PLAYER SELECTOR
 player = player_selector(players, team_id)
 player_id = player["player_id"]
 
@@ -71,7 +85,7 @@ st.markdown(f"### Welcome, **{player['player_name']}**")
 
 
 # ---------------------------------------------------------
-# CAPTAIN MODE TOGGLE
+# CAPTAIN MODE TOGGLE (RESTORED)
 # ---------------------------------------------------------
 
 if player["is_captain"] is True:
