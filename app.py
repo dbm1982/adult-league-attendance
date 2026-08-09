@@ -8,8 +8,8 @@ from ui_components import segmented_control
 
 st.set_page_config(page_title="Adult Team Attendance", layout="wide")
 
-# Authenticate using Streamlit Secrets
-gc = gspread.service_account_from_dict(st.secrets["google_service_account"])
+# Authenticate using YOUR existing secrets key
+gc = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
 sheet = gc.open("Adult Team Attendance Dev")
 
 # Load tabs
