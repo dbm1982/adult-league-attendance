@@ -5,8 +5,7 @@ from attendance_logic import save_attendance
 from ui_components import (
     team_selector,
     player_selector,
-    game_card,
-    attendance_summary
+    game_card
 )
 
 from styles import inject_css
@@ -34,7 +33,7 @@ sheet = data["sheet"]
 
 
 # ---------------------------------------------------------
-# ACTIVE TEAM FILTER (TRUE / "TRUE" / 1 / yes)
+# ACTIVE TEAM FILTER
 # ---------------------------------------------------------
 
 def is_active(value):
@@ -77,7 +76,7 @@ st.markdown(f"### Welcome, **{player['player_name']}**")
 
 
 # ---------------------------------------------------------
-# CAPTAIN MODE TOGGLE (FIXED)
+# CAPTAIN MODE TOGGLE
 # ---------------------------------------------------------
 
 def is_captain(value):
@@ -97,14 +96,15 @@ if is_captain(player.get("is_captain")):
     if st.button(toggle_label):
         st.session_state.captain_mode = not st.session_state.captain_mode
 
+    # CAPTAIN VIEW
     if st.session_state.captain_mode:
         st.markdown("## Captain View")
         captain_view(data, player_id)
-        st.markdown("---")
+        st.stop()   # <<< IMPORTANT: prevents player view from rendering
 
 
 # ---------------------------------------------------------
-# SHOW GAMES FOR THIS TEAM (PLAYER VIEW)
+# PLAYER VIEW ONLY (NOT captain mode)
 # ---------------------------------------------------------
 
 team_games = [g for g in games if g["team_id"] == team_id]
@@ -125,21 +125,3 @@ if st.button("Save Attendance"):
     save_attendance(sheet, updates)
     st.success("Attendance saved!")
     st.session_state.league_data = load_all_data()
-
-
-# ---------------------------------------------------------
-# SUMMARY — ONLY IN CAPTAIN VIEW (FIXED)
-# ---------------------------------------------------------
-
-if "captain_mode" in st.session_state and st.session_state.captain_mode:
-
-    st.markdown("## Attendance Summary")
-
-    team_game_ids = {g["game_id"] for g in team_games}
-
-    filtered_attendance = [
-        a for a in attendance
-        if a["player_id"] == player_id and a["game_id"] in team_game_ids
-    ]
-
-    attendance_summary(filtered_attendance, team_games, player_id)
