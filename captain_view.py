@@ -1,49 +1,44 @@
 import streamlit as st
 
-def captain_view(data):
+def captain_view(data, current_player_id):
     st.markdown("### Captain Tools")
 
     players = data["players"]
     games = data["games"]
     attendance = data["attendance"]
 
-    # Build a lookup of attendance by (player_id, game_id)
+    # Build lookup
     attendance_lookup = {
         (a["player_id"], a["game_id"]): a["status"]
         for a in attendance
     }
 
     # ---------------------------------------------------------
-    # MISSING RESPONSES (clean, no duplicates)
+    # MISSING RESPONSES — CLEAN, NO DUPLICATES, NO SELF
     # ---------------------------------------------------------
 
     st.markdown("#### Players Missing Responses")
 
-    missing_rows = []
+    missing = []
 
     for p in players:
         pid = p["player_id"]
 
+        # Skip the captain themselves
+        if pid == current_player_id:
+            continue
+
         for g in games:
             key = (pid, g["game_id"])
-
-            # If no attendance record exists for this player/game
             if key not in attendance_lookup:
-                missing_rows.append({
-                    "player": p["player_name"],
-                    "date": g["date"],
-                    "time": g["time"]
-                })
+                missing.append((p["player_name"], g["date"], g["time"]))
 
-    # Remove duplicates
-    unique_missing = {
-        (row["player"], row["date"], row["time"]): row
-        for row in missing_rows
-    }.values()
+    # Deduplicate
+    unique_missing = sorted(set(missing))
 
     if unique_missing:
-        for row in unique_missing:
-            st.write(f"{row['player']} — {row['date']} {row['time']}")
+        for name, date, time in unique_missing:
+            st.write(f"{name} — {date} {time}")
     else:
         st.success("All players have responded!")
 
