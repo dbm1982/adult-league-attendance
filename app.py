@@ -56,15 +56,12 @@ st.markdown(f"### Welcome, **{player['player_name']}**")
 
 
 # ---------------------------------------------------------
-# CAPTAIN VIEW (restored)
+# CAPTAIN VIEW (corrected)
 # ---------------------------------------------------------
 
-# Your latest version used a boolean field like this:
-# player["is_captain"] == True
-# If your sheet uses a different field name, tell me and I’ll adjust it.
-
-if player.get("is_captain", False):
-    captain_view(data)
+# Your sheet uses: is_captain = TRUE / FALSE
+if player["is_captain"] == True:
+    captain_view(data, player_id)
     st.markdown("---")
 
 
