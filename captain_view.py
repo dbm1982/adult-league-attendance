@@ -5,7 +5,6 @@ def captain_view(data, captain_player_id):
     players = data["players"]
     games = data["games"]
     attendance = data["attendance"]
-    sheet = data["sheet"]
 
     # Identify captain's team
     captain = next(p for p in players if p["player_id"] == captain_player_id)
@@ -16,70 +15,66 @@ def captain_view(data, captain_player_id):
 
     # Filter games for captain's team
     team_games = [g for g in games if g["team_id"] == team_id]
-    team_game_ids = {g["game_id"] for g in team_games}
 
-    # Build attendance lookup
+    # Sort games by date/time and pick the next upcoming game
+    if not team_games:
+        st.info("No games found for your team.")
+        return
+
+    next_game = sorted(team_games, key=lambda g: (g["date"], g["time"]))[0]
+    game_id = next_game["game_id"]
+
+    # Build attendance lookup for this game
     att_lookup = {
-        (a["player_id"], a["game_id"]): a["status"]
+        a["player_id"]: a["status"]
         for a in attendance
-        if a["game_id"] in team_game_ids
+        if a["game_id"] == game_id
     }
 
     st.markdown("### Captain Tools")
 
     # ---------------------------------------------------------
-    # Missing Responses
+    # Game Header (correct formatting)
     # ---------------------------------------------------------
-    st.markdown("#### Players Missing Responses")
+    st.markdown(
+        f"#### {next_game['date']} {next_game['time']} — Field {next_game['field']} "
+        f"<span style='color:#888;font-size:14px;'>({next_game['opponent']})</span>",
+        unsafe_allow_html=True
+    )
+
+    # ---------------------------------------------------------
+    # Group players by response
+    # ---------------------------------------------------------
+
+    yes_list = []
+    no_list = []
+    maybe_list = []
+    nr_list = []
 
     for p in team_players:
-        missing = [
-            g for g in team_games
-            if att_lookup.get((p["player_id"], g["game_id"]), "") == ""
-        ]
-        if missing:
-            st.markdown(f"**{p['player_name']}**")
-            for g in missing:
-                st.write(f"{g['date']} {g['time']} (Field {g['field']})")
-
-    st.markdown("---")
+        status = att_lookup.get(p["player_id"], "")
+        if status == "Yes":
+            yes_list.append(p["player_name"])
+        elif status == "No":
+            no_list.append(p["player_name"])
+        elif status == "Maybe":
+            maybe_list.append(p["player_name"])
+        else:
+            nr_list.append(p["player_name"])
 
     # ---------------------------------------------------------
-    # Full Attendance Matrix (restored)
+    # Display grouped lists (clean, readable)
     # ---------------------------------------------------------
 
-    st.markdown("### Team Attendance Overview")
+    def show_group(title, names, color):
+        st.markdown(f"### <span style='color:{color};'>{title} ({len(names)})</span>", unsafe_allow_html=True)
+        if names:
+            for n in names:
+                st.markdown(f"- {n}")
+        else:
+            st.markdown("_None_")
 
-    for g in team_games:
-
-        # Correct header: date/time first, opponent small
-        st.markdown(
-            f"#### {g['date']} {g['time']} — Field {g['field']} "
-            f"<span style='color:#888;font-size:14px;'>({g['opponent']})</span>",
-            unsafe_allow_html=True
-        )
-
-        # Build table
-        for p in team_players:
-            status = att_lookup.get((p["player_id"], g["game_id"]), "")
-
-            # Color-coded dots
-            def dot(color):
-                return f"<span style='color:{color};font-size:22px;'>●</span>"
-
-            yes_dot = dot("green") if status == "Yes" else dot("#ccc")
-            no_dot = dot("red") if status == "No" else dot("#ccc")
-            maybe_dot = dot("orange") if status == "Maybe" else dot("#ccc")
-            nr_dot = dot("gray") if status == "" else dot("#ccc")
-
-            # Display row
-            st.markdown(
-                f"<b>{p['player_name']}</b> &nbsp;&nbsp; "
-                f"Yes: {yes_dot} &nbsp;&nbsp; "
-                f"No: {no_dot} &nbsp;&nbsp; "
-                f"Maybe: {maybe_dot} &nbsp;&nbsp; "
-                f"NR: {nr_dot}",
-                unsafe_allow_html=True
-            )
-
-        st.markdown("---")
+    show_group("YES", yes_list, "green")
+    show_group("NO", no_list, "red")
+    show_group("MAYBE", maybe_list, "orange")
+    show_group("NO RESPONSE", nr_list, "gray")
