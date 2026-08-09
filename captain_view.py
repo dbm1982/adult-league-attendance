@@ -1,94 +1,49 @@
+# captain_view.py
 import streamlit as st
-from datetime import datetime
+import pandas as pd
+from ui_components import segmented_control
 
-def captain_view(data, captain_player_id):
+def captain_view(players_df, games_df, attendance_df, team_id):
+    st.header(f"Captain View — {team_id}")
+    upcoming_games = games_df[
+        (games_df["team_id"] == team_id)
+        & (pd.to_datetime(games_df["date"]) >= pd.Timestamp.now())
+    ].sort_values("date")
 
-    players = data["players"]
-    games = data["games"]
-    attendance = data["attendance"]
+    for _, game in upcoming_games.iterrows():
+        st.subheader(
+            f"{game['date']} — {game['time']} — vs {game['opponent']} — {game['field']}"
+        )
+        team_players = players_df[players_df["team_id"] == team_id]
+        game_attendance = attendance_df[attendance_df["game_id"] == game["game_id"]]
 
-    # Identify captain
-    captain = next(p for p in players if p["player_id"] == captain_player_id)
-    team_id = captain["team_id"]
+        updates = []
+        for _, player in team_players.iterrows():
+            current_status = (
+                game_attendance.loc[
+                    game_attendance["player_id"] == player["token"], "status"
+                ].values[0]
+                if player["token"] in game_attendance["player_id"].values
+                else "NR"
+            )
+            new_status = segmented_control(player["token"], current_status)
+            updates.append((player["token"], game["game_id"], new_status))
 
-    # First name only
-    first_name = captain["player_name"].split()[0]
-    st.markdown(f"### Hello {first_name}")
-
-    # Filter players on captain's team
-    team_players = [p for p in players if p["team_id"] == team_id]
-
-    # Filter games for captain's team
-    team_games = [g for g in games if g["team_id"] == team_id]
-
-    if not team_games:
-        st.info("No games found for your team.")
-        return
-
-    # Parse date/time
-    def parse_dt(g):
-        return datetime.strptime(f"{g['date']} {g['time']}", "%Y-%m-%d %I:%M %p")
-
-    # Next upcoming game
-    next_game = sorted(team_games, key=parse_dt)[0]
-    game_id = next_game["game_id"]
-
-    # Attendance lookup
-    att_lookup = {
-        a["player_id"]: a["status"]
-        for a in attendance
-        if a["game_id"] == game_id
-    }
-
-    # Format date
-    dt = parse_dt(next_game)
-    formatted_date = dt.strftime("%A, %B %-d, %Y at %-I:%M%p")
-
-    st.markdown(
-        f"#### {formatted_date} — Opponent: {next_game['opponent']}",
-        unsafe_allow_html=True
-    )
-
-    st.markdown("---")
-
-    # Group players
-    yes_list = []
-    no_list = []
-    maybe_list = []
-    nr_list = []
-
-    for p in team_players:
-        status = att_lookup.get(p["player_id"], "")
-        if status == "Yes":
-            yes_list.append(p["player_name"])
-        elif status == "No":
-            no_list.append(p["player_name"])
-        elif status == "Maybe":
-            maybe_list.append(p["player_name"])
-        else:
-            nr_list.append(p["player_name"])
-
-    # Summary
-    st.markdown("### Summary")
-    st.markdown(
-        f"- **{len(yes_list)}** coming (Yes)\n"
-        f"- **{len(no_list)}** not coming (No)\n"
-        f"- **{len(maybe_list)}** unsure (Maybe)\n"
-        f"- **{len(nr_list)}** no response (NR)"
-    )
-
-    st.markdown("---")
-
-    # Lists
-    def show_group(title, names, color):
-        st.markdown(f"### <span style='color:{color};'>{title} ({len(names)})</span>", unsafe_allow_html=True)
-        if names:
-            for n in names:
-                st.markdown(f"- {n}")
-        else:
-            st.markdown("_None_")
-
-    show_group("YES", yes_list, "green")
-    show_group("NO", no_list, "red")
-    show_group("MAYBE", maybe_list, "orange")
-    show_group("NO RESPONSE", nr_list, "gray")
+        if st.button(f"Save Changes for {game['game_id']}"):
+            for player_id, game_id, status in updates:
+                existing = attendance_df[
+                    (attendance_df["player_id"] == player_id)
+                    & (attendance_df["game_id"] == game_id)
+                ]
+                if existing.empty:
+                    attendance_df.loc[len(attendance_df)] = [
+                        player_id,
+                        game_id,
+                        status,
+                        pd.Timestamp.now(),
+                    ]
+                else:
+                    attendance_df.loc[
+                        existing.index, ["status", "updated_at"]
+                    ] = [status, pd.Timestamp.now()]
+            st.success(f"Saved changes for {game['game_id']}")
