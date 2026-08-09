@@ -10,13 +10,18 @@ from ui_components import (
 )
 
 # ---------------------------------------------------------
-# LOAD DATA ONCE PER SESSION
+# LOAD DATA ONLY AFTER STREAMLIT INITIALIZES
 # ---------------------------------------------------------
 
-if "league_data" not in st.session_state:
-    st.session_state.league_data = load_all_data()
+def get_league_data():
+    # Only load once, AFTER Streamlit has initialized secrets
+    if "league_data" not in st.session_state:
+        st.session_state.league_data = load_all_data()
+    return st.session_state.league_data
 
-data = st.session_state.league_data
+
+# Actually load the data
+data = get_league_data()
 
 teams = data["teams"]
 players = data["players"]
