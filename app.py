@@ -35,15 +35,23 @@ active_teams = teams_df[teams_df["active"] == True]["team_id"].tolist()
 selected_team = st.selectbox("Select your team:", active_teams)
 
 # Player dropdown (filtered by team)
-team_players = players_df[players_df["team_id"] == selected_team]
+team_players = players_df[players_df["team_id"] == selected_team].copy()
+
+# Clean whitespace
+team_players["player_name"] = team_players["player_name"].astype(str).str.strip()
+
 player_names = team_players["player_name"].tolist()
 selected_player_name = st.selectbox("Select your name:", player_names)
 
-# Identify player row
+# Identify player row safely
 player_row = team_players[team_players["player_name"] == selected_player_name]
-player = player_row.iloc[0]
 
-player_token = player["token"]      # used internally for attendance
+if player_row.empty:
+    st.error("Player not found. Check your Players sheet for exact spelling or trailing spaces.")
+    st.stop()
+
+player = player_row.iloc[0]
+player_token = player["token"]
 team_id = player["team_id"]
 is_captain = player["is_captain"]
 
