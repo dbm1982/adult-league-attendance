@@ -1,24 +1,18 @@
 import gspread
 from google.oauth2.service_account import Credentials
+import streamlit as st
 
 # ---------------------------------------------------------
-# CONNECT TO GOOGLE SHEETS
+# CONNECT TO GOOGLE SHEETS USING STREAMLIT SECRETS
 # ---------------------------------------------------------
 
 def connect_to_sheet():
     """
-    Connects to your Google Sheet using your service account.
-    Returns the gspread client and the spreadsheet object.
+    Connects to Google Sheets using the service account stored in Streamlit Secrets.
     """
 
-    scopes = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive"
-    ]
-
-    creds = Credentials.from_service_account_file(
-        "service_account.json",  # <-- your JSON file
-        scopes=scopes
+    creds = Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"]
     )
 
     client = gspread.authorize(creds)
@@ -35,8 +29,7 @@ def connect_to_sheet():
 
 def load_teams(sheet):
     teams_sheet = sheet.worksheet("Teams")
-    rows = teams_sheet.get_all_records()
-    return rows
+    return teams_sheet.get_all_records()
 
 
 # ---------------------------------------------------------
@@ -47,7 +40,6 @@ def load_players(sheet):
     players_sheet = sheet.worksheet("Players")
     rows = players_sheet.get_all_records()
 
-    # Rename token → player_id for clarity
     for row in rows:
         row["player_id"] = row["token"]
 
@@ -60,8 +52,7 @@ def load_players(sheet):
 
 def load_games(sheet):
     games_sheet = sheet.worksheet("Games")
-    rows = games_sheet.get_all_records()
-    return rows
+    return games_sheet.get_all_records()
 
 
 # ---------------------------------------------------------
@@ -70,20 +61,14 @@ def load_games(sheet):
 
 def load_attendance(sheet):
     attendance_sheet = sheet.worksheet("Attendance")
-    rows = attendance_sheet.get_all_records()
-    return rows
+    return attendance_sheet.get_all_records()
 
 
 # ---------------------------------------------------------
-# MASTER LOADER (called once per session)
+# MASTER LOADER
 # ---------------------------------------------------------
 
 def load_all_data():
-    """
-    Loads all league data at once.
-    This function is called ONCE per Streamlit session.
-    """
-
     sheet = connect_to_sheet()
 
     data = {
@@ -91,7 +76,7 @@ def load_all_data():
         "players": load_players(sheet),
         "games": load_games(sheet),
         "attendance": load_attendance(sheet),
-        "sheet": sheet  # keep reference for saving later
+        "sheet": sheet
     }
 
     return data
