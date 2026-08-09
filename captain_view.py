@@ -1,4 +1,5 @@
 import streamlit as st
+from datetime import datetime
 
 def captain_view(data, captain_player_id):
 
@@ -6,9 +7,13 @@ def captain_view(data, captain_player_id):
     games = data["games"]
     attendance = data["attendance"]
 
-    # Identify captain's team
+    # Identify captain
     captain = next(p for p in players if p["player_id"] == captain_player_id)
     team_id = captain["team_id"]
+
+    # First name only
+    first_name = captain["player_name"].split()[0]
+    st.markdown(f"### Hello {first_name}")
 
     # Filter players on captain's team
     team_players = [p for p in players if p["team_id"] == team_id]
@@ -16,12 +21,15 @@ def captain_view(data, captain_player_id):
     # Filter games for captain's team
     team_games = [g for g in games if g["team_id"] == team_id]
 
-    # Sort games by date/time and pick the next upcoming game
     if not team_games:
         st.info("No games found for your team.")
         return
 
-    next_game = sorted(team_games, key=lambda g: (g["date"], g["time"]))[0]
+    # Sort games by date/time and pick the next upcoming game
+    def parse_dt(g):
+        return datetime.strptime(f"{g['date']} {g['time']}", "%Y-%m-%d %H:%M %p")
+
+    next_game = sorted(team_games, key=parse_dt)[0]
     game_id = next_game["game_id"]
 
     # Build attendance lookup for this game
@@ -31,16 +39,18 @@ def captain_view(data, captain_player_id):
         if a["game_id"] == game_id
     }
 
-    st.markdown("### Captain Tools")
+    # ---------------------------------------------------------
+    # Format date nicely
+    # ---------------------------------------------------------
+    dt = parse_dt(next_game)
+    formatted_date = dt.strftime("%A, %B %-d, %Y at %-I:%M%p")
 
-    # ---------------------------------------------------------
-    # Game Header (correct formatting)
-    # ---------------------------------------------------------
     st.markdown(
-        f"#### {next_game['date']} {next_game['time']} — Field {next_game['field']} "
-        f"<span style='color:#888;font-size:14px;'>({next_game['opponent']})</span>",
+        f"#### {formatted_date} — Opponent: {next_game['opponent']}",
         unsafe_allow_html=True
     )
+
+    st.markdown("---")
 
     # ---------------------------------------------------------
     # Group players by response
@@ -63,7 +73,22 @@ def captain_view(data, captain_player_id):
             nr_list.append(p["player_name"])
 
     # ---------------------------------------------------------
-    # Display grouped lists (clean, readable)
+    # Quick Summary
+    # ---------------------------------------------------------
+
+    st.markdown("### Summary")
+
+    st.markdown(
+        f"- **{len(yes_list)}** coming (Yes)\n"
+        f"- **{len(no_list)}** not coming (No)\n"
+        f"- **{len(maybe_list)}** unsure (Maybe)\n"
+        f"- **{len(nr_list)}** no response (NR)"
+    )
+
+    st.markdown("---")
+
+    # ---------------------------------------------------------
+    # Detailed Lists
     # ---------------------------------------------------------
 
     def show_group(title, names, color):
