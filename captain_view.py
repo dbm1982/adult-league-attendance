@@ -25,23 +25,22 @@ def captain_view(data, captain_player_id):
         st.info("No games found for your team.")
         return
 
-    # Sort games by date/time and pick the next upcoming game
+    # Parse date/time
     def parse_dt(g):
-        return datetime.strptime(f"{g['date']} {g['time']}", "%Y-%m-%d %H:%M %p")
+        return datetime.strptime(f"{g['date']} {g['time']}", "%Y-%m-%d %I:%M %p")
 
+    # Next upcoming game
     next_game = sorted(team_games, key=parse_dt)[0]
     game_id = next_game["game_id"]
 
-    # Build attendance lookup for this game
+    # Attendance lookup
     att_lookup = {
         a["player_id"]: a["status"]
         for a in attendance
         if a["game_id"] == game_id
     }
 
-    # ---------------------------------------------------------
-    # Format date nicely
-    # ---------------------------------------------------------
+    # Format date
     dt = parse_dt(next_game)
     formatted_date = dt.strftime("%A, %B %-d, %Y at %-I:%M%p")
 
@@ -52,10 +51,7 @@ def captain_view(data, captain_player_id):
 
     st.markdown("---")
 
-    # ---------------------------------------------------------
-    # Group players by response
-    # ---------------------------------------------------------
-
+    # Group players
     yes_list = []
     no_list = []
     maybe_list = []
@@ -72,12 +68,8 @@ def captain_view(data, captain_player_id):
         else:
             nr_list.append(p["player_name"])
 
-    # ---------------------------------------------------------
-    # Quick Summary
-    # ---------------------------------------------------------
-
+    # Summary
     st.markdown("### Summary")
-
     st.markdown(
         f"- **{len(yes_list)}** coming (Yes)\n"
         f"- **{len(no_list)}** not coming (No)\n"
@@ -87,10 +79,7 @@ def captain_view(data, captain_player_id):
 
     st.markdown("---")
 
-    # ---------------------------------------------------------
-    # Detailed Lists
-    # ---------------------------------------------------------
-
+    # Lists
     def show_group(title, names, color):
         st.markdown(f"### <span style='color:{color};'>{title} ({len(names)})</span>", unsafe_allow_html=True)
         if names:
