@@ -9,8 +9,12 @@ from ui_components import (
     attendance_summary
 )
 
+# NEW: CSS injection
 from styles import inject_css
 inject_css()
+
+# NEW: Captain tools
+from captain_view import captain_view
 
 
 # ---------------------------------------------------------
@@ -18,7 +22,6 @@ inject_css()
 # ---------------------------------------------------------
 
 def get_league_data():
-    # Only load once, AFTER Streamlit has initialized secrets
     if "league_data" not in st.session_state:
         st.session_state.league_data = load_all_data()
     return st.session_state.league_data
@@ -43,13 +46,27 @@ attendance_lookup = {
 # UI — TEAM + PLAYER SELECTION
 # ---------------------------------------------------------
 
-st.title("HAYSA Attendance")
+st.title("Adult Team Attendance")
 
 team_id = team_selector(teams)
 player = player_selector(players, team_id)
 player_id = player["player_id"]
 
 st.markdown(f"### Welcome, **{player['player_name']}**")
+
+
+# ---------------------------------------------------------
+# CAPTAIN VIEW (restored)
+# ---------------------------------------------------------
+
+# Your latest version used a boolean field like this:
+# player["is_captain"] == True
+# If your sheet uses a different field name, tell me and I’ll adjust it.
+
+if player.get("is_captain", False):
+    captain_view(data)
+    st.markdown("---")
+
 
 # ---------------------------------------------------------
 # SHOW GAMES FOR THIS TEAM
@@ -64,6 +81,7 @@ for game in team_games:
     updates.append(update)
     st.markdown("---")
 
+
 # ---------------------------------------------------------
 # SAVE BUTTON
 # ---------------------------------------------------------
@@ -74,6 +92,7 @@ if st.button("Save Attendance"):
 
     # Reload data after saving
     st.session_state.league_data = load_all_data()
+
 
 # ---------------------------------------------------------
 # SUMMARY
