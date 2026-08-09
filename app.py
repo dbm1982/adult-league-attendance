@@ -1,127 +1,66 @@
+# app.py
 import streamlit as st
-
-from data_loader import load_all_data
-from attendance_logic import save_attendance
-from ui_components import (
-    team_selector,
-    player_selector,
-    game_card
-)
-
-from styles import inject_css
-inject_css()
-
+import pandas as pd
 from captain_view import captain_view
+from ui_components import segmented_control
 
+st.set_page_config(page_title="Adult Team Attendance", layout="wide")
 
-# ---------------------------------------------------------
-# LOAD DATA
-# ---------------------------------------------------------
+# Load data
+teams_df = pd.read_csv("Teams.csv")
+players_df = pd.read_csv("Players.csv")
+games_df = pd.read_csv("Games.csv")
+attendance_df = pd.read_csv("Attendance.csv")
 
-def get_league_data():
-    if "league_data" not in st.session_state:
-        st.session_state.league_data = load_all_data()
-    return st.session_state.league_data
+# Identify user
+user_token = st.text_input("Enter your token:")
+player_row = players_df[players_df["token"] == user_token]
 
-data = get_league_data()
-
-teams = data["teams"]
-players = data["players"]
-games = data["games"]
-attendance = data["attendance"]
-sheet = data["sheet"]
-
-
-# ---------------------------------------------------------
-# ACTIVE TEAM FILTER
-# ---------------------------------------------------------
-
-def is_active(value):
-    return str(value).strip().lower() in ("true", "1", "yes")
-
-active_teams = [t for t in teams if is_active(t.get("active"))]
-
-
-# ---------------------------------------------------------
-# ATTENDANCE LOOKUP
-# ---------------------------------------------------------
-
-attendance_lookup = {
-    (row["player_id"], row["game_id"]): row["status"]
-    for row in attendance
-}
-
-
-# ---------------------------------------------------------
-# UI — TEAM + PLAYER SELECTION
-# ---------------------------------------------------------
-
-st.title("Adult Team Attendance")
-
-if not active_teams:
-    st.error("No active teams found.")
+if player_row.empty:
+    st.warning("Invalid token.")
     st.stop()
 
-team_id = team_selector(active_teams)
+player = player_row.iloc[0]
+team_id = player["team_id"]
+is_captain = player["is_captain"]
 
-team_players = [p for p in players if p["team_id"] == team_id]
-if not team_players:
-    st.error("No players found for this team.")
-    st.stop()
+st.title(f"Hello {player['player_name']} 👋")
 
-player = player_selector(players, team_id)
-player_id = player["player_id"]
+if is_captain:
+    captain_view(players_df, games_df, attendance_df, team_id)
+else:
+    st.header("Player View")
+    upcoming_games = games_df[
+        (games_df["team_id"] == team_id)
+        & (pd.to_datetime(games_df["date"]) >= pd.Timestamp.now())
+    ].sort_values("date")
 
-st.markdown(f"### Welcome, **{player['player_name']}**")
+    for _, game in upcoming_games.iterrows():
+        st.subheader(
+            f"{game['date']} — {game['time']} — vs {game['opponent']} — {game['field']}"
+        )
+        current_status = attendance_df.loc[
+            (attendance_df["player_id"] == player["token"])
+            & (attendance_df["game_id"] == game["game_id"]),
+            "status",
+        ].values
+        current_status = current_status[0] if len(current_status) > 0 else "NR"
+        new_status = segmented_control(player["token"], current_status)
 
-
-# ---------------------------------------------------------
-# CAPTAIN MODE TOGGLE
-# ---------------------------------------------------------
-
-def is_captain(value):
-    return str(value).strip().lower() in ("true", "1", "yes")
-
-if is_captain(player.get("is_captain")):
-
-    if "captain_mode" not in st.session_state:
-        st.session_state.captain_mode = False
-
-    toggle_label = (
-        "Switch to Captain View"
-        if not st.session_state.captain_mode
-        else "Return to Player View"
-    )
-
-    if st.button(toggle_label):
-        st.session_state.captain_mode = not st.session_state.captain_mode
-
-    # CAPTAIN VIEW
-    if st.session_state.captain_mode:
-        st.markdown("## Captain View")
-        captain_view(data, player_id)
-        st.stop()   # <<< IMPORTANT: prevents player view from rendering
-
-
-# ---------------------------------------------------------
-# PLAYER VIEW ONLY (NOT captain mode)
-# ---------------------------------------------------------
-
-team_games = [g for g in games if g["team_id"] == team_id]
-
-updates = []
-
-for game in team_games:
-    update = game_card(game, attendance_lookup, player_id)
-    updates.append(update)
-    st.markdown("---")
-
-
-# ---------------------------------------------------------
-# SAVE BUTTON
-# ---------------------------------------------------------
-
-if st.button("Save Attendance"):
-    save_attendance(sheet, updates)
-    st.success("Attendance saved!")
-    st.session_state.league_data = load_all_data()
+        if st.button(f"Save Changes for {game['game_id']}"):
+            existing = attendance_df[
+                (attendance_df["player_id"] == player["token"])
+                & (attendance_df["game_id"] == game["game_id"])
+            ]
+            if existing.empty:
+                attendance_df.loc[len(attendance_df)] = [
+                    player["token"],
+                    game["game_id"],
+                    new_status,
+                    pd.Timestamp.now(),
+                ]
+            else:
+                attendance_df.loc[
+                    existing.index, ["status", "updated_at"]
+                ] = [new_status, pd.Timestamp.now()]
+            st.success(f"Saved changes for {game['game_id']}")
