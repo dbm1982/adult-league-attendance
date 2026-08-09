@@ -128,14 +128,18 @@ if st.button("Save Attendance"):
 
 
 # ---------------------------------------------------------
-# SUMMARY (FIXED — ONLY SHOW THIS TEAM'S GAMES)
+# SUMMARY — ONLY IN CAPTAIN VIEW (FIXED)
 # ---------------------------------------------------------
 
-team_game_ids = {g["game_id"] for g in team_games}
+if "captain_mode" in st.session_state and st.session_state.captain_mode:
 
-filtered_attendance = [
-    a for a in attendance
-    if a["player_id"] == player_id and a["game_id"] in team_game_ids
-]
+    st.markdown("## Attendance Summary")
 
-attendance_summary(filtered_attendance, team_games, player_id)
+    team_game_ids = {g["game_id"] for g in team_games}
+
+    filtered_attendance = [
+        a for a in attendance
+        if a["player_id"] == player_id and a["game_id"] in team_game_ids
+    ]
+
+    attendance_summary(filtered_attendance, team_games, player_id)
