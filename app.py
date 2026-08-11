@@ -99,7 +99,7 @@ def commit_attendance_changes():
     st.success("All attendance changes have been saved.")
 
 # ---------------------------------------------------------
-# VIEW SWITCH — True iOS-style segmented tabs (HTML + JS)
+# VIEW SWITCH — Fully working iOS-style segmented tabs
 # ---------------------------------------------------------
 
 if is_captain:
@@ -108,14 +108,14 @@ if is_captain:
     if "view_mode" not in st.session_state:
         st.session_state.view_mode = "Player View"
 
-    # CSS for real folder-style segmented tabs
+    # CSS for segmented tabs
     st.markdown("""
         <style>
             .segmented-control {
                 display: flex;
                 justify-content: center;
                 margin-top: 10px;
-                margin-bottom: 0px;
+                margin-bottom: -5px;
             }
 
             .segmented-tab {
@@ -146,7 +146,7 @@ if is_captain:
         </style>
     """, unsafe_allow_html=True)
 
-    # Render the tab bar using HTML
+    # Render the tab bar
     st.markdown(
         f"""
         <div class="segmented-control">
