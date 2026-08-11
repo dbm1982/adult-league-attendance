@@ -1,17 +1,19 @@
 import streamlit as st
 
-def segmented_control(player_token, current_status, game_id):
-    options = ["Yes", "No", "Maybe", "None"]
+def segmented_control(player_name, current_status, game_id):
+    # Updated valid statuses
+    options = ["Yes", "No", "Maybe", "No Response"]
 
-    if current_status in ["", "NR", None]:
-        current_status = "None"
+    # Normalize incoming status
+    raw = str(current_status).strip().capitalize()
+    current_status = raw if raw in options else "No Response"
 
+    # Render segmented control
     selected = st.radio(
-        f"Attendance for {player_token} — {game_id}",
+        f"{player_name} — {game_id}",
         options,
         index=options.index(current_status),
-        horizontal=True,
-        key=f"{player_token}_{game_id}_radio"
+        horizontal=True
     )
 
     return selected
