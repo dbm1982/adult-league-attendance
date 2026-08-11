@@ -22,96 +22,85 @@ def captain_view(players_df, games_df, attendance_df, team_id, save_attendance):
         st.info("No upcoming games found for this team.")
         return
 
-    # Valid attendance statuses
     valid_statuses = ["Yes", "No", "Maybe", "No Response"]
 
-    # Build attendance lookup
-    attendance_lookup = {}
-    for _, row in attendance_df.iterrows():
-        attendance_lookup[(row["player_id"], row["game_id"])] = row["status"]
+    attendance_lookup = {
+        (row["player_id"], row["game_id"]): row["status"]
+        for _, row in attendance_df.iterrows()
+    }
 
     # ---------------------------------------------------------
-    # REDESIGNED CAPTAIN VIEW — COLLAPSIBLE GAME SECTIONS
+    # Redesigned Captain View
     # ---------------------------------------------------------
 
     for _, game in upcoming_games.iterrows():
 
         game_id = game["game_id"]
-        game_date = game["display_date"] if "display_date" in game else game["date"]
-        game_time = game["display_time"] if "display_time" in game else game["time"]
+        game_date = game["display_date"]
+        game_time = game["display_time"]
         opponent = game["opponent"]
 
-        # Group players by attendance status
-        grouped = {
-            "Yes": [],
-            "No": [],
-            "Maybe": [],
-            "No Response": []
-        }
+        # Group attendance
+        grouped = {s: [] for s in valid_statuses}
 
         for _, player in team_players.iterrows():
             pid = player["token"]
-            raw_status = attendance_lookup.get((pid, game_id), "No Response")
-            normalized = str(raw_status).strip().capitalize()
-            status = normalized if normalized in valid_statuses else "No Response"
+            raw = attendance_lookup.get((pid, game_id), "No Response")
+            status = str(raw).strip().capitalize()
+            status = status if status in valid_statuses else "No Response"
             grouped[status].append(player["player_name"])
 
-        # Count for expander title
         yes_count = len(grouped["Yes"])
         unconfirmed_count = len(grouped["Maybe"]) + len(grouped["No Response"])
 
-        # Clean, human-friendly title (NO GAME ID)
         title = (
             f"{game_date} — {game_time} — vs {opponent} "
             f"({yes_count} playing • {unconfirmed_count} unconfirmed)"
         )
 
-        # Collapsible section per game
         with st.expander(title, expanded=False):
 
-            # Display grouped attendance with color-coded chips
-            def chip_list(label, names, color):
-                if len(names) == 0:
+            # Color-coded chips
+            def chips(label, names, color):
+                if not names:
                     st.markdown(f"**{label}:** _None_")
-                else:
-                    chips = " ".join([
-                        f"<span style='background:{color};padding:4px 8px;"
-                        f"border-radius:6px;color:white;margin-right:4px'>{n}</span>"
-                        for n in names
-                    ])
-                    st.markdown(f"**{label} ({len(names)}):**<br>{chips}", unsafe_allow_html=True)
+                    return
+                html = " ".join(
+                    f"<span style='background:{color};padding:4px 8px;"
+                    f"border-radius:6px;color:white;margin-right:4px'>{n}</span>"
+                    for n in names
+                )
+                st.markdown(f"**{label} ({len(names)}):**<br>{html}", unsafe_allow_html=True)
 
-            chip_list("Yes", grouped["Yes"], "#2ecc71")
-            chip_list("No", grouped["No"], "#e74c3c")
-            chip_list("Maybe", grouped["Maybe"], "#f1c40f")
-            chip_list("No Response", grouped["No Response"], "#7f8c8d")
+            chips("Yes", grouped["Yes"], "#2ecc71")
+            chips("No", grouped["No"], "#e74c3c")
+            chips("Maybe", grouped["Maybe"], "#f1c40f")
+            chips("No Response", grouped["No Response"], "#7f8c8d")
 
             st.markdown("---")
 
-            # Quick-edit controls
             st.subheader("Update Attendance")
 
-            updated_statuses = []
+            updated = []
 
             for _, player in team_players.iterrows():
                 pid = player["token"]
                 pname = player["player_name"]
 
-                raw_status = attendance_lookup.get((pid, game_id), "No Response")
-                normalized = str(raw_status).strip().capitalize()
-                current_status = normalized if normalized in valid_statuses else "No Response"
+                raw = attendance_lookup.get((pid, game_id), "No Response")
+                status = str(raw).strip().capitalize()
+                status = status if status in valid_statuses else "No Response"
 
                 new_status = st.radio(
                     pname,
                     valid_statuses,
-                    index=valid_statuses.index(current_status),
+                    index=valid_statuses.index(status),
                     horizontal=True,
                     key=f"radio_{pid}_{game_id}"
                 )
 
-                updated_statuses.append((pid, game_id, new_status))
+                updated.append((pid, game_id, new_status))
 
-            # Save button for entire game
-            if st.button(f"Save All Changes for {game_date}", key=f"saveall_{game_id}"):
-                save_attendance(updated_statuses)
+            if st.button(f"Save All Changes for {game_date}", key=f"save_{game_id}"):
+                save_attendance(updated)
                 st.success(f"Saved all attendance updates for {game_date}")
