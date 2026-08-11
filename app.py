@@ -68,7 +68,8 @@ if "active" not in teams_df.columns:
     st.error("ERROR: Your Teams sheet is missing the 'active' column. Fix row 1 in the Teams tab.")
     st.stop()
 
-teams_df["active"] = teams_df["active"].astype(str).str.strip().str.upper() == "true"
+teams_df["active"] = teams_df["active"].astype(str).str.strip().str.lower().isin(["true", "yes", "1"])
+
 
 
 # Convert captain column to real boolean
