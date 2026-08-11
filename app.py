@@ -99,7 +99,7 @@ def commit_attendance_changes():
     st.success("All attendance changes have been saved.")
 
 # ---------------------------------------------------------
-# VIEW SWITCH — Folder-style tabs
+# VIEW SWITCH — Folder-style tabs (no query params)
 # ---------------------------------------------------------
 
 if is_captain:
@@ -111,7 +111,7 @@ if is_captain:
     # Folder-style tab CSS
     st.markdown("""
         <style>
-            .tabs {
+            .tab-bar {
                 display: flex;
                 margin-bottom: 0;
             }
@@ -132,9 +132,6 @@ if is_captain:
                 border-bottom: 1px solid #ffffff;
                 font-weight: 700;
             }
-            .tab:hover {
-                background-color: #f2f2f2;
-            }
         </style>
     """, unsafe_allow_html=True)
 
@@ -142,22 +139,14 @@ if is_captain:
     tab_player_class = "tab-active" if st.session_state.view_mode == "Player View" else "tab"
     tab_captain_class = "tab-active" if st.session_state.view_mode == "Captain View" else "tab"
 
-    st.markdown(
-        f"""
-        <div class="tabs">
-            <div class="{tab_player_class}" onclick="window.location.href='?view=player'">Player View</div>
-            <div class="{tab_captain_class}" onclick="window.location.href='?view=captain'">Captain View</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    col1, col2 = st.columns([1,1])
 
-    # Handle tab clicks
-    query_params = st.experimental_get_query_params()
-    if "view" in query_params:
-        if query_params["view"][0] == "player":
+    with col1:
+        if st.button("Player View", key="tab_player", use_container_width=True):
             st.session_state.view_mode = "Player View"
-        elif query_params["view"][0] == "captain":
+
+    with col2:
+        if st.button("Captain View", key="tab_captain", use_container_width=True):
             st.session_state.view_mode = "Captain View"
 
     mode = st.session_state.view_mode
