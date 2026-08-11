@@ -108,45 +108,56 @@ if is_captain:
     if "view_mode" not in st.session_state:
         st.session_state.view_mode = "Player View"
 
-    # Tab styling
+    # Folder-style tab CSS
     st.markdown("""
         <style>
-            .tab-container {
+            .tabs {
                 display: flex;
-                border-bottom: 2px solid #ccc;
-                margin-bottom: 20px;
+                margin-bottom: 0;
             }
             .tab {
-                padding: 10px 20px;
-                cursor: pointer;
+                padding: 12px 24px;
                 font-size: 18px;
                 font-weight: 500;
-                color: #555;
-                border-radius: 6px 6px 0 0;
-                margin-right: 10px;
-                background-color: #f2f2f2;
+                cursor: pointer;
+                border: 1px solid #ccc;
+                border-bottom: none;
+                background-color: #e6e6e6;
+                border-radius: 8px 8px 0 0;
+                margin-right: 6px;
+                text-align: center;
             }
             .tab-active {
-                color: #000;
                 background-color: #ffffff;
-                border-bottom: 3px solid #0078ff;
+                border-bottom: 1px solid #ffffff;
                 font-weight: 700;
+            }
+            .tab:hover {
+                background-color: #f2f2f2;
             }
         </style>
     """, unsafe_allow_html=True)
 
-    # Render tabs
+    # Render tab bar
     tab_player_class = "tab-active" if st.session_state.view_mode == "Player View" else "tab"
     tab_captain_class = "tab-active" if st.session_state.view_mode == "Captain View" else "tab"
 
-    col1, col2 = st.columns([1,1])
+    st.markdown(
+        f"""
+        <div class="tabs">
+            <div class="{tab_player_class}" onclick="window.location.href='?view=player'">Player View</div>
+            <div class="{tab_captain_class}" onclick="window.location.href='?view=captain'">Captain View</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-    with col1:
-        if st.button("Player View", key="tab_player", use_container_width=True):
+    # Handle tab clicks
+    query_params = st.experimental_get_query_params()
+    if "view" in query_params:
+        if query_params["view"][0] == "player":
             st.session_state.view_mode = "Player View"
-
-    with col2:
-        if st.button("Captain View", key="tab_captain", use_container_width=True):
+        elif query_params["view"][0] == "captain":
             st.session_state.view_mode = "Captain View"
 
     mode = st.session_state.view_mode
