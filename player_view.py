@@ -48,20 +48,30 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, save_
         opponent = game["opponent"]
         field = game["field"]
 
-        # -----------------------------
-        # CURRENT STATUS
-        # -----------------------------
-        current_status = attendance_df.loc[
-            (attendance_df["player_id"] == player_token) &
-            (attendance_df["game_id"] == game["game_id"]),
-            "status"
-        ].values
+    # -----------------------------
+    # CURRENT STATUS
+    # -----------------------------
+    raw = attendance_df.loc[
+        (attendance_df["player_id"] == player_token) &
+        (attendance_df["game_id"] == game["game_id"]),
+        "status"
+    ].values
+    
+    raw = raw[0] if len(raw) > 0 else "No Response"
+    normalized = str(raw).strip().lower()
+    
+    mapping = {
+        "yes": "Yes",
+        "no": "No",
+        "maybe": "Maybe",
+        "no response": "No Response",
+        "": "No Response",
+        "none": "No Response",
+        "nr": "No Response",
+    }
+    
+    current_status = mapping.get(normalized, "No Response")
 
-        current_status = current_status[0] if len(current_status) > 0 else "No Response"
-        current_status = str(current_status).strip().capitalize()
-
-        # Background color based on status
-        bg_color = color_map.get(current_status, "#f2f2f2")
 
         # -----------------------------
         # GAME CARD (color-coded)
