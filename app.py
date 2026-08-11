@@ -45,6 +45,8 @@ players_df.columns = players_df.columns.str.strip().str.lower()
 games_df.columns = games_df.columns.str.strip().str.lower()
 attendance_df.columns = attendance_df.columns.str.strip().str.lower()
 
+st.write("DEBUG — Teams columns:", list(teams_df.columns))
+
 # ---------------------------------------------------------
 # CLEANUP: strip whitespace + remove blank team_id rows
 # ---------------------------------------------------------
