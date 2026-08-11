@@ -99,7 +99,7 @@ def commit_attendance_changes():
     st.success("All attendance changes have been saved.")
 
 # ---------------------------------------------------------
-# VIEW SWITCH — Folder-style tabs (no query params)
+# VIEW SWITCH — Rounded iOS-style segmented tabs
 # ---------------------------------------------------------
 
 if is_captain:
@@ -108,45 +108,51 @@ if is_captain:
     if "view_mode" not in st.session_state:
         st.session_state.view_mode = "Player View"
 
-    # Folder-style tab CSS
+    # iOS-style segmented tab CSS
     st.markdown("""
         <style>
-            .tab-bar {
+            .segmented-control {
                 display: flex;
-                margin-bottom: 0;
+                justify-content: center;
+                margin-bottom: 20px;
             }
-            .tab {
-                padding: 12px 24px;
+            .segment {
+                padding: 10px 24px;
                 font-size: 18px;
                 font-weight: 500;
                 cursor: pointer;
                 border: 1px solid #ccc;
-                border-bottom: none;
-                background-color: #e6e6e6;
-                border-radius: 8px 8px 0 0;
-                margin-right: 6px;
-                text-align: center;
+                background-color: #f2f2f2;
+                color: #555;
+                border-radius: 20px;
+                margin: 0 6px;
+                transition: all 0.15s ease-in-out;
             }
-            .tab-active {
-                background-color: #ffffff;
-                border-bottom: 1px solid #ffffff;
-                font-weight: 700;
+            .segment-active {
+                background-color: #0078ff;
+                color: white;
+                border-color: #0078ff;
+                font-weight: 600;
+                box-shadow: 0px 2px 6px rgba(0,0,0,0.15);
+            }
+            .segment:hover {
+                background-color: #e6e6e6;
             }
         </style>
     """, unsafe_allow_html=True)
 
-    # Render tab bar
-    tab_player_class = "tab-active" if st.session_state.view_mode == "Player View" else "tab"
-    tab_captain_class = "tab-active" if st.session_state.view_mode == "Captain View" else "tab"
+    # Render segmented tabs
+    tab_player_class = "segment-active" if st.session_state.view_mode == "Player View" else "segment"
+    tab_captain_class = "segment-active" if st.session_state.view_mode == "Captain View" else "segment"
 
     col1, col2 = st.columns([1,1])
 
     with col1:
-        if st.button("Player View", key="tab_player", use_container_width=True):
+        if st.button("Player View", key="seg_player", use_container_width=True):
             st.session_state.view_mode = "Player View"
 
     with col2:
-        if st.button("Captain View", key="tab_captain", use_container_width=True):
+        if st.button("Captain View", key="seg_captain", use_container_width=True):
             st.session_state.view_mode = "Captain View"
 
     mode = st.session_state.view_mode
