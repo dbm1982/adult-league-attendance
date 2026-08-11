@@ -2,38 +2,74 @@
 
 import streamlit as st
 import pandas as pd
-from ui_components import segmented_control
 
 def captain_view(players_df, games_df, attendance_df, team_id, save_attendance):
-    st.header(f"Captain View — {team_id}")
 
-    upcoming_games = games_df[
-        (games_df["team_id"] == team_id)
-        & (pd.to_datetime(games_df["date"]) >= pd.Timestamp.now())
-    ].sort_values("date")
+    st.subheader("Team Attendance Overview")
 
-    for _, game in upcoming_games.iterrows():
-        st.subheader(
-            f"{game['date']} — {game['time']} — vs {game['opponent']} — {game['field']}"
-        )
+    # Clean whitespace
+    players_df["team_id"] = players_df["team_id"].astype(str).str.strip()
+    games_df["team_id"] = games_df["team_id"].astype(str).str.strip()
 
-        team_players = players_df[players_df["team_id"] == team_id]
-        game_attendance = attendance_df[attendance_df["game_id"] == game["game_id"]]
+    # Filter players for this team
+    team_players = players_df[players_df["team_id"] == team_id].copy()
 
-        updates = []
+    # Filter games for this team
+    team_games = games_df[games_df["team_id"] == team_id].copy()
+
+    if team_players.empty:
+        st.error("No players found for this team.")
+        return
+
+    if team_games.empty:
+        st.error("No games found for this team.")
+        return
+
+    # Display table of attendance
+    merged = attendance_df.merge(
+        team_players,
+        left_on="player_id",
+        right_on="token",
+        how="right"
+    )
+
+    merged = merged.merge(
+        team_games,
+        on="game_id",
+        how="right"
+    )
+
+    st.dataframe(merged[[
+        "player_name",
+        "game_id",
+        "date",
+        "time",
+        "opponent",
+        "status"
+    ]])
+
+    st.subheader("Update Attendance")
+
+    for _, game in team_games.iterrows():
+        st.write(f"**{game['game_id']} — {game['date']} — {game['time']} — vs {game['opponent']}**")
 
         for _, player in team_players.iterrows():
-            current_status = (
-                game_attendance.loc[
-                    game_attendance["player_id"] == player["token"], "status"
-                ].values[0]
-                if player["token"] in game_attendance["player_id"].values
-                else "NR"
+
+            # Get current status
+            current_status = attendance_df.loc[
+                (attendance_df["player_id"] == player["token"]) &
+                (attendance_df["game_id"] == game["game_id"]),
+                "status"
+            ].values
+
+            current_status = current_status[0] if len(current_status) > 0 else "None"
+
+            new_status = st.selectbox(
+                f"{player['player_name']} ({player['token']})",
+                ["Yes", "No", "Maybe", "None"],
+                index=["Yes", "No", "Maybe", "None"].index(current_status)
             )
 
-            new_status = segmented_control(player["token"], current_status)
-            updates.append((player["token"], game["game_id"], new_status))
-
-        if st.button(f"Save Changes for {game['game_id']}"):
-            save_attendance(updates)
-            st.success(f"Saved changes for {game['game_id']}")
+            if st.button(f"Save {player['player_name']} for {game['game_id']}"):
+                save_attendance([(player["token"], game["game_id"], new_status)])
+                st.success(f"Saved {player['player_name']} for {game['game_id']}")
