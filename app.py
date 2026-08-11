@@ -4,12 +4,11 @@ import gspread
 
 from captain_view import captain_view
 from player_view import player_view
-from ui_components import segmented_control
 
 st.set_page_config(page_title="Adult Team Attendance", layout="wide")
 
 # ---------------------------------------------------------
-# LOAD SHEETS (NO CACHING)
+# LOAD SHEETS ONCE
 # ---------------------------------------------------------
 
 gc = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
@@ -26,7 +25,16 @@ def sheet_to_df(ws):
 teams_df = sheet_to_df(sheet.worksheet("Teams"))
 players_df = sheet_to_df(sheet.worksheet("Players"))
 games_df = sheet_to_df(sheet.worksheet("Games"))
-attendance_df = sheet_to_df(sheet.worksheet("Attendance"))
+attendance_ws = sheet.worksheet("Attendance")
+
+# ---------------------------------------------------------
+# INITIALIZE SESSION STATE
+# ---------------------------------------------------------
+
+if "attendance_df" not in st.session_state:
+    st.session_state.attendance_df = sheet_to_df(attendance_ws)
+
+attendance_df = st.session_state.attendance_df
 
 # ---------------------------------------------------------
 # CLEANUP
@@ -80,35 +88,15 @@ is_captain = player_row["is_captain"]
 st.success(f"Logged in as {selected_player_name} ({team_id})")
 
 # ---------------------------------------------------------
-# SAVE ATTENDANCE (NO RELOAD)
+# COMMIT FUNCTION (BUFFERED WRITE)
 # ---------------------------------------------------------
 
-def save_attendance(updates):
-    global attendance_df
-
-    for player_id, game_id, status in updates:
-        existing = attendance_df[
-            (attendance_df["player_id"] == player_id) &
-            (attendance_df["game_id"] == game_id)
-        ]
-
-        if existing.empty:
-            attendance_df.loc[len(attendance_df)] = [
-                player_id,
-                game_id,
-                status,
-                str(pd.Timestamp.now()),
-            ]
-        else:
-            attendance_df.loc[
-                existing.index, ["status", "updated_at"]
-            ] = [status, str(pd.Timestamp.now())]
-
-    attendance_ws = sheet.worksheet("Attendance")
+def commit_attendance_changes():
     attendance_ws.update(
         [attendance_df.columns.values.tolist()] +
         attendance_df.values.tolist()
     )
+    st.success("All attendance changes have been saved.")
 
 # ---------------------------------------------------------
 # VIEW SWITCH
@@ -120,6 +108,6 @@ else:
     mode = "Player View"
 
 if mode == "Captain View":
-    captain_view(players_df, games_df, attendance_df, team_id, save_attendance)
+    captain_view(players_df, games_df, attendance_df, team_id, commit_attendance_changes)
 else:
-    player_view(players_df, games_df, attendance_df, team_id, selected_player_name, save_attendance)
+    player_view(players_df, games_df, attendance_df, team_id, selected_player_name, commit_attendance_changes)
