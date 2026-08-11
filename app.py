@@ -99,7 +99,7 @@ def commit_attendance_changes():
     st.success("All attendance changes have been saved.")
 
 # ---------------------------------------------------------
-# VIEW SWITCH — True iOS-style segmented tabs
+# VIEW SWITCH — True iOS-style segmented tabs (HTML + JS)
 # ---------------------------------------------------------
 
 if is_captain:
@@ -108,14 +108,14 @@ if is_captain:
     if "view_mode" not in st.session_state:
         st.session_state.view_mode = "Player View"
 
-    # CSS for rounded folder-style tabs
+    # CSS for real folder-style segmented tabs
     st.markdown("""
         <style>
-            .segmented-wrapper {
+            .segmented-control {
                 display: flex;
                 justify-content: center;
                 margin-top: 10px;
-                margin-bottom: -10px;
+                margin-bottom: 0px;
             }
 
             .segmented-tab {
@@ -129,6 +129,7 @@ if is_captain:
                 margin-right: 6px;
                 cursor: pointer;
                 transition: all 0.15s ease-in-out;
+                user-select: none;
             }
 
             .segmented-tab-active {
@@ -145,26 +146,30 @@ if is_captain:
         </style>
     """, unsafe_allow_html=True)
 
-    # Render the tab bar
-    tab_player_class = "segmented-tab-active" if st.session_state.view_mode == "Player View" else "segmented-tab"
-    tab_captain_class = "segmented-tab-active" if st.session_state.view_mode == "Captain View" else "segmented-tab"
-
+    # Render the tab bar using HTML
     st.markdown(
         f"""
-        <div class="segmented-wrapper">
-            <div class="{tab_player_class}" onclick="window.location.href='?tab=player'">Player View</div>
-            <div class="{tab_captain_class}" onclick="window.location.href='?tab=captain'">Captain View</div>
+        <div class="segmented-control">
+            <div class="segmented-tab {'segmented-tab-active' if st.session_state.view_mode=='Player View' else ''}"
+                 onclick="window.location.href='?view=player'">
+                 Player View
+            </div>
+
+            <div class="segmented-tab {'segmented-tab-active' if st.session_state.view_mode=='Captain View' else ''}"
+                 onclick="window.location.href='?view=captain'">
+                 Captain View
+            </div>
         </div>
         """,
         unsafe_allow_html=True
     )
 
-    # Handle tab clicks
+    # Handle tab clicks via query params
     params = st.query_params
-    if "tab" in params:
-        if params["tab"] == "player":
+    if "view" in params:
+        if params["view"] == "player":
             st.session_state.view_mode = "Player View"
-        elif params["tab"] == "captain":
+        elif params["view"] == "captain":
             st.session_state.view_mode = "Captain View"
 
     mode = st.session_state.view_mode
