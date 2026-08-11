@@ -9,30 +9,75 @@ from ui_components import segmented_control
 st.set_page_config(page_title="Adult Team Attendance", layout="wide")
 
 # ---------------------------------------------------------
-# CACHE DATA LOADING
+# LOAD SHEETS (NO CACHING)
 # ---------------------------------------------------------
 
-@st.cache_data(ttl=5)
-def load_sheet_data():
-    gc = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
-    sheet = gc.open_by_key("1afoSDWnUlB6ZN5Wlz4CDyX1whhzNNHxm6vCINs-2LDM")
+gc = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
+sheet = gc.open_by_key("1afoSDWnUlB6ZN5Wlz4CDyX1whhzNNHxm6vCINs-2LDM")
 
-    def sheet_to_df(ws):
-        values = ws.get_all_values()
-        if not values:
-            return pd.DataFrame()
-        header = values[0]
-        rows = values[1:]
-        return pd.DataFrame(rows, columns=header)
+def sheet_to_df(ws):
+    values = ws.get_all_values()
+    if not values:
+        return pd.DataFrame()
+    header = values[0]
+    rows = values[1:]
+    return pd.DataFrame(rows, columns=header)
 
-    teams_df = sheet_to_df(sheet.worksheet("Teams"))
-    players_df = sheet_to_df(sheet.worksheet("Players"))
-    games_df = sheet_to_df(sheet.worksheet("Games"))
-    attendance_df = sheet_to_df(sheet.worksheet("Attendance"))
+teams_df = sheet_to_df(sheet.worksheet("Teams"))
+players_df = sheet_to_df(sheet.worksheet("Players"))
+games_df = sheet_to_df(sheet.worksheet("Games"))
+attendance_df = sheet_to_df(sheet.worksheet("Attendance"))
 
-    return sheet, teams_df, players_df, games_df, attendance_df
+# ---------------------------------------------------------
+# CLEANUP
+# ---------------------------------------------------------
 
-sheet, teams_df, players_df, games_df, attendance_df = load_sheet_data()
+teams_df.columns = teams_df.columns.str.strip().str.lower()
+players_df.columns = players_df.columns.str.strip().str.lower()
+games_df.columns = games_df.columns.str.strip().str.lower()
+attendance_df.columns = attendance_df.columns.str.strip().str.lower()
+
+teams_df["team_id"] = teams_df["team_id"].astype(str).str.strip()
+players_df["team_id"] = players_df["team_id"].astype(str).str.strip()
+games_df["team_id"] = games_df["team_id"].astype(str).str.strip()
+
+players_df["player_name"] = players_df["player_name"].astype(str).str.strip()
+
+teams_df["active"] = teams_df["active"].astype(str).str.lower().isin(["true", "yes", "1"])
+players_df["is_captain"] = players_df["is_captain"].astype(str).str.lower().isin(["true", "yes", "1"])
+
+games_df["date"] = pd.to_datetime(games_df["date"], errors="coerce")
+games_df["display_date"] = games_df["date"].dt.strftime("%A, %b %d")
+games_df["display_time"] = pd.to_datetime(
+    games_df["time"], format="%I:%M %p", errors="coerce"
+).dt.strftime("%-I:%M %p")
+
+# ---------------------------------------------------------
+# LOGIN FLOW
+# ---------------------------------------------------------
+
+st.title("Adult Soccer Attendance Portal at Union Point")
+
+active_teams = teams_df[teams_df["active"] == True]["team_id"].tolist()
+team_options = ["-- Select Team --"] + active_teams
+
+selected_team = st.selectbox("Select your team:", team_options)
+if selected_team == "-- Select Team --":
+    st.stop()
+
+team_players = players_df[players_df["team_id"] == selected_team].copy()
+player_options = ["-- Select Player --"] + team_players["player_name"].tolist()
+
+selected_player_name = st.selectbox("Select your name:", player_options)
+if selected_player_name == "-- Select Player --":
+    st.stop()
+
+player_row = team_players[team_players["player_name"] == selected_player_name].iloc[0]
+player_token = player_row["token"]
+team_id = player_row["team_id"]
+is_captain = player_row["is_captain"]
+
+st.success(f"Logged in as {selected_player_name} ({team_id})")
 
 # ---------------------------------------------------------
 # SAVE ATTENDANCE (NO RELOAD)
@@ -59,12 +104,22 @@ def save_attendance(updates):
                 existing.index, ["status", "updated_at"]
             ] = [status, str(pd.Timestamp.now())]
 
-    # Write to sheet
     attendance_ws = sheet.worksheet("Attendance")
     attendance_ws.update(
         [attendance_df.columns.values.tolist()] +
         attendance_df.values.tolist()
     )
 
-    # DO NOT reload sheet here
-    # Let Streamlit rerun with updated local dataframe
+# ---------------------------------------------------------
+# VIEW SWITCH
+# ---------------------------------------------------------
+
+if is_captain:
+    mode = st.radio("Choose view:", ["Player View", "Captain View"])
+else:
+    mode = "Player View"
+
+if mode == "Captain View":
+    captain_view(players_df, games_df, attendance_df, team_id, save_attendance)
+else:
+    player_view(players_df, games_df, attendance_df, team_id, selected_player_name, save_attendance)
