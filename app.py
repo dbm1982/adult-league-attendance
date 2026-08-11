@@ -10,7 +10,8 @@ st.set_page_config(page_title="Adult Team Attendance Dev", layout="wide")
 
 # Authenticate using your existing secrets key
 gc = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
-sheet = gc.open("Adult Team Attendance Dev")
+sheet = gc.open_by_key("1afoSDWnUlB6ZN5Wlz4CDyX1whhzNNHxm6vCINs-2LDM")
+
 
 # ---------------------------------------------------------
 # SAFE SHEET → DATAFRAME LOADER (fixes GSpreadException)
