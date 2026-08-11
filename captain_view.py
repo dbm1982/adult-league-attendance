@@ -6,15 +6,12 @@ def captain_view(players_df, games_df, attendance_df, team_id, save_attendance):
     st.title("Captain View")
     st.write("Manage attendance for upcoming games.")
 
-    # Normalize whitespace
     players_df["team_id"] = players_df["team_id"].astype(str).str.strip()
     games_df["team_id"] = games_df["team_id"].astype(str).str.strip()
 
-    # Filter players + games for this team
     team_players = players_df[players_df["team_id"] == team_id].copy()
     team_games = games_df[games_df["team_id"] == team_id].copy()
 
-    # Only show upcoming games
     today = pd.Timestamp.now()
     upcoming_games = team_games[team_games["date"] >= today].sort_values("date")
 
@@ -29,10 +26,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, save_attendance):
         for _, row in attendance_df.iterrows()
     }
 
-    # ---------------------------------------------------------
-    # Redesigned Captain View
-    # ---------------------------------------------------------
-
     for _, game in upcoming_games.iterrows():
 
         game_id = game["game_id"]
@@ -40,7 +33,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, save_attendance):
         game_time = game["display_time"]
         opponent = game["opponent"]
 
-        # Group attendance
         grouped = {s: [] for s in valid_statuses}
 
         for _, player in team_players.iterrows():
@@ -60,7 +52,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, save_attendance):
 
         with st.expander(title, expanded=False):
 
-            # Color-coded chips
             def chips(label, names, color):
                 if not names:
                     st.markdown(f"**{label}:** _None_")
