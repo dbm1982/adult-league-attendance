@@ -99,11 +99,46 @@ def commit_attendance_changes():
     st.success("All attendance changes have been saved.")
 
 # ---------------------------------------------------------
-# VIEW SWITCH — Streamlit native tabs (fully working)
+# VIEW SWITCH — Streamlit native tabs with iOS styling + icons
+# ---------------------------------------------------------
+
+# iOS-style tab CSS (Option A)
+st.markdown("""
+<style>
+
+div[data-baseweb="tab-list"] {
+    gap: 6px;
+}
+
+div[data-baseweb="tab"] {
+    padding: 10px 22px !important;
+    border-radius: 12px 12px 0 0 !important;
+    background-color: #e9e9e9 !important;
+    color: #555 !important;
+    font-size: 18px !important;
+    font-weight: 500 !important;
+    transition: all 0.15s ease-in-out;
+}
+
+div[data-baseweb="tab"][aria-selected="true"] {
+    background-color: #ffffff !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    box-shadow: 0px -2px 6px rgba(0,0,0,0.08);
+    border-bottom: 1px solid #ffffff !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# CAPTAIN VS PLAYER VIEW TABS
 # ---------------------------------------------------------
 
 if is_captain:
-    tab_player, tab_captain = st.tabs(["Player View", "Captain View"])
+
+    # Option C: Tabs with icons
+    tab_player, tab_captain = st.tabs(["👤 Player View", "⚽ Captain View"])
 
     with tab_player:
         player_view(
