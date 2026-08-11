@@ -38,9 +38,6 @@ games_df = sheet_to_df(games_ws)
 attendance_df = sheet_to_df(attendance_ws)
 
 
-st.write("DEBUG — Unique team_ids in Players:", players_df["team_id"].unique())
-st.write("DEBUG — First 10 Players rows:", players_df.head(10))
-st.write("DEBUG — Selected team:", selected_team)
 
 # ---------------------------------------------------------
 # NORMALIZE COLUMN NAMES (fixes KeyError: 'active')
@@ -98,6 +95,10 @@ st.title("Attendances")
 
 active_teams = teams_df[teams_df["active"] == True]["team_id"].tolist()
 selected_team = st.selectbox("Select your team:", active_teams)
+
+st.write("DEBUG — Selected team:", selected_team)
+st.write("DEBUG — Unique team_ids in Players:", players_df["team_id"].unique())
+st.write("DEBUG — First 10 Players rows:", players_df.head(10))
 
 team_players = players_df[players_df["team_id"] == selected_team].copy()
 player_names = team_players["player_name"].tolist()
