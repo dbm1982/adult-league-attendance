@@ -61,7 +61,12 @@ players_df = players_df[players_df["team_id"] != ""]
 games_df = games_df[games_df["team_id"] != ""]
 
 # Convert active column to real boolean
-teams_df["active"] = teams_df["active"].astype(str).str.strip().str.upper() == "TRUE"
+if "active" not in teams_df.columns:
+    st.error("ERROR: Your Teams sheet is missing the 'active' column. Fix row 1 in the Teams tab.")
+    st.stop()
+
+teams_df["active"] = teams_df["active"].astype(str).str.strip().str.upper() == "true"
+
 
 # Convert captain column to real boolean
 players_df["is_captain"] = (
