@@ -99,23 +99,38 @@ def commit_attendance_changes():
     st.success("All attendance changes have been saved.")
 
 # ---------------------------------------------------------
-# VIEW SWITCH — Streamlit native tabs (best option)
+# VIEW SWITCH — Streamlit native tabs (fully working)
 # ---------------------------------------------------------
 
 if is_captain:
-    tab1, tab2 = st.tabs(["Player View", "Captain View"])
+    tab_player, tab_captain = st.tabs(["Player View", "Captain View"])
 
-    with tab1:
-        mode = "Player View"
+    with tab_player:
+        player_view(
+            players_df,
+            games_df,
+            attendance_df,
+            team_id,
+            selected_player_name,
+            commit_attendance_changes
+        )
 
-    with tab2:
-        mode = "Captain View"
+    with tab_captain:
+        captain_view(
+            players_df,
+            games_df,
+            attendance_df,
+            team_id,
+            commit_attendance_changes
+        )
 
 else:
-    mode = "Player View"
-
-# Render selected view
-if mode == "Captain View":
-    captain_view(players_df, games_df, attendance_df, team_id, commit_attendance_changes)
-else:
-    player_view(players_df, games_df, attendance_df, team_id, selected_player_name, commit_attendance_changes)
+    # Non-captains only get Player View
+    player_view(
+        players_df,
+        games_df,
+        attendance_df,
+        team_id,
+        selected_player_name,
+        commit_attendance_changes
+    )
