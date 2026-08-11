@@ -48,8 +48,6 @@ players_df.columns = players_df.columns.str.strip().str.lower()
 games_df.columns = games_df.columns.str.strip().str.lower()
 attendance_df.columns = attendance_df.columns.str.strip().str.lower()
 
-st.write("DEBUG — Teams columns:", list(teams_df.columns))
-
 # ---------------------------------------------------------
 # CLEANUP: strip whitespace + remove blank team_id rows
 # ---------------------------------------------------------
@@ -92,14 +90,10 @@ games_df["display_time"] = pd.to_datetime(
 # LOGIN FLOW: TEAM → PLAYER
 # ---------------------------------------------------------
 
-st.title("Attendances")
+st.title("Adult Soccer Attendance Portal at Union Point")
 
 active_teams = teams_df[teams_df["active"] == True]["team_id"].tolist()
 selected_team = st.selectbox("Select your team:", active_teams)
-
-st.write("DEBUG — Selected team:", selected_team)
-st.write("DEBUG — Unique team_ids in Players:", players_df["team_id"].unique())
-st.write("DEBUG — First 10 Players rows:", players_df.head(10))
 
 team_players = players_df[players_df["team_id"] == selected_team].copy()
 player_names = team_players["player_name"].tolist()
