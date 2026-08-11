@@ -48,7 +48,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, save_attendance):
 
     st.subheader("Update Attendance")
 
-    valid_statuses = ["Yes", "No", "Maybe", "None"]
+    valid_statuses = ["Yes", "No", "Maybe", "No Response"]
 
     for _, game in team_games.iterrows():
         st.write(f"**{game['game_id']} — {game['date']} — {game['time']} — vs {game['opponent']}**")
@@ -62,15 +62,15 @@ def captain_view(players_df, games_df, attendance_df, team_id, save_attendance):
                 "status"
             ].values
 
-            current_status = current_status[0] if len(current_status) > 0 else "None"
+            current_status = current_status[0] if len(current_status) > 0 else "No Response"
 
             # Normalize status
             raw_status = str(current_status).strip().capitalize()
-            current_status = raw_status if raw_status in valid_statuses else "None"
+            current_status = raw_status if raw_status in valid_statuses else "No Response"
 
             # Selectbox
             new_status = st.selectbox(
-                f"{player['player_name']} ({player['token']}) — {game['game_id']}",
+                player["player_name"],
                 valid_statuses,
                 index=valid_statuses.index(current_status)
             )
