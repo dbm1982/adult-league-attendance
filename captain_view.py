@@ -41,30 +41,44 @@ def captain_view(players_df, games_df, attendance_df, team_id, save_attendance):
         game_time = game["display_time"] if "display_time" in game else game["time"]
         opponent = game["opponent"]
 
+        # Group players by attendance status
+        grouped = {
+            "Yes": [],
+            "No": [],
+            "Maybe": [],
+            "No Response": []
+        }
+
+        for _, player in team_players.iterrows():
+            pid = player["token"]
+            raw_status = attendance_lookup.get((pid, game_id), "No Response")
+            normalized = str(raw_status).strip().capitalize()
+            status = normalized if normalized in valid_statuses else "No Response"
+            grouped[status].append(player["player_name"])
+
+        # Count for expander title
+        yes_count = len(grouped["Yes"])
+        unconfirmed_count = len(grouped["Maybe"]) + len(grouped["No Response"])
+
+        # Clean, human-friendly title (NO GAME ID)
+        title = (
+            f"{game_date} — {game_time} — vs {opponent} "
+            f"({yes_count} playing • {unconfirmed_count} unconfirmed)"
+        )
+
         # Collapsible section per game
-        with st.expander(f"{game_id} — {game_date} — {game_time} — vs {opponent}", expanded=False):
-
-            # Group players by attendance status
-            grouped = {
-                "Yes": [],
-                "No": [],
-                "Maybe": [],
-                "No Response": []
-            }
-
-            for _, player in team_players.iterrows():
-                pid = player["token"]
-                raw_status = attendance_lookup.get((pid, game_id), "No Response")
-                normalized = str(raw_status).strip().capitalize()
-                status = normalized if normalized in valid_statuses else "No Response"
-                grouped[status].append(player["player_name"])
+        with st.expander(title, expanded=False):
 
             # Display grouped attendance with color-coded chips
             def chip_list(label, names, color):
                 if len(names) == 0:
                     st.markdown(f"**{label}:** _None_")
                 else:
-                    chips = " ".join([f"<span style='background:{color};padding:4px 8px;border-radius:6px;color:white;margin-right:4px'>{n}</span>" for n in names])
+                    chips = " ".join([
+                        f"<span style='background:{color};padding:4px 8px;"
+                        f"border-radius:6px;color:white;margin-right:4px'>{n}</span>"
+                        for n in names
+                    ])
                     st.markdown(f"**{label} ({len(names)}):**<br>{chips}", unsafe_allow_html=True)
 
             chip_list("Yes", grouped["Yes"], "#2ecc71")
@@ -98,6 +112,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, save_attendance):
                 updated_statuses.append((pid, game_id, new_status))
 
             # Save button for entire game
-            if st.button(f"Save All Changes for {game_id}", key=f"saveall_{game_id}"):
+            if st.button(f"Save All Changes for {game_date}", key=f"saveall_{game_id}"):
                 save_attendance(updated_statuses)
-                st.success(f"Saved all attendance updates for {game_id}")
+                st.success(f"Saved all attendance updates for {game_date}")
