@@ -19,10 +19,19 @@ games_ws = sheet.worksheet("Games")
 attendance_ws = sheet.worksheet("Attendance")
 
 # Convert worksheets to DataFrames
-teams_df = pd.DataFrame(teams_ws.get_all_records())
-players_df = pd.DataFrame(players_ws.get_all_records())
-games_df = pd.DataFrame(games_ws.get_all_records())
-attendance_df = pd.DataFrame(attendance_ws.get_all_records())
+def sheet_to_df(ws):
+    values = ws.get_all_values()
+    if not values:
+        return pd.DataFrame()
+    header = values[0]
+    rows = values[1:]
+    return pd.DataFrame(rows, columns=header)
+
+teams_df = sheet_to_df(teams_ws)
+players_df = sheet_to_df(players_ws)
+games_df = sheet_to_df(games_ws)
+attendance_df = sheet_to_df(attendance_ws)
+
 
 # ---------------------------------------------------------
 # CLEANUP: strip whitespace + remove blank team_id rows
