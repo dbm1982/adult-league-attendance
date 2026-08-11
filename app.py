@@ -37,6 +37,11 @@ players_df = sheet_to_df(players_ws)
 games_df = sheet_to_df(games_ws)
 attendance_df = sheet_to_df(attendance_ws)
 
+
+st.write("DEBUG — Unique team_ids in Players:", players_df["team_id"].unique())
+st.write("DEBUG — First 10 Players rows:", players_df.head(10))
+st.write("DEBUG — Selected team:", selected_team)
+
 # ---------------------------------------------------------
 # NORMALIZE COLUMN NAMES (fixes KeyError: 'active')
 # ---------------------------------------------------------
