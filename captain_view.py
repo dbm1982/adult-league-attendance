@@ -1,10 +1,9 @@
 import streamlit as st
 import pandas as pd
 
-def captain_view(players_df, games_df, attendance_df, team_id, save_attendance):
+def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
     st.title("Captain View")
-    st.write("Manage attendance for upcoming games.")
 
     players_df["team_id"] = players_df["team_id"].astype(str).str.strip()
     games_df["team_id"] = games_df["team_id"].astype(str).str.strip()
@@ -93,5 +92,14 @@ def captain_view(players_df, games_df, attendance_df, team_id, save_attendance):
                 updated.append((pid, game_id, new_status))
 
             if st.button(f"Save All Changes for {game_date}", key=f"save_{game_id}"):
-                save_attendance(updated)
+
+                for pid, gid, new_status in updated:
+                    attendance_df.loc[
+                        (attendance_df["player_id"] == pid) &
+                        (attendance_df["game_id"] == gid),
+                        "status"
+                    ] = new_status
+
                 st.success(f"Saved all attendance updates for {game_date}")
+
+                commit_changes()
