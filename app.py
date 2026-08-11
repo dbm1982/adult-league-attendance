@@ -34,6 +34,8 @@ st.write("Attendance loaded:", len(attendance_df))
 teams_df["active"] = teams_df["active"].astype(str).str.strip().str.upper() == "TRUE"
 
 
+
+
 # ---------------------------------------------------------
 # CLEANUP: strip whitespace + remove blank team_id rows
 # ---------------------------------------------------------
@@ -156,7 +158,7 @@ else:
         current_status = current_status[0] if len(current_status) > 0 else "NR"
 
         # Segmented control UI
-        new_status = segmented_control(player_token, current_status)
+        new_status = segmented_control(player_token, current_status, game["game_id"])
 
         # Save button
         if st.button(f"Save Changes for {game['game_id']}"):
