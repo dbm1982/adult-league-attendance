@@ -10,7 +10,7 @@ st.set_page_config(page_title="Adult Team Attendance", layout="wide")
 
 # Authenticate using your existing secrets key
 gc = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
-sheet = gc.open("Adult Team Attendance Dev")
+sheet = gc.open("Adult Team Attendance")
 
 # Load worksheets
 teams_ws = sheet.worksheet("Teams")
@@ -24,33 +24,18 @@ players_df = pd.DataFrame(players_ws.get_all_records())
 games_df = pd.DataFrame(games_ws.get_all_records())
 attendance_df = pd.DataFrame(attendance_ws.get_all_records())
 
-
-st.write("Teams loaded:", len(teams_df))
-st.write("Players loaded:", len(players_df))
-st.write("Games loaded:", len(games_df))
-st.write("Attendance loaded:", len(attendance_df))
-
-# Convert active column to real boolean
-teams_df["active"] = teams_df["active"].astype(str).str.strip().str.upper() == "TRUE"
-
-
-
-
 # ---------------------------------------------------------
 # CLEANUP: strip whitespace + remove blank team_id rows
 # ---------------------------------------------------------
 
-# Strip whitespace from team_id and player_name
 teams_df["team_id"] = teams_df["team_id"].astype(str).str.strip()
 players_df["team_id"] = players_df["team_id"].astype(str).str.strip()
 games_df["team_id"] = games_df["team_id"].astype(str).str.strip()
 players_df["player_name"] = players_df["player_name"].astype(str).str.strip()
 
-# Remove rows with blank team_id
 teams_df = teams_df[teams_df["team_id"] != ""]
 players_df = players_df[players_df["team_id"] != ""]
 games_df = games_df[games_df["team_id"] != ""]
-
 
 # Convert active column to real boolean
 teams_df["active"] = teams_df["active"].astype(str).str.strip().str.upper() == "TRUE"
@@ -60,25 +45,34 @@ players_df["is_captain"] = (
     players_df["is_captain"].astype(str).str.strip().str.upper() == "TRUE"
 )
 
+# ---------------------------------------------------------
+# DATE + TIME FORMATTING
+# ---------------------------------------------------------
 
+# Convert date column to datetime
+games_df["date"] = pd.to_datetime(games_df["date"], errors="coerce")
+
+# Format date for display
+games_df["display_date"] = games_df["date"].dt.strftime("%A, %b %d")
+
+# Format time for display
+games_df["display_time"] = pd.to_datetime(
+    games_df["time"], format="%I:%M %p", errors="coerce"
+).dt.strftime("%-I:%M %p")
 
 # ---------------------------------------------------------
 # LOGIN FLOW: TEAM → PLAYER
 # ---------------------------------------------------------
 
-st.title("Adult League Attendance")
+st.title("Attendances")
 
-# Team dropdown (only active teams)
 active_teams = teams_df[teams_df["active"] == True]["team_id"].tolist()
 selected_team = st.selectbox("Select your team:", active_teams)
 
-# Player dropdown (filtered by team)
 team_players = players_df[players_df["team_id"] == selected_team].copy()
-
 player_names = team_players["player_name"].tolist()
 selected_player_name = st.selectbox("Select your name:", player_names)
 
-# Identify player row safely
 player_row = team_players[team_players["player_name"] == selected_player_name]
 
 if player_row.empty:
@@ -117,7 +111,6 @@ def save_attendance(updates):
                 existing.index, ["status", "updated_at"]
             ] = [status, str(pd.Timestamp.now())]
 
-    # Write back to Google Sheets
     attendance_ws.update(
         [attendance_df.columns.values.tolist()] +
         attendance_df.values.tolist()
@@ -138,29 +131,39 @@ if is_captain:
 else:
     st.header("Player View")
 
+    # Season summary
+    st.subheader("Season Summary")
+
+    player_att = attendance_df[attendance_df["player_id"] == player_token]
+    summary = player_att["status"].value_counts().to_dict()
+
+    for status in ["Yes", "No", "Maybe", "None"]:
+        st.write(f"{status}: {summary.get(status, 0)} games")
+
+    # Upcoming games
     upcoming_games = games_df[
-        (games_df["team_id"] == team_id)
-        & (pd.to_datetime(games_df["date"]) >= pd.Timestamp.now())
+        (games_df["team_id"] == team_id) &
+        (games_df["date"] >= pd.Timestamp.now())
     ].sort_values("date")
 
     for _, game in upcoming_games.iterrows():
-        st.subheader(
-            f"{game['date']} — {game['time']} — vs {game['opponent']} — {game['field']}"
-        )
 
-        # Get current status
+        st.markdown(f"""
+        ### {game['display_date']} — {game['display_time']}
+        **vs {game['opponent']}**  
+        *{game['field']}*
+        """)
+
         current_status = attendance_df.loc[
-            (attendance_df["player_id"] == player_token)
-            & (attendance_df["game_id"] == game["game_id"]),
-            "status",
+            (attendance_df["player_id"] == player_token) &
+            (attendance_df["game_id"] == game["game_id"]),
+            "status"
         ].values
 
-        current_status = current_status[0] if len(current_status) > 0 else "NR"
+        current_status = current_status[0] if len(current_status) > 0 else "None"
 
-        # Segmented control UI
         new_status = segmented_control(player_token, current_status, game["game_id"])
 
-        # Save button
-        if st.button(f"Save Changes for {game['game_id']}"):
+        if st.button(f"Save Changes for {game['game_id']}", key=f"save_{player_token}_{game['game_id']}"):
             save_attendance([(player_token, game["game_id"], new_status)])
             st.success(f"Saved changes for {game['game_id']}")
