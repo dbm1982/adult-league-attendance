@@ -49,6 +49,17 @@ teams_df = teams_df[teams_df["team_id"] != ""]
 players_df = players_df[players_df["team_id"] != ""]
 games_df = games_df[games_df["team_id"] != ""]
 
+
+# Convert active column to real boolean
+teams_df["active"] = teams_df["active"].astype(str).str.strip().str.upper() == "TRUE"
+
+# Convert captain column to real boolean
+players_df["is_captain"] = (
+    players_df["is_captain"].astype(str).str.strip().str.upper() == "TRUE"
+)
+
+
+
 # ---------------------------------------------------------
 # LOGIN FLOW: TEAM → PLAYER
 # ---------------------------------------------------------
