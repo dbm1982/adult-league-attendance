@@ -99,7 +99,7 @@ def commit_attendance_changes():
     st.success("All attendance changes have been saved.")
 
 # ---------------------------------------------------------
-# VIEW SWITCH — Rounded iOS-style segmented tabs
+# VIEW SWITCH — True iOS-style segmented tabs
 # ---------------------------------------------------------
 
 if is_captain:
@@ -108,51 +108,63 @@ if is_captain:
     if "view_mode" not in st.session_state:
         st.session_state.view_mode = "Player View"
 
-    # iOS-style segmented tab CSS
+    # CSS for rounded folder-style tabs
     st.markdown("""
         <style>
-            .segmented-control {
+            .segmented-wrapper {
                 display: flex;
                 justify-content: center;
-                margin-bottom: 20px;
+                margin-top: 10px;
+                margin-bottom: -10px;
             }
-            .segment {
-                padding: 10px 24px;
+
+            .segmented-tab {
+                padding: 10px 26px;
                 font-size: 18px;
                 font-weight: 500;
-                cursor: pointer;
                 border: 1px solid #ccc;
-                background-color: #f2f2f2;
+                border-radius: 14px 14px 0 0;
+                background-color: #e6e6e6;
                 color: #555;
-                border-radius: 20px;
-                margin: 0 6px;
+                margin-right: 6px;
+                cursor: pointer;
                 transition: all 0.15s ease-in-out;
             }
-            .segment-active {
-                background-color: #0078ff;
-                color: white;
-                border-color: #0078ff;
-                font-weight: 600;
-                box-shadow: 0px 2px 6px rgba(0,0,0,0.15);
+
+            .segmented-tab-active {
+                background-color: #ffffff;
+                color: #000;
+                border-bottom: 1px solid #ffffff;
+                font-weight: 700;
+                box-shadow: 0px -2px 6px rgba(0,0,0,0.08);
             }
-            .segment:hover {
-                background-color: #e6e6e6;
+
+            .segmented-tab:hover {
+                background-color: #f2f2f2;
             }
         </style>
     """, unsafe_allow_html=True)
 
-    # Render segmented tabs
-    tab_player_class = "segment-active" if st.session_state.view_mode == "Player View" else "segment"
-    tab_captain_class = "segment-active" if st.session_state.view_mode == "Captain View" else "segment"
+    # Render the tab bar
+    tab_player_class = "segmented-tab-active" if st.session_state.view_mode == "Player View" else "segmented-tab"
+    tab_captain_class = "segmented-tab-active" if st.session_state.view_mode == "Captain View" else "segmented-tab"
 
-    col1, col2 = st.columns([1,1])
+    st.markdown(
+        f"""
+        <div class="segmented-wrapper">
+            <div class="{tab_player_class}" onclick="window.location.href='?tab=player'">Player View</div>
+            <div class="{tab_captain_class}" onclick="window.location.href='?tab=captain'">Captain View</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-    with col1:
-        if st.button("Player View", key="seg_player", use_container_width=True):
+    # Handle tab clicks
+    params = st.query_params
+    if "tab" in params:
+        if params["tab"] == "player":
             st.session_state.view_mode = "Player View"
-
-    with col2:
-        if st.button("Captain View", key="seg_captain", use_container_width=True):
+        elif params["tab"] == "captain":
             st.session_state.view_mode = "Captain View"
 
     mode = st.session_state.view_mode
