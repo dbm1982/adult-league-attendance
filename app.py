@@ -99,14 +99,62 @@ def commit_attendance_changes():
     st.success("All attendance changes have been saved.")
 
 # ---------------------------------------------------------
-# VIEW SWITCH
+# VIEW SWITCH — Folder-style tabs
 # ---------------------------------------------------------
 
 if is_captain:
-    mode = st.radio("Choose view:", ["Player View", "Captain View"])
+
+    # Initialize view mode if not set
+    if "view_mode" not in st.session_state:
+        st.session_state.view_mode = "Player View"
+
+    # Tab styling
+    st.markdown("""
+        <style>
+            .tab-container {
+                display: flex;
+                border-bottom: 2px solid #ccc;
+                margin-bottom: 20px;
+            }
+            .tab {
+                padding: 10px 20px;
+                cursor: pointer;
+                font-size: 18px;
+                font-weight: 500;
+                color: #555;
+                border-radius: 6px 6px 0 0;
+                margin-right: 10px;
+                background-color: #f2f2f2;
+            }
+            .tab-active {
+                color: #000;
+                background-color: #ffffff;
+                border-bottom: 3px solid #0078ff;
+                font-weight: 700;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # Render tabs
+    tab_player_class = "tab-active" if st.session_state.view_mode == "Player View" else "tab"
+    tab_captain_class = "tab-active" if st.session_state.view_mode == "Captain View" else "tab"
+
+    col1, col2 = st.columns([1,1])
+
+    with col1:
+        if st.button("Player View", key="tab_player", use_container_width=True):
+            st.session_state.view_mode = "Player View"
+
+    with col2:
+        if st.button("Captain View", key="tab_captain", use_container_width=True):
+            st.session_state.view_mode = "Captain View"
+
+    mode = st.session_state.view_mode
+
 else:
     mode = "Player View"
 
+# Render selected view
 if mode == "Captain View":
     captain_view(players_df, games_df, attendance_df, team_id, commit_attendance_changes)
 else:
