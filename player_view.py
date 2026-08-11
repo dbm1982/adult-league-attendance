@@ -33,27 +33,27 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, save_
 
     valid_statuses = ["Yes", "No", "Maybe", "No Response"]
 
-    # Color map for game cards
     color_map = {
-        "Yes": "#e8f8f0",        # soft green
-        "No": "#fdecea",         # soft red
-        "Maybe": "#fff8e1",      # soft yellow
-        "No Response": "#f2f2f2" # soft gray
+        "Yes": "#e8f8f0",
+        "No": "#fdecea",
+        "Maybe": "#fff8e1",
+        "No Response": "#f2f2f2"
     }
 
     for _, game in upcoming_games.iterrows():
 
+        game_id = game["game_id"]
         game_date = game["display_date"]
         game_time = game["display_time"]
         opponent = game["opponent"]
         field = game["field"]
 
         # -----------------------------
-        # CURRENT STATUS (bulletproof normalization)
+        # CURRENT STATUS (normalized)
         # -----------------------------
         raw = attendance_df.loc[
             (attendance_df["player_id"] == player_token) &
-            (attendance_df["game_id"] == game["game_id"]),
+            (attendance_df["game_id"] == game_id),
             "status"
         ].values
 
@@ -71,12 +71,10 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, save_
         }
 
         current_status = mapping.get(normalized, "No Response")
-
-        # Background color based on status
-        bg_color = color_map.get(current_status, "#f2f2f2")
+        bg_color = color_map[current_status]
 
         # -----------------------------
-        # GAME CARD (color-coded)
+        # GAME CARD
         # -----------------------------
         st.markdown(
             f"""
@@ -106,15 +104,22 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, save_
             valid_statuses,
             index=valid_statuses.index(current_status),
             horizontal=True,
-            key=f"player_{player_token}_{game['game_id']}"
+            key=f"player_{player_token}_{game_id}"
         )
 
         # -----------------------------
         # SAVE BUTTON
         # -----------------------------
-        if st.button(
-            f"Save Changes for {game_date}",
-            key=f"save_{player_token}_{game['game_id']}"
-        ):
-            save_attendance([(player_token, game["game_id"], new_status)])
+        if st.button(f"Save Changes for {game_date}", key=f"save_{player_token}_{game_id}"):
+
+            # 1. Save to Google Sheets
+            save_attendance([(player_token, game_id, new_status)])
+
+            # 2. Update local dataframe immediately (fixes lag)
+            attendance_df.loc[
+                (attendance_df["player_id"] == player_token) &
+                (attendance_df["game_id"] == game_id),
+                "status"
+            ] = new_status
+
             st.success(f"Saved changes for {game_date}")
