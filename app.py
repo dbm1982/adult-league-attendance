@@ -12,7 +12,6 @@ st.set_page_config(page_title="Adult Team Attendance Dev", layout="wide")
 gc = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
 sheet = gc.open_by_key("1afoSDWnUlB6ZN5Wlz4CDyX1whhzNNHxm6vCINs-2LDM")
 
-
 # ---------------------------------------------------------
 # SAFE SHEET → DATAFRAME LOADER
 # ---------------------------------------------------------
@@ -101,7 +100,7 @@ if selected_player_name == "-- Select Player --":
 player_row = team_players[team_players["player_name"] == selected_player_name]
 
 if player_row.empty:
-    st.error("Player not found. Check your Players sheet for exact spelling or trailing spaces.")
+    st.error("Player not found. Check your Players sheet.")
     st.stop()
 
 player = player_row.iloc[0]
@@ -167,7 +166,7 @@ else:
     player_att = attendance_df[attendance_df["player_id"] == player_token]
     summary = player_att["status"].value_counts().to_dict()
 
-    for status in ["Yes", "No", "Maybe", "None"]:
+    for status in ["Yes", "No", "Maybe", "No Response"]:
         st.write(f"{status}: {summary.get(status, 0)} games")
 
     # Upcoming games
@@ -190,9 +189,9 @@ else:
             "status"
         ].values
 
-        current_status = current_status[0] if len(current_status) > 0 else "None"
+        current_status = current_status[0] if len(current_status) > 0 else "No Response"
 
-        new_status = segmented_control(player_token, current_status, game["game_id"])
+        new_status = segmented_control(selected_player_name, current_status, game["game_id"])
 
         if st.button(f"Save Changes for {game['game_id']}", key=f"save_{player_token}_{game['game_id']}"):
             save_attendance([(player_token, game["game_id"], new_status)])
