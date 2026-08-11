@@ -12,13 +12,10 @@ st.set_page_config(page_title="Adult Team Attendance", layout="wide")
 gc = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
 sheet = gc.open("Adult Team Attendance")
 
-# Load worksheets
-teams_ws = sheet.worksheet("Teams")
-players_ws = sheet.worksheet("Players")
-games_ws = sheet.worksheet("Games")
-attendance_ws = sheet.worksheet("Attendance")
+# ---------------------------------------------------------
+# SAFE SHEET → DATAFRAME LOADER (fixes GSpreadException)
+# ---------------------------------------------------------
 
-# Convert worksheets to DataFrames
 def sheet_to_df(ws):
     values = ws.get_all_values()
     if not values:
@@ -27,17 +24,26 @@ def sheet_to_df(ws):
     rows = values[1:]
     return pd.DataFrame(rows, columns=header)
 
+# Load worksheets
+teams_ws = sheet.worksheet("Teams")
+players_ws = sheet.worksheet("Players")
+games_ws = sheet.worksheet("Games")
+attendance_ws = sheet.worksheet("Attendance")
+
+# Convert worksheets to DataFrames
 teams_df = sheet_to_df(teams_ws)
 players_df = sheet_to_df(players_ws)
 games_df = sheet_to_df(games_ws)
 attendance_df = sheet_to_df(attendance_ws)
 
-# Normalize column names to avoid KeyErrors
+# ---------------------------------------------------------
+# NORMALIZE COLUMN NAMES (fixes KeyError: 'active')
+# ---------------------------------------------------------
+
 teams_df.columns = teams_df.columns.str.strip().str.lower()
 players_df.columns = players_df.columns.str.strip().str.lower()
 games_df.columns = games_df.columns.str.strip().str.lower()
 attendance_df.columns = attendance_df.columns.str.strip().str.lower()
-
 
 # ---------------------------------------------------------
 # CLEANUP: strip whitespace + remove blank team_id rows
@@ -64,13 +70,9 @@ players_df["is_captain"] = (
 # DATE + TIME FORMATTING
 # ---------------------------------------------------------
 
-# Convert date column to datetime
 games_df["date"] = pd.to_datetime(games_df["date"], errors="coerce")
-
-# Format date for display
 games_df["display_date"] = games_df["date"].dt.strftime("%A, %b %d")
 
-# Format time for display
 games_df["display_time"] = pd.to_datetime(
     games_df["time"], format="%I:%M %p", errors="coerce"
 ).dt.strftime("%-I:%M %p")
