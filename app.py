@@ -99,84 +99,17 @@ def commit_attendance_changes():
     st.success("All attendance changes have been saved.")
 
 # ---------------------------------------------------------
-# VIEW SWITCH — iOS-style segmented tabs (no JS)
+# VIEW SWITCH — Streamlit native tabs (best option)
 # ---------------------------------------------------------
 
 if is_captain:
+    tab1, tab2 = st.tabs(["Player View", "Captain View"])
 
-    # Initialize view mode if not set
-    if "view_mode" not in st.session_state:
-        st.session_state.view_mode = "Player View"
+    with tab1:
+        mode = "Player View"
 
-    # CSS for segmented tabs
-    st.markdown("""
-        <style>
-            .segmented-control {
-                display: flex;
-                justify-content: center;
-                margin-top: 10px;
-                margin-bottom: -5px;
-            }
-
-            .segmented-tab {
-                padding: 10px 26px;
-                font-size: 18px;
-                font-weight: 500;
-                border: 1px solid #ccc;
-                border-radius: 14px 14px 0 0;
-                background-color: #e6e6e6;
-                color: #555;
-                margin-right: 6px;
-                cursor: pointer;
-                transition: all 0.15s ease-in-out;
-                user-select: none;
-                text-align: center;
-            }
-
-            .segmented-tab-active {
-                background-color: #ffffff;
-                color: #000;
-                border-bottom: 1px solid #ffffff;
-                font-weight: 700;
-                box-shadow: 0px -2px 6px rgba(0,0,0,0.08);
-            }
-        </style>
-    """, unsafe_allow_html=True)
-
-    # Render tab bar using Streamlit buttons
-    col1, col2 = st.columns([1,1])
-
-    with col1:
-        if st.button(
-            "Player View",
-            key="player_tab",
-            use_container_width=True
-        ):
-            st.session_state.view_mode = "Player View"
-
-        # Apply active styling
-        if st.session_state.view_mode == "Player View":
-            st.markdown(
-                "<div class='segmented-tab-active'></div>",
-                unsafe_allow_html=True
-            )
-
-    with col2:
-        if st.button(
-            "Captain View",
-            key="captain_tab",
-            use_container_width=True
-        ):
-            st.session_state.view_mode = "Captain View"
-
-        # Apply active styling
-        if st.session_state.view_mode == "Captain View":
-            st.markdown(
-                "<div class='segmented-tab-active'></div>",
-                unsafe_allow_html=True
-            )
-
-    mode = st.session_state.view_mode
+    with tab2:
+        mode = "Captain View"
 
 else:
     mode = "Player View"
