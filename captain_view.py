@@ -64,11 +64,17 @@ def captain_view(players_df, games_df, attendance_df, team_id, save_attendance):
 
             current_status = current_status[0] if len(current_status) > 0 else "None"
 
-            new_status = st.selectbox(
-                f"{player['player_name']} ({player['token']})",
-                ["Yes", "No", "Maybe", "None"],
-                index=["Yes", "No", "Maybe", "None"].index(current_status)
-            )
+            valid_statuses = ["Yes", "No", "Maybe", "None"]
+
+raw_status = str(current_status).strip().capitalize()
+current_status = raw_status if raw_status in valid_statuses else "None"
+
+new_status = st.selectbox(
+    f"{player['player_name']} ({player['token']})",
+    valid_statuses,
+    index=valid_statuses.index(current_status)
+)
+
 
             if st.button(f"Save {player['player_name']} for {game['game_id']}"):
                 save_attendance([(player["token"], game["game_id"], new_status)])
