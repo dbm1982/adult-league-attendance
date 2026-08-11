@@ -14,7 +14,7 @@ sheet = gc.open_by_key("1afoSDWnUlB6ZN5Wlz4CDyX1whhzNNHxm6vCINs-2LDM")
 
 
 # ---------------------------------------------------------
-# SAFE SHEET → DATAFRAME LOADER (fixes GSpreadException)
+# SAFE SHEET → DATAFRAME LOADER
 # ---------------------------------------------------------
 
 def sheet_to_df(ws):
@@ -37,10 +37,8 @@ players_df = sheet_to_df(players_ws)
 games_df = sheet_to_df(games_ws)
 attendance_df = sheet_to_df(attendance_ws)
 
-
-
 # ---------------------------------------------------------
-# NORMALIZE COLUMN NAMES (fixes KeyError: 'active')
+# NORMALIZE COLUMN NAMES
 # ---------------------------------------------------------
 
 teams_df.columns = teams_df.columns.str.strip().str.lower()
@@ -49,7 +47,7 @@ games_df.columns = games_df.columns.str.strip().str.lower()
 attendance_df.columns = attendance_df.columns.str.strip().str.lower()
 
 # ---------------------------------------------------------
-# CLEANUP: strip whitespace + remove blank team_id rows
+# CLEANUP: strip whitespace
 # ---------------------------------------------------------
 
 teams_df["team_id"] = teams_df["team_id"].astype(str).str.strip()
@@ -57,23 +55,11 @@ players_df["team_id"] = players_df["team_id"].astype(str).str.strip()
 games_df["team_id"] = games_df["team_id"].astype(str).str.strip()
 players_df["player_name"] = players_df["player_name"].astype(str).str.strip()
 
-teams_df = teams_df[teams_df["team_id"] != ""]
-players_df = players_df[players_df["team_id"] != ""]
-games_df = games_df[games_df["team_id"] != ""]
-
 # Convert active column to real boolean
-if "active" not in teams_df.columns:
-    st.error("ERROR: Your Teams sheet is missing the 'active' column. Fix row 1 in the Teams tab.")
-    st.stop()
-
 teams_df["active"] = teams_df["active"].astype(str).str.strip().str.lower().isin(["true", "yes", "1"])
 
-
-
 # Convert captain column to real boolean
-players_df["is_captain"] = (
-    players_df["is_captain"].astype(str).str.strip().str.upper() == "TRUE"
-)
+players_df["is_captain"] = players_df["is_captain"].astype(str).str.strip().str.lower().isin(["true", "yes", "1"])
 
 # ---------------------------------------------------------
 # DATE + TIME FORMATTING
@@ -92,12 +78,25 @@ games_df["display_time"] = pd.to_datetime(
 
 st.title("Adult Soccer Attendance Portal at Union Point")
 
+# TEAM SELECT (with placeholder)
 active_teams = teams_df[teams_df["active"] == True]["team_id"].tolist()
-selected_team = st.selectbox("Select your team:", active_teams)
+team_options = ["-- Select Team --"] + active_teams
 
+selected_team = st.selectbox("Select your team:", team_options)
+
+if selected_team == "-- Select Team --":
+    st.info("Please select your team to continue.")
+    st.stop()
+
+# PLAYER SELECT (with placeholder)
 team_players = players_df[players_df["team_id"] == selected_team].copy()
-player_names = team_players["player_name"].tolist()
-selected_player_name = st.selectbox("Select your name:", player_names)
+player_options = ["-- Select Player --"] + team_players["player_name"].tolist()
+
+selected_player_name = st.selectbox("Select your name:", player_options)
+
+if selected_player_name == "-- Select Player --":
+    st.info("Please select your name to continue.")
+    st.stop()
 
 player_row = team_players[team_players["player_name"] == selected_player_name]
 
@@ -143,16 +142,21 @@ def save_attendance(updates):
     )
 
 # ---------------------------------------------------------
-# CAPTAIN VIEW
+# CAPTAIN OR PLAYER VIEW SWITCH
 # ---------------------------------------------------------
 
 if is_captain:
-    st.header("Captain View")
-    captain_view(players_df, games_df, attendance_df, team_id, save_attendance)
+    mode = st.radio("Choose view:", ["Player View", "Captain View"])
+else:
+    mode = "Player View"
 
 # ---------------------------------------------------------
-# PLAYER VIEW
+# ROUTE TO VIEW
 # ---------------------------------------------------------
+
+if mode == "Captain View":
+    st.header("Captain View")
+    captain_view(players_df, games_df, attendance_df, team_id, save_attendance)
 
 else:
     st.header("Player View")
