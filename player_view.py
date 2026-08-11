@@ -1,15 +1,11 @@
 import streamlit as st
 import pandas as pd
 
-def player_view(players_df, games_df, attendance_df, team_id, player_name, save_attendance):
+def player_view(players_df, games_df, attendance_df, team_id, player_name, commit_changes):
 
-    # Identify player
     player_row = players_df[players_df["player_name"] == player_name].iloc[0]
     player_token = player_row["token"]
 
-    # -----------------------------
-    # SEASON SUMMARY
-    # -----------------------------
     st.subheader("Season Summary")
 
     player_att = attendance_df[attendance_df["player_id"] == player_token]
@@ -18,9 +14,6 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, save_
     for status in ["Yes", "No", "Maybe", "No Response"]:
         st.write(f"{status}: {summary.get(status, 0)} games")
 
-    # -----------------------------
-    # UPCOMING GAMES
-    # -----------------------------
     today = pd.Timestamp.now()
     upcoming_games = games_df[
         (games_df["team_id"] == team_id) &
@@ -48,9 +41,6 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, save_
         opponent = game["opponent"]
         field = game["field"]
 
-        # -----------------------------
-        # CURRENT STATUS (normalized)
-        # -----------------------------
         raw = attendance_df.loc[
             (attendance_df["player_id"] == player_token) &
             (attendance_df["game_id"] == game_id),
@@ -73,9 +63,6 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, save_
         current_status = mapping.get(normalized, "No Response")
         bg_color = color_map[current_status]
 
-        # -----------------------------
-        # GAME CARD
-        # -----------------------------
         st.markdown(
             f"""
             <div style="
@@ -96,9 +83,6 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, save_
             unsafe_allow_html=True
         )
 
-        # -----------------------------
-        # STATUS SELECTOR
-        # -----------------------------
         new_status = st.radio(
             f"{player_name}",
             valid_statuses,
@@ -107,15 +91,8 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, save_
             key=f"player_{player_token}_{game_id}"
         )
 
-        # -----------------------------
-        # SAVE BUTTON
-        # -----------------------------
         if st.button(f"Save Changes for {game_date}", key=f"save_{player_token}_{game_id}"):
 
-            # 1. Save to Google Sheets
-            save_attendance([(player_token, game_id, new_status)])
-
-            # 2. Update local dataframe immediately (fixes lag)
             attendance_df.loc[
                 (attendance_df["player_id"] == player_token) &
                 (attendance_df["game_id"] == game_id),
@@ -123,3 +100,5 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, save_
             ] = new_status
 
             st.success(f"Saved changes for {game_date}")
+
+            commit_changes()
