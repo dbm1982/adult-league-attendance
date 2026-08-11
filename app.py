@@ -6,11 +6,11 @@ import gspread
 from captain_view import captain_view
 from ui_components import segmented_control
 
-st.set_page_config(page_title="Adult Team Attendance", layout="wide")
+st.set_page_config(page_title="Adult Team Attendance Dev", layout="wide")
 
 # Authenticate using your existing secrets key
 gc = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
-sheet = gc.open("Adult Team Attendance")
+sheet = gc.open("Adult Team Attendance Dev")
 
 # ---------------------------------------------------------
 # SAFE SHEET → DATAFRAME LOADER (fixes GSpreadException)
