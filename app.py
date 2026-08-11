@@ -32,6 +32,12 @@ players_df = sheet_to_df(players_ws)
 games_df = sheet_to_df(games_ws)
 attendance_df = sheet_to_df(attendance_ws)
 
+# Normalize column names to avoid KeyErrors
+teams_df.columns = teams_df.columns.str.strip().str.lower()
+players_df.columns = players_df.columns.str.strip().str.lower()
+games_df.columns = games_df.columns.str.strip().str.lower()
+attendance_df.columns = attendance_df.columns.str.strip().str.lower()
+
 
 # ---------------------------------------------------------
 # CLEANUP: strip whitespace + remove blank team_id rows
