@@ -30,6 +30,8 @@ st.write("Players loaded:", len(players_df))
 st.write("Games loaded:", len(games_df))
 st.write("Attendance loaded:", len(attendance_df))
 
+# Convert active column to real boolean
+teams_df["active"] = teams_df["active"].astype(str).str.strip().str.upper() == "TRUE"
 
 
 # ---------------------------------------------------------
