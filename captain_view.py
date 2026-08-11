@@ -3,72 +3,101 @@ import pandas as pd
 
 def captain_view(players_df, games_df, attendance_df, team_id, save_attendance):
 
-    st.subheader("Team Attendance Overview")
+    st.title("Captain View")
+    st.write("Manage attendance for upcoming games.")
 
+    # Normalize whitespace
     players_df["team_id"] = players_df["team_id"].astype(str).str.strip()
     games_df["team_id"] = games_df["team_id"].astype(str).str.strip()
 
+    # Filter players + games for this team
     team_players = players_df[players_df["team_id"] == team_id].copy()
     team_games = games_df[games_df["team_id"] == team_id].copy()
 
-    if team_players.empty:
-        st.error("No players found for this team.")
+    # Only show upcoming games
+    today = pd.Timestamp.now()
+    upcoming_games = team_games[team_games["date"] >= today].sort_values("date")
+
+    if upcoming_games.empty:
+        st.info("No upcoming games found for this team.")
         return
 
-    if team_games.empty:
-        st.error("No games found for this team.")
-        return
-
-    merged = attendance_df.merge(
-        team_players,
-        left_on="player_id",
-        right_on="token",
-        how="right"
-    )
-
-    merged = merged.merge(
-        team_games,
-        on="game_id",
-        how="right"
-    )
-
-    st.dataframe(merged[[
-        "player_name",
-        "game_id",
-        "date",
-        "time",
-        "opponent",
-        "status"
-    ]])
-
-    st.subheader("Update Attendance")
-
+    # Valid attendance statuses
     valid_statuses = ["Yes", "No", "Maybe", "No Response"]
 
-    for _, game in team_games.iterrows():
-        st.write(f"**{game['game_id']} — {game['date']} — {game['time']} — vs {game['opponent']}**")
+    # Build attendance lookup
+    attendance_lookup = {}
+    for _, row in attendance_df.iterrows():
+        attendance_lookup[(row["player_id"], row["game_id"])] = row["status"]
 
-        for _, player in team_players.iterrows():
+    # ---------------------------------------------------------
+    # REDESIGNED CAPTAIN VIEW — COLLAPSIBLE GAME SECTIONS
+    # ---------------------------------------------------------
 
-            current_status = attendance_df.loc[
-                (attendance_df["player_id"] == player["token"]) &
-                (attendance_df["game_id"] == game["game_id"]),
-                "status"
-            ].values
+    for _, game in upcoming_games.iterrows():
 
-            current_status = current_status[0] if len(current_status) > 0 else "No Response"
+        game_id = game["game_id"]
+        game_date = game["display_date"] if "display_date" in game else game["date"]
+        game_time = game["display_time"] if "display_time" in game else game["time"]
+        opponent = game["opponent"]
 
-            raw_status = str(current_status).strip().capitalize()
-            current_status = raw_status if raw_status in valid_statuses else "No Response"
+        # Collapsible section per game
+        with st.expander(f"{game_id} — {game_date} — {game_time} — vs {opponent}", expanded=False):
 
-            new_status = st.selectbox(
-                player["player_name"],
-                valid_statuses,
-                index=valid_statuses.index(current_status),
-                key=f"select_{player['token']}_{game['game_id']}"
-            )
+            # Group players by attendance status
+            grouped = {
+                "Yes": [],
+                "No": [],
+                "Maybe": [],
+                "No Response": []
+            }
 
-            if st.button(f"Save {player['player_name']} for {game['game_id']}",
-                         key=f"save_{player['token']}_{game['game_id']}"):
-                save_attendance([(player["token"], game["game_id"], new_status)])
-                st.success(f"Saved {player['player_name']} for {game['game_id']}")
+            for _, player in team_players.iterrows():
+                pid = player["token"]
+                raw_status = attendance_lookup.get((pid, game_id), "No Response")
+                normalized = str(raw_status).strip().capitalize()
+                status = normalized if normalized in valid_statuses else "No Response"
+                grouped[status].append(player["player_name"])
+
+            # Display grouped attendance with color-coded chips
+            def chip_list(label, names, color):
+                if len(names) == 0:
+                    st.markdown(f"**{label}:** _None_")
+                else:
+                    chips = " ".join([f"<span style='background:{color};padding:4px 8px;border-radius:6px;color:white;margin-right:4px'>{n}</span>" for n in names])
+                    st.markdown(f"**{label} ({len(names)}):**<br>{chips}", unsafe_allow_html=True)
+
+            chip_list("Yes", grouped["Yes"], "#2ecc71")
+            chip_list("No", grouped["No"], "#e74c3c")
+            chip_list("Maybe", grouped["Maybe"], "#f1c40f")
+            chip_list("No Response", grouped["No Response"], "#7f8c8d")
+
+            st.markdown("---")
+
+            # Quick-edit controls
+            st.subheader("Update Attendance")
+
+            updated_statuses = []
+
+            for _, player in team_players.iterrows():
+                pid = player["token"]
+                pname = player["player_name"]
+
+                raw_status = attendance_lookup.get((pid, game_id), "No Response")
+                normalized = str(raw_status).strip().capitalize()
+                current_status = normalized if normalized in valid_statuses else "No Response"
+
+                new_status = st.radio(
+                    pname,
+                    valid_statuses,
+                    index=valid_statuses.index(current_status),
+                    horizontal=True,
+                    key=f"radio_{pid}_{game_id}"
+                )
+
+                updated_statuses.append((pid, game_id, new_status))
+
+            # Save button for entire game
+            if st.button(f"Save All Changes for {game_id}", key=f"saveall_{game_id}"):
+                save_attendance(updated_statuses)
+                st.success(f"Saved all attendance updates for {game_id}")
