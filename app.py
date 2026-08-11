@@ -24,6 +24,14 @@ players_df = pd.DataFrame(players_ws.get_all_records())
 games_df = pd.DataFrame(games_ws.get_all_records())
 attendance_df = pd.DataFrame(attendance_ws.get_all_records())
 
+
+st.write("Teams loaded:", len(teams_df))
+st.write("Players loaded:", len(players_df))
+st.write("Games loaded:", len(games_df))
+st.write("Attendance loaded:", len(attendance_df))
+
+
+
 # ---------------------------------------------------------
 # CLEANUP: strip whitespace + remove blank team_id rows
 # ---------------------------------------------------------
