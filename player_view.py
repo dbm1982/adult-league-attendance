@@ -6,6 +6,9 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
     player_row = players_df[players_df["player_name"] == player_name].iloc[0]
     player_token = player_row["token"]
 
+    # ---------------------------------------------------------
+    # SEASON SUMMARY
+    # ---------------------------------------------------------
     st.subheader("Season Summary")
 
     player_att = attendance_df[attendance_df["player_id"] == player_token]
@@ -14,6 +17,9 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
     for status in ["Yes", "No", "Maybe", "No Response"]:
         st.write(f"{status}: {summary.get(status, 0)} games")
 
+    # ---------------------------------------------------------
+    # UPCOMING GAMES
+    # ---------------------------------------------------------
     today = pd.Timestamp.now()
     upcoming_games = games_df[
         (games_df["team_id"] == team_id) &
@@ -41,6 +47,7 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
         opponent = game["opponent"]
         field = game["field"]
 
+        # Current status lookup
         raw = attendance_df.loc[
             (attendance_df["player_id"] == player_token) &
             (attendance_df["game_id"] == game_id),
@@ -63,6 +70,9 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
         current_status = mapping.get(normalized, "No Response")
         bg_color = color_map[current_status]
 
+        # ---------------------------------------------------------
+        # GAME CARD (clean, no repeated player name)
+        # ---------------------------------------------------------
         st.markdown(
             f"""
             <div style="
@@ -74,23 +84,29 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
             ">
                 <h4 style="margin:0 0 6px 0;">{game_date} — {game_time}</h4>
                 <div style="font-size:16px;"><strong>vs {opponent}</strong></div>
-                <div style="color:#555; margin-bottom:12px;">{field}</div>
+                <div style="color:#555; margin-bottom:12px;">Field {field}</div>
                 <div style="font-size:14px; color:#333;">
-                    <em>Current response: {current_status}</em>
+                    <em>Your current response: {current_status}</em>
                 </div>
             </div>
             """,
             unsafe_allow_html=True
         )
 
+        # ---------------------------------------------------------
+        # RESPONSE RADIO (NO PLAYER NAME)
+        # ---------------------------------------------------------
         new_status = st.radio(
-            f"{player_name}",
+            "Response",   # <--- FIXED: no more player name
             valid_statuses,
             index=valid_statuses.index(current_status),
             horizontal=True,
             key=f"player_{player_token}_{game_id}"
         )
 
+        # ---------------------------------------------------------
+        # SAVE BUTTON
+        # ---------------------------------------------------------
         if st.button(f"Save Changes for {game_date}", key=f"save_{player_token}_{game_id}"):
 
             attendance_df.loc[
