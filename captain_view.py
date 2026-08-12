@@ -6,6 +6,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
     st.title("Captain View")
     st.info("Expand a game below to see player attendance and make updates.")
 
+    # Clean team_id formatting
     players_df["team_id"] = players_df["team_id"].astype(str).str.strip()
     games_df["team_id"] = games_df["team_id"].astype(str).str.strip()
 
@@ -44,6 +45,9 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         </style>
     """, unsafe_allow_html=True)
 
+    # ---------------------------------------------------------
+    # GAME LOOP
+    # ---------------------------------------------------------
     for _, game in upcoming_games.iterrows():
 
         game_id = game["game_id"]
@@ -51,6 +55,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         game_time = game["display_time"]
         opponent = game["opponent"]
 
+        # Group attendance
         grouped = {s: [] for s in valid_statuses}
 
         for _, player in team_players.iterrows():
@@ -64,8 +69,10 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         unconfirmed_count = len(grouped["Maybe"]) + len(grouped["No Response"])
 
         # ---------------------------------------------------------
-        # CLEAN, SIMPLE HEADER (NO HTML, NO EXPANDER TITLE)
+        # SUBTLE DIVIDER + CLEAN HEADER (compact, spaced)
         # ---------------------------------------------------------
+        st.markdown("---")   # subtle divider between games
+
         st.write(f"### {game_date} — {game_time}")
         st.write(f"**vs {opponent}**")
 
@@ -76,10 +83,11 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             st.write(f"**Unconfirmed:** {unconfirmed_count}")
 
         # ---------------------------------------------------------
-        # EXPANDER (SHORT TITLE ONLY)
+        # EXPANDER (short title only)
         # ---------------------------------------------------------
         with st.expander("View Details", expanded=False):
 
+            # Pills inside expander
             def pill_row(label, names, css_class):
                 if not names:
                     st.markdown(f"**{label}:** _None_")
