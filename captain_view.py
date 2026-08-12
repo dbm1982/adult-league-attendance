@@ -4,9 +4,7 @@ import pandas as pd
 def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
     st.title("Captain View")
-
-    # Simple instructions for captains
-    st.info("Expand each game below to view player attendance and make updates.")
+    st.info("Expand a game below to see player attendance and make updates.")
 
     players_df["team_id"] = players_df["team_id"].astype(str).str.strip()
     games_df["team_id"] = games_df["team_id"].astype(str).str.strip()
@@ -28,7 +26,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         for _, row in attendance_df.iterrows()
     }
 
-    # Cleaner pill styling
+    # Pills inside expander only
     st.markdown("""
         <style>
             .pill {
@@ -66,56 +64,25 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         unconfirmed_count = len(grouped["Maybe"]) + len(grouped["No Response"])
 
         # ---------------------------------------------------------
-        # CLEAN GAME HEADER (front-and-center info)
+        # CLEAN STREAMLIT HEADER (NO HTML)
         # ---------------------------------------------------------
-        st.markdown(
-            f"""
-            <div style="
-                padding:16px;
-                border-radius:12px;
-                border:1px solid #DDD;
-                margin-bottom:6px;
-                background:#fafafa;
-            ">
-                <div style="font-size:18px; font-weight:600;">
-                    {game_date} — {game_time}
-                </div>
-                <div style="font-size:16px; margin-bottom:8px;">
-                    vs <strong>{opponent}</strong>
-                </div>
+        header = st.container()
+        with header:
+            col_left, col_right = st.columns([3, 2])
 
-                <div style="display:flex; gap:12px; margin-top:6px;">
-                    <div style="
-                        background:#2ecc71;
-                        padding:6px 12px;
-                        border-radius:8px;
-                        color:white;
-                        font-weight:600;
-                    ">
-                        {yes_count} playing
-                    </div>
+            with col_left:
+                st.subheader(f"{game_date} — {game_time}")
+                st.write(f"vs **{opponent}**")
 
-                    <div style="
-                        background:#7f8c8d;
-                        padding:6px 12px;
-                        border-radius:8px;
-                        color:white;
-                        font-weight:600;
-                    ">
-                        {unconfirmed_count} unconfirmed
-                    </div>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+            with col_right:
+                st.metric("Playing", yes_count)
+                st.metric("Unconfirmed", unconfirmed_count)
 
         # ---------------------------------------------------------
         # EXPANDER FOR DETAILS
         # ---------------------------------------------------------
         with st.expander("View Details", expanded=False):
 
-            # Pills inside expander
             def pill_row(label, names, css_class):
                 if not names:
                     st.markdown(f"**{label}:** _None_")
@@ -133,7 +100,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             pill_row("No Response", grouped["No Response"], "pill-nr")
 
             st.markdown("---")
-
             st.subheader("Update Attendance")
 
             updated = []
