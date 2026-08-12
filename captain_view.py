@@ -64,22 +64,19 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         unconfirmed_count = len(grouped["Maybe"]) + len(grouped["No Response"])
 
         # ---------------------------------------------------------
-        # CLEAN STREAMLIT HEADER (NO HTML)
+        # CLEAN, SIMPLE HEADER (NO HTML, NO EXPANDER TITLE)
         # ---------------------------------------------------------
-        header = st.container()
-        with header:
-            col_left, col_right = st.columns([3, 2])
+        st.write(f"### {game_date} — {game_time}")
+        st.write(f"**vs {opponent}**")
 
-            with col_left:
-                st.subheader(f"{game_date} — {game_time}")
-                st.write(f"vs **{opponent}**")
-
-            with col_right:
-                st.metric("Playing", yes_count)
-                st.metric("Unconfirmed", unconfirmed_count)
+        colA, colB = st.columns(2)
+        with colA:
+            st.write(f"**Playing:** {yes_count}")
+        with colB:
+            st.write(f"**Unconfirmed:** {unconfirmed_count}")
 
         # ---------------------------------------------------------
-        # EXPANDER FOR DETAILS
+        # EXPANDER (SHORT TITLE ONLY)
         # ---------------------------------------------------------
         with st.expander("View Details", expanded=False):
 
