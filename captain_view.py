@@ -65,15 +65,57 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         yes_count = len(grouped["Yes"])
         unconfirmed_count = len(grouped["Maybe"]) + len(grouped["No Response"])
 
-        # Cleaner expander title
-        title = (
-            f"{game_date} — {game_time} — vs {opponent}  "
-            f"({yes_count} playing • {unconfirmed_count} unconfirmed)"
+        # ---------------------------------------------------------
+        # CLEAN GAME HEADER (front-and-center info)
+        # ---------------------------------------------------------
+        st.markdown(
+            f"""
+            <div style="
+                padding:16px;
+                border-radius:12px;
+                border:1px solid #DDD;
+                margin-bottom:6px;
+                background:#fafafa;
+            ">
+                <div style="font-size:18px; font-weight:600;">
+                    {game_date} — {game_time}
+                </div>
+                <div style="font-size:16px; margin-bottom:8px;">
+                    vs <strong>{opponent}</strong>
+                </div>
+
+                <div style="display:flex; gap:12px; margin-top:6px;">
+                    <div style="
+                        background:#2ecc71;
+                        padding:6px 12px;
+                        border-radius:8px;
+                        color:white;
+                        font-weight:600;
+                    ">
+                        {yes_count} playing
+                    </div>
+
+                    <div style="
+                        background:#7f8c8d;
+                        padding:6px 12px;
+                        border-radius:8px;
+                        color:white;
+                        font-weight:600;
+                    ">
+                        {unconfirmed_count} unconfirmed
+                    </div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
-        with st.expander(title, expanded=False):
+        # ---------------------------------------------------------
+        # EXPANDER FOR DETAILS
+        # ---------------------------------------------------------
+        with st.expander("View Details", expanded=False):
 
-            # Cleaner pill rendering
+            # Pills inside expander
             def pill_row(label, names, css_class):
                 if not names:
                     st.markdown(f"**{label}:** _None_")
