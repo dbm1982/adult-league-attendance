@@ -92,12 +92,12 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
             """,
             unsafe_allow_html=True
         )
-
+        
         # ---------------------------------------------------------
         # RESPONSE RADIO (NO PLAYER NAME)
         # ---------------------------------------------------------
         new_status = st.radio(
-            "Response",   # <--- FIXED: no more player name
+            "Response",   # ← FIXED: no more player name
             valid_statuses,
             index=valid_statuses.index(current_status),
             horizontal=True,
