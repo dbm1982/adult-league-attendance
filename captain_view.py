@@ -5,6 +5,9 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
     st.title("Captain View")
 
+    # Simple instructions for captains
+    st.info("Expand each game below to view player attendance and make updates.")
+
     players_df["team_id"] = players_df["team_id"].astype(str).str.strip()
     games_df["team_id"] = games_df["team_id"].astype(str).str.strip()
 
@@ -25,6 +28,24 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         for _, row in attendance_df.iterrows()
     }
 
+    # Cleaner pill styling
+    st.markdown("""
+        <style>
+            .pill {
+                display:inline-block;
+                padding:6px 10px;
+                border-radius:12px;
+                color:white;
+                margin:4px 6px 4px 0;
+                font-size:14px;
+            }
+            .pill-yes { background:#2ecc71; }
+            .pill-no { background:#e74c3c; }
+            .pill-maybe { background:#f1c40f; color:black; }
+            .pill-nr { background:#7f8c8d; }
+        </style>
+    """, unsafe_allow_html=True)
+
     for _, game in upcoming_games.iterrows():
 
         game_id = game["game_id"]
@@ -44,28 +65,30 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         yes_count = len(grouped["Yes"])
         unconfirmed_count = len(grouped["Maybe"]) + len(grouped["No Response"])
 
+        # Cleaner expander title
         title = (
-            f"{game_date} — {game_time} — vs {opponent} "
+            f"{game_date} — {game_time} — vs {opponent}  "
             f"({yes_count} playing • {unconfirmed_count} unconfirmed)"
         )
 
         with st.expander(title, expanded=False):
 
-            def chips(label, names, color):
+            # Cleaner pill rendering
+            def pill_row(label, names, css_class):
                 if not names:
                     st.markdown(f"**{label}:** _None_")
                     return
-                html = " ".join(
-                    f"<span style='background:{color};padding:4px 8px;"
-                    f"border-radius:6px;color:white;margin-right:4px'>{n}</span>"
+
+                pills_html = "".join(
+                    f"<span class='pill {css_class}'>{n}</span>"
                     for n in names
                 )
-                st.markdown(f"**{label} ({len(names)}):**<br>{html}", unsafe_allow_html=True)
+                st.markdown(f"**{label} ({len(names)}):**<br>{pills_html}", unsafe_allow_html=True)
 
-            chips("Yes", grouped["Yes"], "#2ecc71")
-            chips("No", grouped["No"], "#e74c3c")
-            chips("Maybe", grouped["Maybe"], "#f1c40f")
-            chips("No Response", grouped["No Response"], "#7f8c8d")
+            pill_row("Yes", grouped["Yes"], "pill-yes")
+            pill_row("No", grouped["No"], "pill-no")
+            pill_row("Maybe", grouped["Maybe"], "pill-maybe")
+            pill_row("No Response", grouped["No Response"], "pill-nr")
 
             st.markdown("---")
 
@@ -101,5 +124,4 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     ] = new_status
 
                 st.success(f"Saved all attendance updates for {game_date}")
-
                 commit_changes()
