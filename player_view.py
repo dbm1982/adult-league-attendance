@@ -2,26 +2,51 @@ import streamlit as st
 import pandas as pd
 
 # ---------------------------------------------------------
-# DARK/LIGHT MODE SAFE CSS
+# DARK/LIGHT MODE SAFE CSS — REAL CARD STYLING
 # ---------------------------------------------------------
 st.markdown("""
 <style>
 
-    /* GAME CARD CONTAINER */
+    /* GAME CARD */
     .game-card {
         background: var(--secondary-background-color);
         color: var(--text-color);
-        padding: 16px;
+        padding: 18px;
         border-radius: 12px;
         border: 1px solid var(--border-color, #444);
-        margin-bottom: 24px;   /* clear separation between games */
+        margin-top: 18px;
+        margin-bottom: 28px;   /* CLEAR separation between games */
     }
 
-    /* STATUS TEXT */
-    .status-text {
-        color: var(--text-color);
+    .game-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    .game-opponent {
+        font-size: 16px;
+        margin-bottom: 4px;
+    }
+
+    .game-field {
         font-size: 14px;
+        margin-bottom: 10px;
+        color: var(--text-color);
+    }
+
+    .status-text {
+        font-size: 14px;
+        font-style: italic;
         margin-bottom: 12px;
+        color: var(--text-color);
+    }
+
+    /* Divider between games */
+    .game-divider {
+        height: 1px;
+        background: var(--border-color, #444);
+        margin: 12px 0 12px 0;
     }
 
 </style>
@@ -90,17 +115,15 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
         current_status = mapping.get(normalized, "No Response")
 
         # ---------------------------------------------------------
-        # GAME CARD (theme-aware, clearly separated)
+        # GAME CARD — NOW USING CSS CLASSES (NOT INLINE STYLES)
         # ---------------------------------------------------------
         st.markdown(
             f"""
             <div class="game-card">
-                <h4 style="margin:0 0 6px 0;">{game_date} — {game_time}</h4>
-                <div style="font-size:16px;"><strong>vs {opponent}</strong></div>
-                <div style="margin-bottom:12px;">Field {field}</div>
-                <div class="status-text">
-                    <em>Your current response: {current_status}</em>
-                </div>
+                <div class="game-title">{game_date} — {game_time}</div>
+                <div class="game-opponent"><strong>vs {opponent}</strong></div>
+                <div class="game-field">Field {field}</div>
+                <div class="status-text">Your current response: {current_status}</div>
             </div>
             """,
             unsafe_allow_html=True
