@@ -14,32 +14,50 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
     df = df.drop_duplicates(subset=["player_id", "game_id"], keep="last").reset_index(drop=True)
     st.session_state.attendance_df = df
 
-    # MINI TIMELINE
-    st.subheader("Your Season Calendar")
-
-    season_game_ids = set(games_df["game_id"])
-
-    player_att = df[
-        (df["player_id"] == player_token) &
-        (df["game_id"].isin(season_game_ids))
-    ].drop_duplicates(subset=["game_id"], keep="last")
-
-    team_games = games_df[games_df["team_id"] == team_id]
+    # ---------------------------------------------------------
+    # MICRO TIMELINE SUMMARY
+    # ---------------------------------------------------------
     
+    st.subheader("Your Season Calendar")
+    
+    # Only games for THIS team
+    team_games = games_df[games_df["team_id"] == team_id].copy()
+    
+    # Attendance for this player
+    player_att = st.session_state.attendance_df[
+        st.session_state.attendance_df["player_id"] == player_token
+    ].copy()
+    
+    # Merge so that ALL games appear, even with no attendance yet
     merged = (
-        player_att
-        .merge(team_games, on="game_id")
+        team_games
+        .merge(player_att, on="game_id", how="left")
         .sort_values("date")
     )
-
-    emoji_map = {"Yes": "🟢", "No": "🔴", "Maybe": "🟡", "No Response": "⚪"}
-
-    timeline = [
-        f"{emoji_map.get(row['status'], '⚪')} {pd.to_datetime(row['date']).strftime('%m/%d')}"
-        for _, row in merged.iterrows()
-    ]
-
+    
+    # Normalize status
+    merged["status"] = (
+        merged["status"]
+        .fillna("No Response")
+        .replace(["", "none", "None", "NR"], "No Response")
+    )
+    
+    emoji_map = {
+        "Yes": "🟢",
+        "No": "🔴",
+        "Maybe": "🟡",
+        "No Response": "⚪"   # light gray / empty circle
+    }
+    
+    timeline = []
+    for _, row in merged.iterrows():
+        date_short = pd.to_datetime(row["date"]).strftime("%m/%d")
+        status = row["status"]
+        emoji = emoji_map.get(status, "⚪")
+        timeline.append(f"{emoji} {date_short}")
+    
     st.write("   ".join(timeline))
+
 
     # UPCOMING GAMES
     today = pd.Timestamp.now()
