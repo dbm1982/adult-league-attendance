@@ -4,6 +4,14 @@ import pandas as pd
 def player_view(players_df, games_df, attendance_df, team_id, player_name, commit_changes):
 
     # ---------------------------------------------------------
+    # HARD DEDUPE: remove duplicates from the sheet data
+    # ---------------------------------------------------------
+    attendance_df = attendance_df.drop_duplicates(
+        subset=["player_id", "game_id"],
+        keep="last"
+    ).reset_index(drop=True)
+
+    # ---------------------------------------------------------
     # Identify player
     # ---------------------------------------------------------
     player_row = players_df[players_df["player_name"] == player_name].iloc[0]
@@ -14,7 +22,6 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
     # ---------------------------------------------------------
     st.subheader("Your Season Calendar")
 
-    # Only include games from THIS season
     season_game_ids = set(games_df["game_id"])
 
     player_att = attendance_df[
@@ -22,10 +29,9 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
         (attendance_df["game_id"].isin(season_game_ids))
     ]
 
-    # Remove duplicate attendance rows per game (keep latest)
+    # Dedupe again (in case sheet had issues)
     player_att = player_att.drop_duplicates(subset=["game_id"], keep="last")
 
-    # Merge with games to get dates
     merged = player_att.merge(games_df, on="game_id").sort_values("date")
 
     emoji_map = {
@@ -42,7 +48,6 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
         emoji = emoji_map.get(status, "⚪")
         timeline.append(f"{emoji} {date_short}")
 
-    # Render as a single clean line
     st.write("   ".join(timeline))
 
     # ---------------------------------------------------------
@@ -71,7 +76,6 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
         opponent = game["opponent"]
         field = game["field"]
 
-        # Current status lookup (deduped)
         mask = (
             (attendance_df["player_id"] == player_token) &
             (attendance_df["game_id"] == game_id)
@@ -82,7 +86,6 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
         else:
             current_status = attendance_df.loc[mask, "status"].iloc[-1]
 
-        # Normalize status
         normalized = str(current_status).strip().lower()
         mapping = {
             "yes": "Yes",
@@ -95,9 +98,6 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
         }
         current_status = mapping.get(normalized, "No Response")
 
-        # ---------------------------------------------------------
-        # GAME CARD (pure Streamlit)
-        # ---------------------------------------------------------
         card = st.container(border=True)
 
         with card:
@@ -108,9 +108,6 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
 
             st.divider()
 
-            # ---------------------------------------------------------
-            # RESPONSE RADIO
-            # ---------------------------------------------------------
             new_status = st.radio(
                 "Response",
                 valid_statuses,
@@ -119,23 +116,24 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
                 key=f"player_{player_token}_{game_id}"
             )
 
-            # ---------------------------------------------------------
-            # SAVE BUTTON — CORRECT UPDATE LOGIC
-            # ---------------------------------------------------------
             if st.button(f"Save Changes for {game_date}", key=f"save_{player_token}_{game_id}"):
 
-                # If row exists → UPDATE
+                # UPDATE instead of append
                 if attendance_df.loc[mask].empty:
-                    # INSERT new row
                     attendance_df.loc[len(attendance_df)] = {
                         "player_id": player_token,
                         "game_id": game_id,
                         "status": new_status
                     }
                 else:
-                    # UPDATE existing row
                     attendance_df.loc[mask, "status"] = new_status
+
+                # HARD DEDUPE before saving back
+                attendance_df = attendance_df.drop_duplicates(
+                    subset=["player_id", "game_id"],
+                    keep="last"
+                ).reset_index(drop=True)
 
                 st.success(f"Saved changes for {game_date}")
 
-                commit_changes()
+                commit_changes(attendance_df)
