@@ -7,36 +7,30 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
     player_token = player_row["token"]
 
     # ---------------------------------------------------------
-    # MINI CALENDAR SUMMARY (3-across grid, pure Streamlit)
+    # MICRO TIMELINE SUMMARY (tiny row of dates + colors)
     # ---------------------------------------------------------
     st.subheader("Your Season Calendar")
-
+    
     player_att = attendance_df[attendance_df["player_id"] == player_token]
     merged = player_att.merge(games_df, on="game_id").sort_values("date")
-
-    # Color mapping using emojis (dark-mode safe)
+    
     emoji_map = {
         "Yes": "🟢",
         "No": "🔴",
         "Maybe": "🟡",
         "No Response": "⚪"
     }
-
-    # Build items for the mini-calendar
-    calendar_items = []
+    
+    timeline = []
+    
     for _, row in merged.iterrows():
-        date_str = row["display_date"]
+        date_short = pd.to_datetime(row["date"]).strftime("%m/%d")
         status = row["status"]
         emoji = emoji_map.get(status, "⚪")
-        calendar_items.append(f"{emoji}\n{date_str}")
-
-    # Render 3-across grid
-    for i in range(0, len(calendar_items), 3):
-        row_items = calendar_items[i:i+3]
-        cols = st.columns(len(row_items))
-        for col, item in zip(cols, row_items):
-            with col:
-                st.markdown(f"### {item}")
+        timeline.append(f"{emoji} {date_short}")
+    
+    # Render as a single clean line
+    st.write("   ".join(timeline))
 
     # ---------------------------------------------------------
     # UPCOMING GAMES
