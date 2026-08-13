@@ -1,62 +1,6 @@
 import streamlit as st
 import pandas as pd
 
-# ---------------------------------------------------------
-# GLOBAL CSS — MUST BE AT TOP, NO INDENTATION
-# ---------------------------------------------------------
-st.markdown("""
-<style>
-
-.game-card {
-    background: var(--secondary-background-color);
-    color: var(--text-color);
-    padding: 18px;
-    border-radius: 12px;
-    border: 1px solid var(--border-color, #555);
-
-    /* REAL separation */
-    margin-top: 24px;
-    margin-bottom: 24px;
-
-    /* Shadow that works in light + dark mode */
-    box-shadow: 0px 2px 6px rgba(0,0,0,0.35);
-}
-
-.game-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 6px;
-}
-
-.game-opponent {
-    font-size: 16px;
-    margin-bottom: 4px;
-}
-
-.game-field {
-    font-size: 14px;
-    margin-bottom: 10px;
-    color: var(--text-color);
-}
-
-.status-text {
-    font-size: 14px;
-    font-style: italic;
-    margin-bottom: 12px;
-    color: var(--text-color);
-}
-
-/* Divider (optional) */
-.game-divider {
-    height: 1px;
-    background: var(--border-color, #555);
-    margin: 12px 0;
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-
 def player_view(players_df, games_df, attendance_df, team_id, player_name, commit_changes):
 
     player_row = players_df[players_df["player_name"] == player_name].iloc[0]
@@ -119,42 +63,40 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
         current_status = mapping.get(normalized, "No Response")
 
         # ---------------------------------------------------------
-        # GAME CARD — NOW USING CSS CLASSES ONLY
+        # GAME CARD — PURE STREAMLIT (NO HTML, NO CSS)
         # ---------------------------------------------------------
-        st.markdown(
-            f"""
-            <div class="game-card">
-                <div class="game-title">{game_date} — {game_time}</div>
-                <div class="game-opponent"><strong>vs {opponent}</strong></div>
-                <div class="game-field">Field {field}</div>
-                <div class="status-text">Your current response: {current_status}</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        card = st.container(border=True)  # <-- THIS creates a real visible card
 
-        # ---------------------------------------------------------
-        # RESPONSE RADIO
-        # ---------------------------------------------------------
-        new_status = st.radio(
-            "Response",
-            valid_statuses,
-            index=valid_statuses.index(current_status),
-            horizontal=True,
-            key=f"player_{player_token}_{game_id}"
-        )
+        with card:
+            st.write(f"### {game_date} — {game_time}")
+            st.write(f"**vs {opponent}**")
+            st.write(f"Field {field}")
+            st.write(f"*Your current response: {current_status}*")
 
-        # ---------------------------------------------------------
-        # SAVE BUTTON
-        # ---------------------------------------------------------
-        if st.button(f"Save Changes for {game_date}", key=f"save_{player_token}_{game_id}"):
+            st.divider()  # <-- CLEAR separation inside the card
 
-            attendance_df.loc[
-                (attendance_df["player_id"] == player_token) &
-                (attendance_df["game_id"] == game_id),
-                "status"
-            ] = new_status
+            # ---------------------------------------------------------
+            # RESPONSE RADIO
+            # ---------------------------------------------------------
+            new_status = st.radio(
+                "Response",
+                valid_statuses,
+                index=valid_statuses.index(current_status),
+                horizontal=True,
+                key=f"player_{player_token}_{game_id}"
+            )
 
-            st.success(f"Saved changes for {game_date}")
+            # ---------------------------------------------------------
+            # SAVE BUTTON
+            # ---------------------------------------------------------
+            if st.button(f"Save Changes for {game_date}", key=f"save_{player_token}_{game_id}"):
 
-            commit_changes()
+                attendance_df.loc[
+                    (attendance_df["player_id"] == player_token) &
+                    (attendance_df["game_id"] == game_id),
+                    "status"
+                ] = new_status
+
+                st.success(f"Saved changes for {game_date}")
+
+                commit_changes()
