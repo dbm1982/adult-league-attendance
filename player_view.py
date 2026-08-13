@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # ---------------------------------------------------------
-# DARK/LIGHT MODE SAFE CSS — REAL CARD STYLING
+# DARK/LIGHT MODE SAFE CSS — REAL CARD SEPARATION
 # ---------------------------------------------------------
 st.markdown("""
 <style>
@@ -13,9 +13,16 @@ st.markdown("""
         color: var(--text-color);
         padding: 18px;
         border-radius: 12px;
-        border: 1px solid var(--border-color, #444);
-        margin-top: 18px;
-        margin-bottom: 28px;   /* CLEAR separation between games */
+
+        /* REAL separation */
+        margin-top: 20px;
+        margin-bottom: 20px;
+
+        /* Visible in light + dark mode */
+        border: 1px solid var(--border-color, #555);
+
+        /* Shadow that works in both modes */
+        box-shadow: 0px 2px 6px rgba(0,0,0,0.25);
     }
 
     .game-title {
@@ -45,8 +52,9 @@ st.markdown("""
     /* Divider between games */
     .game-divider {
         height: 1px;
-        background: var(--border-color, #444);
-        margin: 12px 0 12px 0;
+        background: var(--border-color, #555);
+        margin-top: 10px;
+        margin-bottom: 10px;
     }
 
 </style>
@@ -115,7 +123,7 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
         current_status = mapping.get(normalized, "No Response")
 
         # ---------------------------------------------------------
-        # GAME CARD — NOW USING CSS CLASSES (NOT INLINE STYLES)
+        # GAME CARD — NOW USING CSS CLASSES ONLY
         # ---------------------------------------------------------
         st.markdown(
             f"""
