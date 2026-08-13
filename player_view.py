@@ -1,6 +1,33 @@
 import streamlit as st
 import pandas as pd
 
+# ---------------------------------------------------------
+# DARK-MODE SAFE CSS (applies to all game cards + text)
+# ---------------------------------------------------------
+st.markdown("""
+<style>
+
+    /* GAME CARD CONTAINER */
+    .game-card {
+        background: var(--secondary-background-color);
+        color: var(--text-color);
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color, #444);
+        margin-bottom: 18px;
+    }
+
+    /* STATUS TEXT */
+    .status-text {
+        color: var(--text-color);
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+
+</style>
+""", unsafe_allow_html=True)
+
+
 def player_view(players_df, games_df, attendance_df, team_id, player_name, commit_changes):
 
     player_row = players_df[players_df["player_name"] == player_name].iloc[0]
@@ -32,13 +59,6 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
 
     valid_statuses = ["Yes", "No", "Maybe", "No Response"]
 
-    color_map = {
-        "Yes": "#e8f8f0",
-        "No": "#fdecea",
-        "Maybe": "#fff8e1",
-        "No Response": "#f2f2f2"
-    }
-
     for _, game in upcoming_games.iterrows():
 
         game_id = game["game_id"]
@@ -68,36 +88,29 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
         }
 
         current_status = mapping.get(normalized, "No Response")
-        bg_color = color_map[current_status]
 
         # ---------------------------------------------------------
-        # GAME CARD (clean, no repeated player name)
+        # GAME CARD (now dark-mode safe)
         # ---------------------------------------------------------
         st.markdown(
             f"""
-            <div style="
-                padding:16px;
-                border-radius:12px;
-                border:1px solid #DDD;
-                margin-bottom:18px;
-                background:{bg_color};
-            ">
+            <div class="game-card">
                 <h4 style="margin:0 0 6px 0;">{game_date} — {game_time}</h4>
                 <div style="font-size:16px;"><strong>vs {opponent}</strong></div>
-                <div style="color:#555; margin-bottom:12px;">Field {field}</div>
-                <div style="font-size:14px; color:#333;">
+                <div style="margin-bottom:12px;">Field {field}</div>
+                <div class="status-text">
                     <em>Your current response: {current_status}</em>
                 </div>
             </div>
             """,
             unsafe_allow_html=True
         )
-        
+
         # ---------------------------------------------------------
         # RESPONSE RADIO (NO PLAYER NAME)
         # ---------------------------------------------------------
         new_status = st.radio(
-            "Response",   # ← FIXED: no more player name
+            "Response",
             valid_statuses,
             index=valid_statuses.index(current_status),
             horizontal=True,
