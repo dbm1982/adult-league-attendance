@@ -2,60 +2,56 @@ import streamlit as st
 import pandas as pd
 
 # ---------------------------------------------------------
-# DARK/LIGHT MODE SAFE CSS — REAL CARD SEPARATION
+# GLOBAL CSS — MUST BE AT TOP, NO INDENTATION
 # ---------------------------------------------------------
 st.markdown("""
 <style>
 
-    /* GAME CARD */
-    .game-card {
-        background: var(--secondary-background-color);
-        color: var(--text-color);
-        padding: 18px;
-        border-radius: 12px;
+.game-card {
+    background: var(--secondary-background-color);
+    color: var(--text-color);
+    padding: 18px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color, #555);
 
-        /* REAL separation */
-        margin-top: 20px;
-        margin-bottom: 20px;
+    /* REAL separation */
+    margin-top: 24px;
+    margin-bottom: 24px;
 
-        /* Visible in light + dark mode */
-        border: 1px solid var(--border-color, #555);
+    /* Shadow that works in light + dark mode */
+    box-shadow: 0px 2px 6px rgba(0,0,0,0.35);
+}
 
-        /* Shadow that works in both modes */
-        box-shadow: 0px 2px 6px rgba(0,0,0,0.25);
-    }
+.game-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
 
-    .game-title {
-        font-size: 18px;
-        font-weight: 600;
-        margin-bottom: 6px;
-    }
+.game-opponent {
+    font-size: 16px;
+    margin-bottom: 4px;
+}
 
-    .game-opponent {
-        font-size: 16px;
-        margin-bottom: 4px;
-    }
+.game-field {
+    font-size: 14px;
+    margin-bottom: 10px;
+    color: var(--text-color);
+}
 
-    .game-field {
-        font-size: 14px;
-        margin-bottom: 10px;
-        color: var(--text-color);
-    }
+.status-text {
+    font-size: 14px;
+    font-style: italic;
+    margin-bottom: 12px;
+    color: var(--text-color);
+}
 
-    .status-text {
-        font-size: 14px;
-        font-style: italic;
-        margin-bottom: 12px;
-        color: var(--text-color);
-    }
-
-    /* Divider between games */
-    .game-divider {
-        height: 1px;
-        background: var(--border-color, #555);
-        margin-top: 10px;
-        margin-bottom: 10px;
-    }
+/* Divider (optional) */
+.game-divider {
+    height: 1px;
+    background: var(--border-color, #555);
+    margin: 12px 0;
+}
 
 </style>
 """, unsafe_allow_html=True)
