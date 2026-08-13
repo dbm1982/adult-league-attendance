@@ -3,6 +3,9 @@ import pandas as pd
 
 def player_view(players_df, games_df, attendance_df, team_id, player_name, commit_changes):
 
+    # ---------------------------------------------------------
+    # Identify player
+    # ---------------------------------------------------------
     player_row = players_df[players_df["player_name"] == player_name].iloc[0]
     player_token = player_row["token"]
 
@@ -10,25 +13,35 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
     # MICRO TIMELINE SUMMARY (tiny row of dates + colors)
     # ---------------------------------------------------------
     st.subheader("Your Season Calendar")
-    
-    player_att = attendance_df[attendance_df["player_id"] == player_token]
+
+    # Only include games from THIS season
+    season_game_ids = set(games_df["game_id"])
+
+    player_att = attendance_df[
+        (attendance_df["player_id"] == player_token) &
+        (attendance_df["game_id"].isin(season_game_ids))
+    ]
+
+    # Remove duplicate attendance rows per game (keep latest)
+    player_att = player_att.drop_duplicates(subset=["game_id"], keep="last")
+
+    # Merge with games to get dates
     merged = player_att.merge(games_df, on="game_id").sort_values("date")
-    
+
     emoji_map = {
         "Yes": "🟢",
         "No": "🔴",
         "Maybe": "🟡",
         "No Response": "⚪"
     }
-    
+
     timeline = []
-    
     for _, row in merged.iterrows():
         date_short = pd.to_datetime(row["date"]).strftime("%m/%d")
         status = row["status"]
         emoji = emoji_map.get(status, "⚪")
         timeline.append(f"{emoji} {date_short}")
-    
+
     # Render as a single clean line
     st.write("   ".join(timeline))
 
@@ -47,6 +60,9 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
 
     valid_statuses = ["Yes", "No", "Maybe", "No Response"]
 
+    # ---------------------------------------------------------
+    # GAME LOOP
+    # ---------------------------------------------------------
     for _, game in upcoming_games.iterrows():
 
         game_id = game["game_id"]
@@ -55,16 +71,19 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
         opponent = game["opponent"]
         field = game["field"]
 
-        # Current status lookup
-        raw = attendance_df.loc[
+        # Current status lookup (deduped)
+        mask = (
             (attendance_df["player_id"] == player_token) &
-            (attendance_df["game_id"] == game_id),
-            "status"
-        ].values
+            (attendance_df["game_id"] == game_id)
+        )
 
-        raw = raw[0] if len(raw) > 0 else "No Response"
-        normalized = str(raw).strip().lower()
+        if attendance_df.loc[mask].empty:
+            current_status = "No Response"
+        else:
+            current_status = attendance_df.loc[mask, "status"].iloc[-1]
 
+        # Normalize status
+        normalized = str(current_status).strip().lower()
         mapping = {
             "yes": "Yes",
             "no": "No",
@@ -74,11 +93,10 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
             "none": "No Response",
             "nr": "No Response",
         }
-
         current_status = mapping.get(normalized, "No Response")
 
         # ---------------------------------------------------------
-        # GAME CARD — PURE STREAMLIT (NO HTML, NO CSS)
+        # GAME CARD (pure Streamlit)
         # ---------------------------------------------------------
         card = st.container(border=True)
 
@@ -102,15 +120,21 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
             )
 
             # ---------------------------------------------------------
-            # SAVE BUTTON
+            # SAVE BUTTON — CORRECT UPDATE LOGIC
             # ---------------------------------------------------------
             if st.button(f"Save Changes for {game_date}", key=f"save_{player_token}_{game_id}"):
 
-                attendance_df.loc[
-                    (attendance_df["player_id"] == player_token) &
-                    (attendance_df["game_id"] == game_id),
-                    "status"
-                ] = new_status
+                # If row exists → UPDATE
+                if attendance_df.loc[mask].empty:
+                    # INSERT new row
+                    attendance_df.loc[len(attendance_df)] = {
+                        "player_id": player_token,
+                        "game_id": game_id,
+                        "status": new_status
+                    }
+                else:
+                    # UPDATE existing row
+                    attendance_df.loc[mask, "status"] = new_status
 
                 st.success(f"Saved changes for {game_date}")
 
