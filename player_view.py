@@ -24,7 +24,13 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
         (df["game_id"].isin(season_game_ids))
     ].drop_duplicates(subset=["game_id"], keep="last")
 
-    merged = player_att.merge(games_df, on="game_id").sort_values("date")
+    team_games = games_df[games_df["team_id"] == team_id]
+    
+    merged = (
+        player_att
+        .merge(team_games, on="game_id")
+        .sort_values("date")
+    )
 
     emoji_map = {"Yes": "🟢", "No": "🔴", "Maybe": "🟡", "No Response": "⚪"}
 
