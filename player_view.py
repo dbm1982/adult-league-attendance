@@ -7,15 +7,36 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
     player_token = player_row["token"]
 
     # ---------------------------------------------------------
-    # SEASON SUMMARY
+    # MINI CALENDAR SUMMARY (3-across grid, pure Streamlit)
     # ---------------------------------------------------------
-    st.subheader("Season Summary")
+    st.subheader("Your Season Calendar")
 
     player_att = attendance_df[attendance_df["player_id"] == player_token]
-    summary = player_att["status"].value_counts().to_dict()
+    merged = player_att.merge(games_df, on="game_id").sort_values("date")
 
-    for status in ["Yes", "No", "Maybe", "No Response"]:
-        st.write(f"{status}: {summary.get(status, 0)} games")
+    # Color mapping using emojis (dark-mode safe)
+    emoji_map = {
+        "Yes": "🟢",
+        "No": "🔴",
+        "Maybe": "🟡",
+        "No Response": "⚪"
+    }
+
+    # Build items for the mini-calendar
+    calendar_items = []
+    for _, row in merged.iterrows():
+        date_str = row["display_date"]
+        status = row["status"]
+        emoji = emoji_map.get(status, "⚪")
+        calendar_items.append(f"{emoji}\n{date_str}")
+
+    # Render 3-across grid
+    for i in range(0, len(calendar_items), 3):
+        row_items = calendar_items[i:i+3]
+        cols = st.columns(len(row_items))
+        for col, item in zip(cols, row_items):
+            with col:
+                st.markdown(f"### {item}")
 
     # ---------------------------------------------------------
     # UPCOMING GAMES
@@ -65,7 +86,7 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
         # ---------------------------------------------------------
         # GAME CARD — PURE STREAMLIT (NO HTML, NO CSS)
         # ---------------------------------------------------------
-        card = st.container(border=True)  # <-- THIS creates a real visible card
+        card = st.container(border=True)
 
         with card:
             st.write(f"### {game_date} — {game_time}")
@@ -73,7 +94,7 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
             st.write(f"Field {field}")
             st.write(f"*Your current response: {current_status}*")
 
-            st.divider()  # <-- CLEAR separation inside the card
+            st.divider()
 
             # ---------------------------------------------------------
             # RESPONSE RADIO
