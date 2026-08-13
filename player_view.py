@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # ---------------------------------------------------------
-# DARK-MODE SAFE CSS (applies to all game cards + text)
+# DARK/LIGHT MODE SAFE CSS
 # ---------------------------------------------------------
 st.markdown("""
 <style>
@@ -14,7 +14,7 @@ st.markdown("""
         padding: 16px;
         border-radius: 12px;
         border: 1px solid var(--border-color, #444);
-        margin-bottom: 18px;
+        margin-bottom: 24px;   /* clear separation between games */
     }
 
     /* STATUS TEXT */
@@ -90,7 +90,7 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
         current_status = mapping.get(normalized, "No Response")
 
         # ---------------------------------------------------------
-        # GAME CARD (now dark-mode safe)
+        # GAME CARD (theme-aware, clearly separated)
         # ---------------------------------------------------------
         st.markdown(
             f"""
@@ -107,7 +107,7 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
         )
 
         # ---------------------------------------------------------
-        # RESPONSE RADIO (NO PLAYER NAME)
+        # RESPONSE RADIO
         # ---------------------------------------------------------
         new_status = st.radio(
             "Response",
