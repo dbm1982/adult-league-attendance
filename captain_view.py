@@ -6,7 +6,23 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
     st.title("Captain View")
     st.info("Expand a game below to see player attendance and make updates.")
 
-    # Clean team_id formatting
+    # ---------------------------------------------------------
+    # STATUS / SAVE FEEDBACK
+    # ---------------------------------------------------------
+
+    if "unsaved_changes" not in st.session_state:
+        st.session_state.unsaved_changes = False
+
+    if "last_saved" in st.session_state:
+        st.info(f"Last saved at {st.session_state.last_saved}")
+
+    if st.session_state.unsaved_changes:
+        st.warning("You have unsaved changes.")
+
+    # ---------------------------------------------------------
+    # FILTER TEAM DATA
+    # ---------------------------------------------------------
+
     players_df["team_id"] = players_df["team_id"].astype(str).str.strip()
     games_df["team_id"] = games_df["team_id"].astype(str).str.strip()
 
@@ -22,12 +38,15 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
     valid_statuses = ["Yes", "No", "Maybe", "No Response"]
 
+    # Build lookup from in-memory attendance_df (NO SHEET READS)
     attendance_lookup = {
         (row["player_id"], row["game_id"]): row["status"]
         for _, row in attendance_df.iterrows()
     }
 
-    # Pills inside expander only
+    # ---------------------------------------------------------
+    # CSS FOR PILLS
+    # ---------------------------------------------------------
     st.markdown("""
         <style>
             .pill {
@@ -68,11 +87,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         yes_count = len(grouped["Yes"])
         unconfirmed_count = len(grouped["Maybe"]) + len(grouped["No Response"])
 
-        # ---------------------------------------------------------
-        # SUBTLE DIVIDER + CLEAN HEADER (compact, spaced)
-        # ---------------------------------------------------------
-        st.markdown("---")   # subtle divider between games
-
+        st.markdown("---")
         st.write(f"### {game_date} — {game_time}")
         st.write(f"**vs {opponent}**")
 
@@ -83,11 +98,10 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             st.write(f"**Unconfirmed:** {unconfirmed_count}")
 
         # ---------------------------------------------------------
-        # EXPANDER (short title only)
+        # EXPANDER
         # ---------------------------------------------------------
         with st.expander("View Details", expanded=False):
 
-            # Pills inside expander
             def pill_row(label, names, css_class):
                 if not names:
                     st.markdown(f"**{label}:** _None_")
@@ -127,8 +141,16 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
                 updated.append((pid, game_id, new_status))
 
+                # Mark unsaved changes
+                if new_status != status:
+                    st.session_state.unsaved_changes = True
+
+            # ---------------------------------------------------------
+            # SAVE BUTTON — ONE WRITE ONLY
+            # ---------------------------------------------------------
             if st.button(f"Save All Changes for {game_date}", key=f"save_{game_id}"):
 
+                # Update in-memory DataFrame (NO SHEET READS)
                 for pid, gid, new_status in updated:
                     attendance_df.loc[
                         (attendance_df["player_id"] == pid) &
@@ -136,5 +158,8 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                         "status"
                     ] = new_status
 
-                st.success(f"Saved all attendance updates for {game_date}")
+                # Write once
                 commit_changes()
+
+                st.session_state.unsaved_changes = False
+                st.success(f"Saved all attendance updates for {game_date}")
