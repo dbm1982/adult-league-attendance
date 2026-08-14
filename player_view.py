@@ -7,59 +7,74 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
     player_row = players_df[players_df["player_name"] == player_name].iloc[0]
     player_token = player_row["token"]
 
-    # ALWAYS use the real session DataFrame
+    # ALWAYS use the real session DataFrame (no sheet reads)
     df = st.session_state.attendance_df
 
-    # HARD DEDUPE
+    # HARD DEDUPE (safe because it's in-memory only)
     df = df.drop_duplicates(subset=["player_id", "game_id"], keep="last").reset_index(drop=True)
     st.session_state.attendance_df = df
 
     # ---------------------------------------------------------
+    # STATUS / SAVE FEEDBACK
+    # ---------------------------------------------------------
+
+    if "unsaved_changes" not in st.session_state:
+        st.session_state.unsaved_changes = False
+
+    if "last_saved" in st.session_state:
+        st.info(f"Last saved at {st.session_state.last_saved}")
+
+    if st.session_state.unsaved_changes:
+        st.warning("You have unsaved changes.")
+
+    # ---------------------------------------------------------
     # MICRO TIMELINE SUMMARY
     # ---------------------------------------------------------
-    
+
     st.subheader("Your Season Calendar")
-    
+
     # Only games for THIS team
     team_games = games_df[games_df["team_id"] == team_id].copy()
-    
+
     # Attendance for this player
     player_att = st.session_state.attendance_df[
         st.session_state.attendance_df["player_id"] == player_token
     ].copy()
-    
+
     # Merge so that ALL games appear, even with no attendance yet
     merged = (
         team_games
         .merge(player_att, on="game_id", how="left")
         .sort_values("date")
     )
-    
+
     # Normalize status
     merged["status"] = (
         merged["status"]
         .fillna("No Response")
         .replace(["", "none", "None", "NR"], "No Response")
     )
-    
+
     emoji_map = {
         "Yes": "🟢",
         "No": "🔴",
         "Maybe": "🟡",
         "No Response": "⚪"   # light gray / empty circle
     }
-    
+
     timeline = []
     for _, row in merged.iterrows():
         date_short = pd.to_datetime(row["date"]).strftime("%m/%d")
         status = row["status"]
         emoji = emoji_map.get(status, "⚪")
         timeline.append(f"{emoji} {date_short}")
-    
+
     st.write("   ".join(timeline))
 
-
+    # ---------------------------------------------------------
     # UPCOMING GAMES
+    # ---------------------------------------------------------
+
     today = pd.Timestamp.now()
     upcoming_games = games_df[
         (games_df["team_id"] == team_id) &
@@ -109,9 +124,13 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
                 key=f"player_{player_token}_{game_id}"
             )
 
+            # Mark unsaved changes
+            if new_status != current_status:
+                st.session_state.unsaved_changes = True
+
             if st.button(f"Save Changes for {game['display_date']}", key=f"save_{player_token}_{game_id}"):
 
-                # UPDATE or INSERT
+                # UPDATE or INSERT (in-memory only)
                 if df.loc[mask].empty:
                     st.session_state.attendance_df.loc[len(df)] = {
                         "player_id": player_token,
@@ -128,6 +147,8 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
                     .reset_index(drop=True)
                 )
 
-                st.success(f"Saved changes for {game['display_date']}")
-
+                # Write once
                 commit_changes()
+
+                st.session_state.unsaved_changes = False
+                st.success(f"Saved changes for {game['display_date']}")
