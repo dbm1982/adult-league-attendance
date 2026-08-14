@@ -29,8 +29,15 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
     team_players = players_df[players_df["team_id"] == team_id].copy()
     team_games = games_df[games_df["team_id"] == team_id].copy()
 
-    today = pd.Timestamp.now()
-    upcoming_games = team_games[team_games["date"] >= today].sort_values("date")
+    # ---------------------------------------------------------
+    # FIX: KEEP TODAY'S GAME VISIBLE UNTIL TOMORROW
+    # ---------------------------------------------------------
+
+    today = pd.Timestamp.now().normalize()  # strip time → date only
+
+    upcoming_games = team_games[
+        team_games["date"].dt.normalize() >= today
+    ].sort_values("date")
 
     if upcoming_games.empty:
         st.info("No upcoming games found for this team.")
