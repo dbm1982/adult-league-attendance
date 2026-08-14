@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import gspread
+from datetime import datetime
 
 from captain_view import captain_view
 from player_view import player_view
@@ -8,7 +9,7 @@ from player_view import player_view
 st.set_page_config(page_title="Adult Team Attendance", layout="wide")
 
 # ---------------------------------------------------------
-# LOAD SHEETS ONCE
+# CONNECT TO GOOGLE SHEETS ONCE
 # ---------------------------------------------------------
 
 gc = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
@@ -22,29 +23,44 @@ def sheet_to_df(ws):
     rows = values[1:]
     return pd.DataFrame(rows, columns=header)
 
-teams_df = sheet_to_df(sheet.worksheet("Teams"))
-players_df = sheet_to_df(sheet.worksheet("Players"))
-games_df = sheet_to_df(sheet.worksheet("Games"))
-attendance_ws = sheet.worksheet("Attendance")
+# ---------------------------------------------------------
+# LOAD ALL SHEETS ONCE INTO SESSION STATE
+# ---------------------------------------------------------
 
-# ---------------------------------------------------------
-# INITIALIZE SESSION STATE
-# ---------------------------------------------------------
+if "teams_df" not in st.session_state:
+    st.session_state.teams_df = sheet_to_df(sheet.worksheet("Teams"))
+
+if "players_df" not in st.session_state:
+    st.session_state.players_df = sheet_to_df(sheet.worksheet("Players"))
+
+if "games_df" not in st.session_state:
+    st.session_state.games_df = sheet_to_df(sheet.worksheet("Games"))
 
 if "attendance_df" not in st.session_state:
-    st.session_state.attendance_df = sheet_to_df(attendance_ws)
+    raw_df = sheet_to_df(sheet.worksheet("Attendance"))
+    raw_df.columns = raw_df.columns.str.strip().str.lower()
 
-# ALWAYS work on the real DataFrame
+    # Deduplicate once
+    raw_df = raw_df.drop_duplicates(
+        subset=["player_id", "game_id"],
+        keep="last"
+    ).reset_index(drop=True)
+
+    st.session_state.attendance_df = raw_df
+
+# Always work on the in-memory DataFrames
+teams_df = st.session_state.teams_df
+players_df = st.session_state.players_df
+games_df = st.session_state.games_df
 attendance_df = st.session_state.attendance_df
 
 # ---------------------------------------------------------
-# CLEANUP
+# CLEANUP (safe because no more reads)
 # ---------------------------------------------------------
 
 teams_df.columns = teams_df.columns.str.strip().str.lower()
 players_df.columns = players_df.columns.str.strip().str.lower()
 games_df.columns = games_df.columns.str.strip().str.lower()
-attendance_df.columns = attendance_df.columns.str.strip().str.lower()
 
 teams_df["team_id"] = teams_df["team_id"].astype(str).str.strip()
 players_df["team_id"] = players_df["team_id"].astype(str).str.strip()
@@ -89,19 +105,33 @@ is_captain = player_row["is_captain"]
 st.success(f"Logged in as {selected_player_name} ({team_id})")
 
 # ---------------------------------------------------------
-# COMMIT FUNCTION — WRITE REAL SESSION DATAFRAME
+# COMMIT FUNCTION — ONE WRITE ONLY
 # ---------------------------------------------------------
 
-def commit_attendance_changes():
+attendance_ws = sheet.worksheet("Attendance")
+
+def commit_attendance_changes(reload_after_save=False):
     df = st.session_state.attendance_df
+
+    # Write once
     attendance_ws.update(
         [df.columns.values.tolist()] +
         df.values.tolist()
     )
+
+    st.session_state.last_saved = datetime.now().strftime("%I:%M %p")
+    st.session_state.unsaved_changes = False
+
     st.success("All attendance changes have been saved.")
 
+    # Optional reload (ONE read)
+    if reload_after_save:
+        new_df = sheet_to_df(attendance_ws)
+        new_df.columns = new_df.columns.str.strip().str.lower()
+        st.session_state.attendance_df = new_df
+
 # ---------------------------------------------------------
-# VIEW SWITCH — Streamlit native tabs
+# VIEW SWITCH
 # ---------------------------------------------------------
 
 if is_captain:
