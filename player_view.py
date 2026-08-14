@@ -72,13 +72,14 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
     st.write("   ".join(timeline))
 
     # ---------------------------------------------------------
-    # UPCOMING GAMES
+    # UPCOMING GAMES — FIXED TO KEEP TODAY'S GAME
     # ---------------------------------------------------------
 
-    today = pd.Timestamp.now()
+    today = pd.Timestamp.now().normalize()  # strip time → date only
+
     upcoming_games = games_df[
         (games_df["team_id"] == team_id) &
-        (games_df["date"] >= today)
+        (games_df["date"].dt.normalize() >= today)
     ].sort_values("date")
 
     if upcoming_games.empty:
