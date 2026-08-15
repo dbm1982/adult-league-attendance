@@ -22,47 +22,34 @@ if "attendance_df" not in st.session_state:
     st.session_state.attendance_df = attendance_df.copy()
 
 # ---------------------------------------------------------
-# SIDEBAR — ORIGINAL LOGIN FLOW RESTORED
+# TOP-OF-PAGE TEAM + PLAYER SELECTORS (NO SIDEBAR)
 # ---------------------------------------------------------
-st.sidebar.header("Access")
+st.title("Adult League Attendance")
 
-# Only show ACTIVE teams
-active_teams = sorted(
-    players_df[players_df["active_team"] == True]["team_id"].unique()
-)
+# Team dropdown
+team_list = sorted(players_df["team_id"].unique())
+team_id = st.selectbox("Team", team_list)
 
-team_id = st.sidebar.selectbox("Team", active_teams)
-
-# Filter players by team
+# Player dropdown filtered by team
 team_players = players_df[players_df["team_id"] == team_id]
 player_names = team_players["player_name"].tolist()
+player_name = st.selectbox("Player", player_names)
 
-player_name = st.sidebar.selectbox("Player", player_names)
-
-# Get player_id and captain flag
+# Identify player
 player_row = team_players[team_players["player_name"] == player_name].iloc[0]
 player_id = player_row["player_id"]
 is_captain = bool(player_row["is_captain"])
 
 # ---------------------------------------------------------
-# PAGE TITLE
-# ---------------------------------------------------------
-st.title("Adult League Attendance")
-
-# ---------------------------------------------------------
-# ROUTING BASED ON CAPTAIN FLAG
+# TABS — ORIGINAL LAYOUT RESTORED
 # ---------------------------------------------------------
 if is_captain:
-    captain_view(
-        data={
-            "players": players_df.to_dict("records"),
-            "games": games_df,
-            "attendance": st.session_state.attendance_df.to_dict("records"),
-        },
-        current_player_id=player_id,
-        team_id=team_id,
-    )
+    tab_player, tab_captain = st.tabs(["Player View", "Captain View"])
 else:
+    tab_player = st.tabs(["Player View"])[0]
+
+# Player View tab
+with tab_player:
     player_view(
         players_df=players_df,
         games_df=games_df,
@@ -70,6 +57,19 @@ else:
         player_id=player_id,
         commit_changes=commit_attendance_changes,
     )
+
+# Captain View tab (only for captains)
+if is_captain:
+    with tab_captain:
+        captain_view(
+            data={
+                "players": players_df.to_dict("records"),
+                "games": games_df,
+                "attendance": st.session_state.attendance_df.to_dict("records"),
+            },
+            current_player_id=player_id,
+            team_id=team_id,
+        )
 
 # ---------------------------------------------------------
 # SAVE BUTTON
