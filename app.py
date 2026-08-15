@@ -6,6 +6,9 @@ from datetime import datetime
 from captain_view import captain_view
 from player_view import player_view
 
+
+st.write("DEBUG — Parsed game dates:", games_df[["game_id", "date"]])
+
 st.set_page_config(page_title="Adult Team Attendance", layout="wide")
 
 # ---------------------------------------------------------
