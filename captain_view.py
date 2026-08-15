@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+from zoneinfo import ZoneInfo
+import datetime
 
 def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
@@ -13,7 +15,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         st.info(f"Last saved at {st.session_state.last_saved}")
 
     if st.session_state.unsaved_changes:
-        st.warning("You have unsaved_changes.")
+        st.warning("You have unsaved changes.")
 
     players_df["team_id"] = players_df["team_id"].astype(str).str.strip()
     games_df["team_id"] = games_df["team_id"].astype(str).str.strip()
@@ -22,13 +24,13 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
     team_games = games_df[games_df["team_id"] == team_id].copy()
 
     # ---------------------------------------------------------
-    # FIX: KEEP TODAY'S GAME VISIBLE EVEN IF SERVER IS ON TOMORROW
+    # LOCAL MIDNIGHT CUTOFF
     # ---------------------------------------------------------
-    today = pd.Timestamp.now().normalize()
-    cutoff = today - pd.Timedelta(days=1)
+    eastern = ZoneInfo("America/New_York")
+    today_local = datetime.datetime.now(eastern).date()
 
     upcoming_games = team_games[
-        team_games["date"].dt.normalize() >= cutoff
+        team_games["date"].dt.date >= today_local
     ].sort_values("date")
 
     if upcoming_games.empty:
