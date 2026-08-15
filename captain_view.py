@@ -17,6 +17,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
     if st.session_state.unsaved_changes:
         st.warning("You have unsaved changes.")
 
+    # Normalize team IDs
     players_df["team_id"] = players_df["team_id"].astype(str).str.strip()
     games_df["team_id"] = games_df["team_id"].astype(str).str.strip()
 
@@ -24,7 +25,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
     team_games = games_df[games_df["team_id"] == team_id].copy()
 
     # ---------------------------------------------------------
-    # LOCAL MIDNIGHT CUTOFF
+    # LOCAL MIDNIGHT CUTOFF (America/New_York)
     # ---------------------------------------------------------
     eastern = ZoneInfo("America/New_York")
     today_local = datetime.datetime.now(eastern).date()
@@ -44,6 +45,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         for _, row in attendance_df.iterrows()
     }
 
+    # Pills CSS
     st.markdown("""
         <style>
             .pill {
@@ -70,6 +72,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
         grouped = {s: [] for s in valid_statuses}
 
+        # Build grouped attendance lists
         for _, player in team_players.iterrows():
             pid = player["token"]
             raw = attendance_lookup.get((pid, game_id), "No Response")
@@ -113,6 +116,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
             updated = []
 
+            # Build update list
             for _, player in team_players.iterrows():
                 pid = player["token"]
                 pname = player["player_name"]
@@ -134,8 +138,12 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                 if new_status != status:
                     st.session_state.unsaved_changes = True
 
+            # ---------------------------------------------------------
+            # SAVE BUTTON — WITH INSTANT RELOAD
+            # ---------------------------------------------------------
             if st.button(f"Save All Changes for {game_date}", key=f"save_{game_id}"):
 
+                # Update local session DF
                 for pid, gid, new_status in updated:
                     attendance_df.loc[
                         (attendance_df["player_id"] == pid) &
@@ -143,7 +151,8 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                         "status"
                     ] = new_status
 
-                commit_changes()
+                # 🔥 Instant reload so captain sees updates immediately
+                commit_changes(reload_after_save=True)
 
                 st.session_state.unsaved_changes = False
                 st.success(f"Saved all attendance updates for {game_date}")
