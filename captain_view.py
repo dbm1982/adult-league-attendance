@@ -106,27 +106,27 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
         # -----------------------------
-        # DARK-MODE-SAFE HEADER BOX
+        # DUAL‑MODE HEADER BOX
         # -----------------------------
         st.markdown(
             f"""
             <div style="
                 padding:12px 16px;
-                background-color:rgba(255,255,255,0.08);
-                border:1px solid rgba(255,255,255,0.25);
+                background-color:var(--background-color);
+                border:1px solid var(--secondary-background-color);
                 border-radius:10px;
                 margin-bottom:12px;
                 font-size:16px;
-                color:#e0e0e0;
+                color:var(--text-color);
             ">
-                <div style="font-weight:600; color:#ffffff;">
+                <div style="font-weight:600;">
                     {day_name}, {pretty_date} — {pretty_time}
                 </div>
-                <div style="font-weight:600; color:#ffffff;">
+                <div style="font-weight:600;">
                     {captain_team_name} vs {opponent}
                 </div>
-                <div style="color:#cccccc;">
-                    Field <strong style="color:#ffffff;">{field}</strong>
+                <div>
+                    Field <strong>{field}</strong>
                 </div>
                 <div style="margin-top:6px;">
                     <span style="color:#4CAF50; font-weight:700;">Playing: {yes_count}</span>
@@ -143,19 +143,19 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         # -----------------------------
         with st.expander("Details"):
 
-            # Summary block
+            # Summary block (dual‑mode)
             st.markdown(
                 f"""
                 <div style="
                     padding:8px 12px;
-                    background-color:rgba(255,255,255,0.05);
-                    border:1px solid rgba(255,255,255,0.15);
+                    background-color:var(--background-color);
+                    border:1px solid var(--secondary-background-color);
                     border-radius:6px;
                     margin-bottom:10px;
                     font-size:14px;
-                    color:#e0e0e0;
+                    color:var(--text-color);
                 ">
-                    <strong style="color:#ffffff;">Game Summary</strong><br>
+                    <strong>Game Summary</strong><br>
                     <span style="color:#4CAF50; font-weight:700;">Playing: {yes_count}</span><br>
                     <span style="color:#FF9800; font-weight:700;">Undecided: {undecided_count}</span>
                 </div>
