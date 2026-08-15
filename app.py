@@ -4,6 +4,10 @@ from attendance_logic import (
     load_games_df,
     load_attendance_df,
     commit_attendance_changes,
+    load_players_df,
+    load_games_df,
+    load_attendance_df,
+    commit_attendance_changes,
 )
 from player_view import player_view
 from captain_view import captain_view
@@ -22,33 +26,35 @@ if "attendance_df" not in st.session_state:
     st.session_state.attendance_df = attendance_df.copy()
 
 # ---------------------------------------------------------
-# TOP-OF-PAGE TEAM + PLAYER SELECTORS (NO SIDEBAR)
+# ACTIVE TEAMS ONLY
+# ---------------------------------------------------------
+active_team_ids = sorted(
+    players_df[players_df["active"] == True]["team_id"].unique()
+)
+
+# ---------------------------------------------------------
+# TOP-OF-PAGE TEAM + PLAYER SELECTORS
 # ---------------------------------------------------------
 st.title("Adult League Attendance")
 
-# Team dropdown
-team_list = sorted(players_df["team_id"].unique())
-team_id = st.selectbox("Team", team_list)
+team_id = st.selectbox("Team", active_team_ids)
 
-# Player dropdown filtered by team
 team_players = players_df[players_df["team_id"] == team_id]
 player_names = team_players["player_name"].tolist()
 player_name = st.selectbox("Player", player_names)
 
-# Identify player
 player_row = team_players[team_players["player_name"] == player_name].iloc[0]
 player_id = player_row["player_id"]
 is_captain = bool(player_row["is_captain"])
 
 # ---------------------------------------------------------
-# TABS — ORIGINAL LAYOUT RESTORED
+# TABS — ORIGINAL LAYOUT
 # ---------------------------------------------------------
 if is_captain:
     tab_player, tab_captain = st.tabs(["Player View", "Captain View"])
 else:
     tab_player = st.tabs(["Player View"])[0]
 
-# Player View tab
 with tab_player:
     player_view(
         players_df=players_df,
@@ -58,7 +64,6 @@ with tab_player:
         commit_changes=commit_attendance_changes,
     )
 
-# Captain View tab (only for captains)
 if is_captain:
     with tab_captain:
         captain_view(
@@ -72,7 +77,7 @@ if is_captain:
         )
 
 # ---------------------------------------------------------
-# SAVE BUTTON
+# GLOBAL SAVE BUTTON
 # ---------------------------------------------------------
 st.markdown("---")
 if st.button("Save All Changes"):
