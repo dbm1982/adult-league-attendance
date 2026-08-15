@@ -190,32 +190,31 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             st.markdown("#### Override Player Status")
 
             # -----------------------------
-            # UPGRADED OVERRIDE UI (full-background color-coded rows)
+            # FULL-BACKGROUND COLOR-CODED PLAYER ROWS (name + radio buttons)
             # -----------------------------
             for _, p in team_players.iterrows():
                 pid = p["player_id"]
                 pname = p["player_name"]
                 current_status = normalize_status(att_lookup.get((pid, game_id), "No Response"))
 
-                # Color accent for entire block
+                # Solid background colors
                 bg_color = {
-                    "Yes": "rgba(76, 175, 80, 0.25)",       # soft green
-                    "No": "rgba(217, 83, 79, 0.25)",        # soft red
-                    "Maybe": "rgba(255, 152, 0, 0.25)",     # soft orange
-                    "No Response": "rgba(158, 158, 158, 0.25)",  # soft gray
+                    "Yes": "#C8E6C9",        # soft green
+                    "No": "#F8D7DA",         # soft red
+                    "Maybe": "#FFE0B2",      # soft orange
+                    "No Response": "#E0E0E0" # soft gray
                 }[current_status]
 
+                # Entire block including radio buttons
                 st.markdown(
                     f"""
                     <div style="
-                        padding:12px 14px;
+                        padding:14px 16px;
                         background-color:{bg_color};
-                        border:1px solid var(--secondary-background-color);
                         border-radius:10px;
-                        margin-bottom:12px;
-                        color:var(--text-color);
+                        margin-bottom:14px;
                     ">
-                        <div style="font-weight:600; margin-bottom:6px;">
+                        <div style="font-weight:600; margin-bottom:8px;">
                             {pname}
                         </div>
                     </div>
