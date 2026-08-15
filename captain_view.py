@@ -87,8 +87,8 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
         # Expander title now includes summary
         expander_title = (
-            f"{date} — {time} vs {opponent} ({field})  "
-            f" |  Yes: {yes_count} • Undecided: {undecided_count}"
+            f"{date} — {time} vs {opponent} ({field})"
+            f" | Yes: {yes_count} • Undecided: {undecided_count}"
         )
 
         with st.expander(expander_title, expanded=False):
