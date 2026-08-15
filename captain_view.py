@@ -95,7 +95,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
         # -----------------------------
-        # CLEAN PLAIN-TEXT EXPANDER TITLE
+        # CLEAN MULTI-LINE EXPANDER TITLE (NO HTML)
         # -----------------------------
         expander_title = (
             f"{day_name}, {pretty_date} — {pretty_time}\n"
