@@ -85,7 +85,10 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         date = g["date"]
         time_raw = g["time"]
         opponent = g["opponent"]
-        field = g.get("field", "")
+
+        # Clean field formatting
+        field_raw = g.get("field", "")
+        field = str(field_raw).replace("Field ", "").replace("field ", "").strip()
 
         # Format date/time
         day_name = date.strftime("%A")
@@ -112,11 +115,13 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         # Clean, human-friendly header
         # -----------------------------
         expander_title = (
-            f"**{day_name}, {pretty_date}** — "
-            f"**{pretty_time}**  \n"
-            f"**{captain_team_name} vs {opponent}**  \n"
-            f"Field **{field}**  \n"
-            f"Playing: **{yes_count}** • Undecided: **{undecided_count}**"
+            f"<div style='font-size:16px; font-weight:600;'>"
+            f"{day_name}, {pretty_date} — {pretty_time}<br>"
+            f"{captain_team_name} vs {opponent}<br>"
+            f"Field <strong>{field}</strong><br>"
+            f"<span style='color:#4CAF50; font-weight:700;'>Playing: {yes_count}</span> • "
+            f"<span style='color:#FF9800; font-weight:700;'>Undecided: {undecided_count}</span>"
+            f"</div>"
         )
 
         # -----------------------------
@@ -135,8 +140,8 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     font-size:15px;
                 ">
                     <strong>Game Summary</strong><br>
-                    <span style="color:#5cb85c; font-weight:600;">Playing: {yes_count}</span><br>
-                    <span style="color:#999999; font-weight:600;">Undecided: {undecided_count}</span>
+                    <span style="color:#4CAF50; font-weight:700;">Playing: {yes_count}</span><br>
+                    <span style="color:#FF9800; font-weight:700;">Undecided: {undecided_count}</span>
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -147,10 +152,10 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             cols = st.columns(4)
             labels = ["Yes", "No", "Maybe", "No Response"]
             colors = {
-                "Yes": "#5cb85c",
-                "No": "#d9534f",
-                "Maybe": "#f0ad4e",
-                "No Response": "#999999",
+                "Yes": "#4CAF50",        # green
+                "No": "#d9534f",         # red
+                "Maybe": "#FF9800",      # orange
+                "No Response": "#9E9E9E" # gray
             }
 
             for col, label in zip(cols, labels):
