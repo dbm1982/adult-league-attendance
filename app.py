@@ -45,6 +45,13 @@ active_team_ids = sorted(
     teams_df[teams_df["active"] == True]["team_id"].unique()
 )
 
+# --- SAFE RESET CALLBACK ---
+def reset_selection():
+    st.session_state.selected_team = None
+    st.session_state.selected_player = None
+    st.experimental_rerun()
+
+
 # --- CLEAN TEAM & PLAYER SELECTORS (blank, no auto-select, shrink away) ---
 
 if st.session_state.selected_team is None or st.session_state.selected_player is None:
@@ -112,10 +119,7 @@ if st.session_state.selected_team and st.session_state.selected_player:
         )
 
     with badge_col2:
-        if st.button("Change"):
-            st.session_state.selected_team = None
-            st.session_state.selected_player = None
-            st.experimental_rerun()
+        st.button("Change", on_click=reset_selection)
 
 # If still missing selection, stop here
 if st.session_state.selected_team is None or st.session_state.selected_player is None:
