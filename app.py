@@ -116,10 +116,10 @@ if st.session_state.selected_team and st.session_state.selected_player:
     with badge_col2:
         st.button("Change", on_click=reset_selection)
 
-# Prevent blank page after selection
+# Prevent blank page (NO RERUN HERE)
 if st.session_state.selected_team is None or st.session_state.selected_player is None:
-    st.write("")  # harmless placeholder
-    st.experimental_rerun()
+    st.write("")  # placeholder
+    st.stop()
 
 # Load player row
 team_id = st.session_state.selected_team
