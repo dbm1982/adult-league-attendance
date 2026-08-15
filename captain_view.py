@@ -4,9 +4,7 @@ from zoneinfo import ZoneInfo
 
 eastern = ZoneInfo("America/New_York")
 
-# -----------------------------
-# Status normalization
-# -----------------------------
+
 def normalize_status(raw):
     s = str(raw).strip()
     if s == "" or s.lower() in ["none", "no response"]:
@@ -20,9 +18,6 @@ def normalize_status(raw):
     return "No Response"
 
 
-# -----------------------------
-# Captain View
-# -----------------------------
 def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
     st.markdown("### Captain View")
@@ -68,7 +63,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         for _, row in attendance_df.iterrows()
     }
 
-    # Determine captain's team name (fallback to team_id)
+    # Captain's team name
     if "team_name" in players_df.columns:
         captain_team_name = players_df.loc[
             players_df["team_id"] == team_id, "team_name"
@@ -93,7 +88,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         # Format date/time
         day_name = date.strftime("%A")
         pretty_date = date.strftime("%B %d")
-
         try:
             pretty_time = datetime.strptime(time_raw, "%H:%M").strftime("%I:%M %p")
         except:
@@ -112,116 +106,125 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
         # -----------------------------
-        # SINGLE-LINE EXPANDER TITLE
-        # (Streamlit limitation: no multi-line titles)
+        # HEADER BOX (what you liked)
         # -----------------------------
-        expander_title = (
-            f"{day_name}, {pretty_date} — {pretty_time} | "
-            f"{captain_team_name} vs {opponent} | "
-            f"Field {field} | "
-            f"{yes_count} Playing • {undecided_count} Undecided"
+        st.markdown(
+            f"""
+            <div style="
+                padding:10px 14px;
+                background-color:#eef2f7;
+                border-radius:8px;
+                margin-bottom:12px;
+                font-size:15px;
+            ">
+                <div style="font-weight:600;">
+                    {day_name}, {pretty_date} — {pretty_time}
+                </div>
+                <div style="font-weight:600;">
+                    {captain_team_name} vs {opponent}
+                </div>
+                <div>
+                    Field <strong>{field}</strong>
+                </div>
+                <div style="margin-top:4px;">
+                    <span style="color:#4CAF50; font-weight:700;">Playing: {yes_count}</span>
+                    &nbsp;•&nbsp;
+                    <span style="color:#FF9800; font-weight:700;">Undecided: {undecided_count}</span>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
         # -----------------------------
-        # EXPANDER (AUTO-EXPANDED)
-        # Multi-line header INSIDE expander
+        # GAME SUMMARY
         # -----------------------------
-        with st.expander(expander_title, expanded=True):
+        st.markdown(
+            f"""
+            <div style="
+                padding:8px 12px;
+                background-color:#f7f7f7;
+                border-radius:6px;
+                margin-bottom:10px;
+                font-size:14px;
+            ">
+                <strong>Game Summary</strong><br>
+                <span style="color:#4CAF50; font-weight:700;">Playing: {yes_count}</span><br>
+                <span style="color:#FF9800; font-weight:700;">Undecided: {undecided_count}</span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
-            # Multi-line styled header
-            st.markdown(
-                f"""
-                ### {day_name}, {pretty_date} — {pretty_time}
-                **{captain_team_name} vs {opponent}**  
-                Field **{field}**  
-                <span style='color:#4CAF50; font-weight:700;'>Playing: {yes_count}</span> • 
-                <span style='color:#FF9800; font-weight:700;'>Undecided: {undecided_count}</span>
-                """,
-                unsafe_allow_html=True
-            )
+        # -----------------------------
+        # ATTENDANCE BREAKDOWN
+        # -----------------------------
+        st.markdown("#### Attendance Breakdown")
 
-            # Summary block
-            st.markdown(
-                f"""
-                <div style="
-                    padding:10px 14px;
-                    background-color:#f2f4f7;
-                    border-radius:8px;
-                    margin-bottom:15px;
-                    font-size:15px;
-                ">
-                    <strong>Game Summary</strong><br>
-                    <span style="color:#4CAF50; font-weight:700;">Playing: {yes_count}</span><br>
-                    <span style="color:#FF9800; font-weight:700;">Undecided: {undecided_count}</span>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+        cols = st.columns(4)
+        labels = ["Yes", "No", "Maybe", "No Response"]
+        colors = {
+            "Yes": "#4CAF50",
+            "No": "#d9534f",
+            "Maybe": "#FF9800",
+            "No Response": "#9E9E9E",
+        }
 
-            # Attendance Breakdown
-            st.markdown("### Attendance Breakdown")
-
-            cols = st.columns(4)
-            labels = ["Yes", "No", "Maybe", "No Response"]
-            colors = {
-                "Yes": "#4CAF50",
-                "No": "#d9534f",
-                "Maybe": "#FF9800",
-                "No Response": "#9E9E9E"
-            }
-
-            for col, label in zip(cols, labels):
-                with col:
-                    count = len(buckets[label])
-                    st.markdown(
-                        f"<span style='color:{colors[label]}; font-weight:bold;'>{label} ({count})</span>",
-                        unsafe_allow_html=True,
-                    )
-                    if buckets[label]:
-                        for name in sorted(buckets[label]):
-                            st.markdown(f"- {name}")
-                    else:
-                        st.markdown("_None_")
-
-            st.markdown("---")
-            st.markdown("### Override Player Status")
-
-            # Override UI
-            for _, p in team_players.iterrows():
-                pid = p["player_id"]
-                pname = p["player_name"]
-                current_status = normalize_status(att_lookup.get((pid, game_id), "No Response"))
-
-                options = ["Yes", "No", "Maybe", "No Response"]
-
-                st.markdown(f"**{pname}**")
-                new_status = st.radio(
-                    f"Status for {pname}",
-                    options,
-                    index=options.index(current_status),
-                    key=f"capt_{pid}_{game_id}",
+        for col, label in zip(cols, labels):
+            with col:
+                count = len(buckets[label])
+                st.markdown(
+                    f"<span style='color:{colors[label]}; font-weight:bold;'>{label} ({count})</span>",
+                    unsafe_allow_html=True,
                 )
+                if buckets[label]:
+                    for name in sorted(buckets[label]):
+                        st.markdown(f"- {name}")
+                else:
+                    st.markdown("_None_")
 
-                st.session_state.pending_updates[(pid, game_id)] = new_status
+        st.markdown("---")
+        st.markdown("#### Override Player Status")
 
-            # Save button
-            has_unsaved = any(
-                (gid == game_id) for (_, gid) in st.session_state.pending_updates.keys()
+        # -----------------------------
+        # OVERRIDE UI
+        # -----------------------------
+        for _, p in team_players.iterrows():
+            pid = p["player_id"]
+            pname = p["player_name"]
+            current_status = normalize_status(att_lookup.get((pid, game_id), "No Response"))
+
+            options = ["Yes", "No", "Maybe", "No Response"]
+
+            st.markdown(f"**{pname}**")
+            new_status = st.radio(
+                f"Status for {pname}",
+                options,
+                index=options.index(current_status),
+                key=f"capt_{pid}_{game_id}",
             )
 
-            if has_unsaved:
-                st.warning("Unsaved changes for this game.")
-                if st.button(f"Save changes for {pretty_date} {pretty_time}", key=f"save_capt_{game_id}"):
-                    _apply_game_updates(game_id, attendance_df)
-                    updated = commit_changes(attendance_df)
-                    st.session_state.attendance_df = updated
-                    _clear_game_pending(game_id)
-                    st.success("Attendance for this game has been saved.")
+            st.session_state.pending_updates[(pid, game_id)] = new_status
+
+        # -----------------------------
+        # SAVE BUTTON
+        # -----------------------------
+        has_unsaved = any(
+            (gid == game_id) for (_, gid) in st.session_state.pending_updates.keys()
+        )
+
+        if has_unsaved:
+            st.warning("Unsaved changes for this game.")
+            if st.button(f"Save changes for {pretty_date} {pretty_time}", key=f"save_capt_{game_id}"):
+                _apply_game_updates(game_id, attendance_df)
+                updated = commit_changes(attendance_df)
+                st.session_state.attendance_df = updated
+                _clear_game_pending(game_id)
+                st.success("Attendance for this game has been saved.")
+
+        st.markdown("---")
 
 
-# -----------------------------
-# Apply pending updates
-# -----------------------------
 def _apply_game_updates(game_id, attendance_df):
     for (pid, gid), status in list(st.session_state.pending_updates.items()):
         if gid != game_id:
@@ -241,9 +244,6 @@ def _apply_game_updates(game_id, attendance_df):
             }
 
 
-# -----------------------------
-# Clear pending updates
-# -----------------------------
 def _clear_game_pending(game_id):
     for key in list(st.session_state.pending_updates.keys()):
         pid, gid = key
