@@ -7,7 +7,7 @@ from attendance_logic import (
     commit_attendance_changes,
 )
 from player_view import player_view
-from captain_view import captain_view
+    from captain_view import captain_view
 
 st.set_page_config(page_title="Adult League Attendance", layout="wide")
 
@@ -51,10 +51,8 @@ def reset_selection():
     st.session_state.selected_player = None
     st.experimental_rerun()
 
-
-# --- CLEAN TEAM & PLAYER SELECTORS (blank, no auto-select, shrink away) ---
-
-if st.session_state.selected_team is None or st.session_state.selected_player is None:
+# --- SHOW SELECTORS ONLY IF NOTHING IS SELECTED ---
+if st.session_state.selected_team is None and st.session_state.selected_player is None:
 
     selector_container = st.container()
 
@@ -91,10 +89,10 @@ if st.session_state.selected_team is None or st.session_state.selected_player is
 
             if player_name:
                 st.session_state.selected_player = player_name
-                selector_container.empty()  # hide selectors
+                selector_container.empty()
+                st.experimental_rerun()
 
 # --- COMPACT BADGE DISPLAY AFTER SELECTION ---
-
 if st.session_state.selected_team and st.session_state.selected_player:
 
     badge_col1, badge_col2 = st.columns([0.85, 0.15])
@@ -126,7 +124,6 @@ if st.session_state.selected_team is None or st.session_state.selected_player is
     st.stop()
 
 # --- LOAD PLAYER ROW ---
-
 team_id = st.session_state.selected_team
 player_name = st.session_state.selected_player
 
@@ -151,7 +148,6 @@ player_id = player_row["player_id"]
 is_captain = bool(player_row["is_captain"])
 
 # --- RENDER PLAYER / CAPTAIN VIEW ---
-
 if is_captain:
     tab_player, tab_captain = st.tabs(["Player View", "Captain View"])
 else:
