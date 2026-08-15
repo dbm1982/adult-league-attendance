@@ -190,30 +190,29 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             st.markdown("#### Override Player Status")
 
             # -----------------------------
-            # UPGRADED OVERRIDE UI (color-coded mini-cards)
+            # UPGRADED OVERRIDE UI (full-background color-coded rows)
             # -----------------------------
             for _, p in team_players.iterrows():
                 pid = p["player_id"]
                 pname = p["player_name"]
                 current_status = normalize_status(att_lookup.get((pid, game_id), "No Response"))
 
-                # Color accent for current status
-                accent = {
-                    "Yes": "#4CAF50",
-                    "No": "#d9534f",
-                    "Maybe": "#FF9800",
-                    "No Response": "#9E9E9E",
+                # Color accent for entire block
+                bg_color = {
+                    "Yes": "rgba(76, 175, 80, 0.25)",       # soft green
+                    "No": "rgba(217, 83, 79, 0.25)",        # soft red
+                    "Maybe": "rgba(255, 152, 0, 0.25)",     # soft orange
+                    "No Response": "rgba(158, 158, 158, 0.25)",  # soft gray
                 }[current_status]
 
                 st.markdown(
                     f"""
                     <div style="
-                        padding:10px 12px;
-                        background-color:var(--background-color);
+                        padding:12px 14px;
+                        background-color:{bg_color};
                         border:1px solid var(--secondary-background-color);
-                        border-left:6px solid {accent};
-                        border-radius:8px;
-                        margin-bottom:10px;
+                        border-radius:10px;
+                        margin-bottom:12px;
                         color:var(--text-color);
                     ">
                         <div style="font-weight:600; margin-bottom:6px;">
