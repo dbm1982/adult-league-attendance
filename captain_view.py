@@ -12,9 +12,6 @@ def captain_view(data, current_player_id, team_id):
     games = data["games"]
     attendance = data["attendance"]
 
-    # ---------------------------------------------------------
-    # NORMALIZE team_id (fixes Gray vs GRAY mismatch)
-    # ---------------------------------------------------------
     team_id_normalized = team_id.strip().lower()
     games["team_id_normalized"] = (
         games["team_id"].astype(str).str.strip().str.lower()
@@ -24,12 +21,8 @@ def captain_view(data, current_player_id, team_id):
         games["team_id_normalized"] == team_id_normalized
     ].copy()
 
-    # ---------------------------------------------------------
-    # UPCOMING GAMES
-    # ---------------------------------------------------------
     today_local = datetime.now(eastern).date()
 
-    # Ensure date column is datetime.date
     if "date" in team_games.columns:
         team_games["date"] = team_games["date"].apply(
             lambda d: d.date() if hasattr(d, "date") else None
@@ -39,9 +32,6 @@ def captain_view(data, current_player_id, team_id):
         team_games["date"] >= today_local
     ].sort_values("date")
 
-    # ---------------------------------------------------------
-    # MISSING RESPONSES
-    # ---------------------------------------------------------
     st.markdown("#### Players Missing Responses")
 
     attendance_lookup = {
@@ -54,7 +44,6 @@ def captain_view(data, current_player_id, team_id):
     for p in players:
         pid = p["player_id"]
 
-        # Captain should NOT see themselves
         if pid == current_player_id:
             continue
 
@@ -72,10 +61,6 @@ def captain_view(data, current_player_id, team_id):
         st.success("All players have responded!")
 
     st.markdown("---")
-
-    # ---------------------------------------------------------
-    # TEAM ATTENDANCE SUMMARY
-    # ---------------------------------------------------------
     st.markdown("#### Team Attendance Summary")
 
     if upcoming_games.empty:
