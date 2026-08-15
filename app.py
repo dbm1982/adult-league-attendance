@@ -39,7 +39,7 @@ games_df = st.session_state.games_df
 attendance_df = st.session_state.attendance_df
 teams_df = st.session_state.teams_df
 
-st.title("Adult League Attendance")
+st.title("South Shore Coed Adult Soccer League Portal")
 
 active_team_ids = sorted(
     teams_df[teams_df["active"] == True]["team_id"].unique()
