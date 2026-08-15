@@ -3,37 +3,15 @@ import pandas as pd
 
 def player_view(players_df, games_df, attendance_df, team_id, player_name, commit_changes):
 
-    # ---------------------------------------------------------
-    # FIX: ENSURE DATE COLUMN IS CLEANED & PARSED
-    # ---------------------------------------------------------
-    games_df["date"] = (
-        games_df["date"]
-        .astype(str)
-        .str.replace("\u00A0", " ", regex=False)
-        .str.strip()
-        .replace("", pd.NA)
-    )
+    # Ensure date column is parsed
+    games_df["date"] = pd.to_datetime(games_df["date"], errors="coerce")
 
-    games_df["date"] = pd.to_datetime(
-        games_df["date"],
-        format=None,
-        errors="coerce"
-    )
-
-    # Identify player
     player_row = players_df[players_df["player_name"] == player_name].iloc[0]
     player_token = player_row["token"]
 
-    # ALWAYS use the real session DataFrame (no sheet reads)
     df = st.session_state.attendance_df
-
-    # HARD DEDUPE (safe because it's in-memory only)
     df = df.drop_duplicates(subset=["player_id", "game_id"], keep="last").reset_index(drop=True)
     st.session_state.attendance_df = df
-
-    # ---------------------------------------------------------
-    # STATUS / SAVE FEEDBACK
-    # ---------------------------------------------------------
 
     if "unsaved_changes" not in st.session_state:
         st.session_state.unsaved_changes = False
@@ -44,28 +22,20 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
     if st.session_state.unsaved_changes:
         st.warning("You have unsaved changes.")
 
-    # ---------------------------------------------------------
-    # MICRO TIMELINE SUMMARY
-    # ---------------------------------------------------------
-
     st.subheader("Your Season Calendar")
 
-    # Only games for THIS team
     team_games = games_df[games_df["team_id"] == team_id].copy()
 
-    # Attendance for this player
     player_att = st.session_state.attendance_df[
         st.session_state.attendance_df["player_id"] == player_token
     ].copy()
 
-    # Merge so that ALL games appear, even with no attendance yet
     merged = (
         team_games
         .merge(player_att, on="game_id", how="left")
         .sort_values("date")
     )
 
-    # Normalize status
     merged["status"] = (
         merged["status"]
         .fillna("No Response")
@@ -89,14 +59,14 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
     st.write("   ".join(timeline))
 
     # ---------------------------------------------------------
-    # UPCOMING GAMES — FIXED TO KEEP TODAY'S GAME
+    # FIX: KEEP TODAY'S GAME VISIBLE EVEN IF SERVER IS ON TOMORROW
     # ---------------------------------------------------------
-
     today = pd.Timestamp.now().normalize()
+    cutoff = today - pd.Timedelta(days=1)
 
     upcoming_games = games_df[
         (games_df["team_id"] == team_id) &
-        (games_df["date"].dt.normalize() >= today)
+        (games_df["date"].dt.normalize() >= cutoff)
     ].sort_values("date")
 
     if upcoming_games.empty:
