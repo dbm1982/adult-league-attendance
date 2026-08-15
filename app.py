@@ -1,4 +1,5 @@
 import streamlit as st
+from datetime import datetime
 from attendance_logic import (
     load_players_df,
     load_games_df,
@@ -18,6 +19,9 @@ teams_df = load_teams_df()
 
 if "attendance_df" not in st.session_state:
     st.session_state.attendance_df = attendance_df.copy()
+
+if "pending_updates" not in st.session_state:
+    st.session_state.pending_updates = {}
 
 st.title("Adult League Attendance")
 
@@ -87,6 +91,24 @@ if is_captain:
 
 st.markdown("---")
 if st.button("Save All Changes"):
+    # Apply pending updates into attendance_df
+    for (pid, gid), status in st.session_state.pending_updates.items():
+        mask = (
+            (st.session_state.attendance_df["player_id"] == pid)
+            & (st.session_state.attendance_df["game_id"] == gid)
+        )
+        if mask.any():
+            st.session_state.attendance_df.loc[mask, "status"] = status
+            st.session_state.attendance_df.loc[mask, "updated_at"] = datetime.now().isoformat()
+        else:
+            st.session_state.attendance_df.loc[len(st.session_state.attendance_df)] = {
+                "player_id": pid,
+                "game_id": gid,
+                "status": status,
+                "updated_at": datetime.now().isoformat(),
+            }
+
     updated = commit_attendance_changes(st.session_state.attendance_df)
     st.session_state.attendance_df = updated
-    st.success("Attendance saved successfully!")
+    st.session_state.pending_updates = {}
+    st.success("All changes submitted.")
