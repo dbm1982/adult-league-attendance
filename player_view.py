@@ -63,7 +63,7 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
     }
 
     # -----------------------------
-    # Render each game as a card
+    # Render each game as a compact card
     # -----------------------------
     for _, g in upcoming_games.iterrows():
 
@@ -85,29 +85,35 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         # Current status
         current_status = normalize_status(att_lookup.get((player_id, game_id), "No Response"))
 
-        # CARD: game summary + short instruction
+        # -----------------------------
+        # FULL GAME CARD (tight, readable)
+        # -----------------------------
         st.markdown(
             f"""
             <div style="
-                padding:12px 14px;
+                padding:14px 16px;
                 background-color:var(--background-color);
                 border:1px solid var(--secondary-background-color);
-                border-radius:10px;
-                margin-bottom:10px;
+                border-radius:12px;
+                margin-bottom:18px;
                 color:var(--text-color);
-                line-height:1.35;
+                line-height:1.4;
             ">
-                <div style="font-weight:700; font-size:16px;">
-                    ⚽ {day_name}, {pretty_date} — {pretty_time}
+                <div style="font-weight:700; font-size:16px; margin-bottom:4px;">
+                    ⚽ {day_name}, {pretty_date}
                 </div>
-                <div style="font-weight:600;">
-                    vs {opponent}
+                <div style="font-size:15px; font-weight:600; margin-bottom:2px;">
+                    🕒 {pretty_time}
                 </div>
-                <div style="opacity:0.75; font-size:13px;">
+                <div style="font-size:15px; font-weight:600; margin-bottom:2px;">
+                    🆚 {opponent}
+                </div>
+                <div style="font-size:14px; opacity:0.8; margin-bottom:10px;">
                     📍 Field <strong>{field}</strong>
                 </div>
-                <div style="margin-top:6px; font-size:13px; opacity:0.8;">
-                    Choose your status below:
+
+                <div style="font-size:13px; opacity:0.8; margin-bottom:6px;">
+                    Choose your status:
                 </div>
             </div>
             """,
@@ -127,7 +133,9 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
 
         st.session_state.pending_updates[(player_id, game_id)] = new_status
 
-        # Unsaved + save, still compact
+        # -----------------------------
+        # UNSAVED + SAVE (inside same card visually)
+        # -----------------------------
         has_unsaved = any(
             (pid == player_id and gid == game_id)
             for (pid, gid) in st.session_state.pending_updates.keys()
