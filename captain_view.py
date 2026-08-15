@@ -4,7 +4,6 @@ from zoneinfo import ZoneInfo
 
 eastern = ZoneInfo("America/New_York")
 
-
 def normalize_status(raw):
     s = str(raw).strip()
     if s == "" or s.lower() in ["none", "no response"]:
@@ -17,11 +16,9 @@ def normalize_status(raw):
         return "Maybe"
     return "No Response"
 
-
 def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
     st.markdown("### Captain View")
 
-    # Filter players for this team
     team_players = players_df[
         (players_df["team_id"] == team_id)
         & (players_df["team_id"].ne(""))
@@ -33,13 +30,11 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         st.info(f"No players found for team '{team_id}'.")
         return
 
-    # Normalize team_id for matching
     games_df["team_id_norm"] = games_df["team_id"].astype(str).str.strip().str.lower()
     team_id_norm = team_id.strip().lower()
 
     team_games = games_df[games_df["team_id_norm"] == team_id_norm].copy()
 
-    # Convert datetime to date
     if "date" in team_games.columns:
         team_games["date"] = team_games["date"].apply(
             lambda d: d.date() if hasattr(d, "date") else None
@@ -52,18 +47,15 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         st.info("No upcoming games found for this team.")
         return
 
-    # Normalize attendance
     attendance_df["player_id"] = attendance_df["player_id"].astype(str).str.strip()
     attendance_df["game_id"] = attendance_df["game_id"].astype(str).str.strip()
     attendance_df["status"] = attendance_df["status"].apply(normalize_status)
 
-    # Lookup dictionary
     att_lookup = {
         (row["player_id"], row["game_id"]): row["status"]
         for _, row in attendance_df.iterrows()
     }
 
-    # Loop through games
     for _, g in upcoming_games.iterrows():
         game_id = g["game_id"]
         date = g["date"]
@@ -81,11 +73,9 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             status = normalize_status(status)
             buckets[status].append(pname)
 
-        # Summary counts
         yes_count = len(buckets["Yes"])
         undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
-        # Expander title now includes summary
         expander_title = (
             f"{date} — {time} vs {opponent} ({field})"
             f" | Yes: {yes_count} • Undecided: {undecided_count}"
@@ -93,7 +83,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
         with st.expander(expander_title, expanded=False):
 
-            # Summary bar inside expander
             st.markdown(
                 f"""
                 <div style="
@@ -111,7 +100,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                 unsafe_allow_html=True
             )
 
-            # Column display with counts
             cols = st.columns(4)
             labels = ["Yes", "No", "Maybe", "No Response"]
             colors = {
@@ -137,7 +125,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             st.markdown("---")
             st.markdown("#### Override individual player status")
 
-            # Radio buttons for each player
             for _, p in team_players.iterrows():
                 pid = p["player_id"]
                 pname = p["player_name"]
@@ -154,10 +141,8 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     key=f"capt_{pid}_{game_id}",
                 )
 
-                # Store in pending updates
                 st.session_state.pending_updates[(pid, game_id)] = new_status
 
-            # Save button only if unsaved changes exist
             has_unsaved = any(
                 (gid == game_id) for (_, gid) in st.session_state.pending_updates.keys()
             )
@@ -171,7 +156,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     _clear_game_pending(game_id)
                     st.success("Attendance for this game has been saved.")
 
-
 def _apply_game_updates(game_id, attendance_df):
     for (pid, gid), status in list(st.session_state.pending_updates.items()):
         if gid != game_id:
@@ -181,16 +165,3 @@ def _apply_game_updates(game_id, attendance_df):
             attendance_df.loc[mask, "status"] = status
             attendance_df.loc[mask, "updated_at"] = datetime.now(eastern).isoformat()
         else:
-            attendance_df.loc[len(attendance_df)] = {
-                "player_id": pid,
-                "game_id": gid,
-                "status": status,
-                "updated_at": datetime.now(eastern).isoformat(),
-            }
-
-
-def _clear_game_pending(game_id):
-    for key in list(st.session_state.pending_updates.keys()):
-        pid, gid = key
-        if gid == game_id:
-            del st.session_state.pending_updates[key]
