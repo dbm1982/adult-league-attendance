@@ -6,9 +6,6 @@ from datetime import datetime
 from captain_view import captain_view
 from player_view import player_view
 
-
-st.write("DEBUG — Parsed game dates:", games_df[["game_id", "date"]])
-
 st.set_page_config(page_title="Adult Team Attendance", layout="wide")
 
 # ---------------------------------------------------------
@@ -79,6 +76,9 @@ games_df["display_date"] = games_df["date"].dt.strftime("%A, %b %d")
 games_df["display_time"] = pd.to_datetime(
     games_df["time"], format="%I:%M %p", errors="coerce"
 ).dt.strftime("%-I:%M %p")
+
+st.write("DEBUG — Parsed game dates:", games_df[["game_id", "date"]])
+
 
 # ---------------------------------------------------------
 # LOGIN FLOW
