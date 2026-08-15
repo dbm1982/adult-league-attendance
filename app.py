@@ -45,11 +45,6 @@ active_team_ids = sorted(
     teams_df[teams_df["active"] == True]["team_id"].unique()
 )
 
-def reset_selection():
-    st.session_state.selected_team = None
-    st.session_state.selected_player_id = None
-    st.rerun()
-
 # Selectors
 if st.session_state.selected_team is None or st.session_state.selected_player_id is None:
 
@@ -95,7 +90,10 @@ if st.session_state.selected_team is None or st.session_state.selected_player_id
 # Badge
 if st.session_state.selected_team and st.session_state.selected_player_id:
 
-    player_row = players_df[players_df["player_id"] == st.session_state.selected_player_id].iloc[0]
+    player_row = players_df[
+        players_df["player_id"] == st.session_state.selected_player_id
+    ].iloc[0]
+
     player_name = player_row["player_name"]
 
     badge_col1, badge_col2 = st.columns([0.85, 0.15])
@@ -120,14 +118,19 @@ if st.session_state.selected_team and st.session_state.selected_player_id:
         )
 
     with badge_col2:
-        st.button("Change", on_click=reset_selection)
+        if st.button("Change"):
+            st.session_state.selected_team = None
+            st.session_state.selected_player_id = None
+            st.rerun()
 
 # Stop if still missing selection
 if st.session_state.selected_team is None or st.session_state.selected_player_id is None:
     st.stop()
 
 # Load player row safely
-player_row = players_df[players_df["player_id"] == st.session_state.selected_player_id]
+player_row = players_df[
+    players_df["player_id"] == st.session_state.selected_player_id
+]
 
 if player_row.empty:
     st.error("Player not found in Players sheet.")
