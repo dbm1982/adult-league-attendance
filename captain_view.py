@@ -16,7 +16,6 @@ def captain_view(data, current_player_id, team_id):
     # NORMALIZE team_id (fixes Gray vs GRAY mismatch)
     # ---------------------------------------------------------
     team_id_normalized = team_id.strip().lower()
-
     games["team_id_normalized"] = games["team_id"].astype(str).str.strip().str.lower()
 
     team_games = games[games["team_id_normalized"] == team_id_normalized].copy()
@@ -26,7 +25,7 @@ def captain_view(data, current_player_id, team_id):
     # ---------------------------------------------------------
     today_local = datetime.now(eastern).date()
 
-    # Ensure date column is datetime
+    # Ensure date column is datetime.date
     if "date" in team_games.columns:
         team_games["date"] = team_games["date"].apply(
             lambda d: d.date() if hasattr(d, "date") else None
