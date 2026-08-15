@@ -84,24 +84,28 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         current_status = normalize_status(att_lookup.get((player_id, game_id), "No Response"))
 
         # -----------------------------
-        # DUAL‑MODE HEADER BOX
+        # BEAUTIFUL DUAL‑MODE HEADER CARD
         # -----------------------------
         st.markdown(
             f"""
             <div style="
-                padding:12px 16px;
+                padding:16px 20px;
                 background-color:var(--background-color);
                 border:1px solid var(--secondary-background-color);
-                border-radius:10px;
-                margin-bottom:12px;
-                font-size:16px;
+                border-radius:12px;
+                margin-bottom:16px;
+                font-size:17px;
                 color:var(--text-color);
+                line-height:1.5;
             ">
-                <div style="font-weight:600;">
-                    {day_name}, {pretty_date} — {pretty_time}
+                <div style="font-weight:700; font-size:18px;">
+                    ⚽ {day_name}, {pretty_date} — {pretty_time}
                 </div>
-                <div style="font-weight:600;">
+                <div style="font-weight:600; margin-top:2px;">
                     vs {opponent}
+                </div>
+                <div style="opacity:0.7; font-size:14px; margin-top:4px;">
+                    Your availability for this match
                 </div>
             </div>
             """,
@@ -109,9 +113,25 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         )
 
         # -----------------------------
-        # STATUS SELECTION
+        # STATUS CARD
         # -----------------------------
-        st.markdown(f"#### Your status for {day_name}, {pretty_date} at {pretty_time}")
+        st.markdown(
+            f"""
+            <div style="
+                padding:14px 16px;
+                background-color:var(--background-color);
+                border:1px solid var(--secondary-background-color);
+                border-radius:10px;
+                margin-bottom:10px;
+                color:var(--text-color);
+            ">
+                <div style="font-weight:600; margin-bottom:6px;">
+                    Your status for {day_name}, {pretty_date} at {pretty_time}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
         options = ["Yes", "No", "Maybe", "No Response"]
 
@@ -125,7 +145,7 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         st.session_state.pending_updates[(player_id, game_id)] = new_status
 
         # -----------------------------
-        # SAVE BUTTON
+        # UNSAVED CHANGES CARD
         # -----------------------------
         has_unsaved = any(
             (pid == player_id and gid == game_id)
@@ -136,21 +156,22 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
             st.markdown(
                 """
                 <div style="
-                    padding:8px 12px;
+                    padding:10px 14px;
                     background-color:var(--background-color);
                     border:1px solid var(--secondary-background-color);
-                    border-radius:6px;
+                    border-radius:8px;
+                    margin-top:10px;
                     margin-bottom:10px;
-                    font-size:14px;
                     color:var(--text-color);
+                    font-size:14px;
                 ">
-                    <strong>Unsaved changes for this game.</strong>
+                    <strong>⚠️ Unsaved changes for this game.</strong>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
 
-            if st.button(f"Save changes for {pretty_date} {pretty_time}", key=f"save_player_{game_id}"):
+            if st.button(f"💾 Save status for {pretty_date} {pretty_time}", key=f"save_player_{game_id}"):
                 _apply_player_update(player_id, game_id, new_status, attendance_df)
                 updated = commit_changes(attendance_df)
                 st.session_state.attendance_df = updated
