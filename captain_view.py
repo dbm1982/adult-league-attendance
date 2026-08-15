@@ -12,6 +12,7 @@ def captain_view(data, current_player_id, team_id):
     games = data["games"]
     attendance = data["attendance"]
 
+    # Normalize team_id
     team_id_normalized = team_id.strip().lower()
     games["team_id_normalized"] = (
         games["team_id"].astype(str).str.strip().str.lower()
@@ -56,7 +57,11 @@ def captain_view(data, current_player_id, team_id):
 
     if unique_missing:
         for name, date, time in unique_missing:
-            st.write(f"{name} — {date} {time}")
+            st.markdown(
+                f"<span style='color:#d9534f; font-weight:bold;'>⚠ {name}</span> "
+                f"<span style='color:#555;'>— {date} {time}</span>",
+                unsafe_allow_html=True,
+            )
     else:
         st.success("All players have responded!")
 
@@ -83,7 +88,14 @@ def captain_view(data, current_player_id, team_id):
             if a["game_id"] == game_id and a["status"] == "Maybe"
         )
 
-        st.write(
-            f"{g['date']} — {g['time']} — "
-            f"Yes: {yes}, No: {no}, Maybe: {maybe}"
+        st.markdown(
+            f"""
+            <div style='padding:6px 10px; border-radius:6px; background:#f7f7f7; margin-bottom:4px;'>
+              <strong>{g['date']} — {g['time']}</strong><br>
+              <span style='color:#5cb85c;'>Yes: {yes}</span> &nbsp;|&nbsp;
+              <span style='color:#d9534f;'>No: {no}</span> &nbsp;|&nbsp;
+              <span style='color:#f0ad4e;'>Maybe: {maybe}</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
