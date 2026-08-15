@@ -22,6 +22,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
     st.markdown("### Captain View")
 
+    # Filter players on captain's team
     team_players = players_df[
         (players_df["team_id"] == team_id)
         & (players_df["team_id"] != "")
@@ -33,10 +34,13 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         st.info(f"No players found for team '{team_id}'.")
         return
 
+    # Normalize team_id in games
     games_df["team_id_norm"] = games_df["team_id"].astype(str).str.strip().str.lower()
     team_id_norm = team_id.strip().lower()
+
     team_games = games_df[games_df["team_id_norm"] == team_id_norm].copy()
 
+    # Convert date column
     if "date" in team_games.columns:
         team_games["date"] = team_games["date"].apply(
             lambda d: d.date() if hasattr(d, "date") else None
@@ -49,6 +53,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         st.info("No upcoming games found for this team.")
         return
 
+    # Normalize attendance
     attendance_df["player_id"] = attendance_df["player_id"].astype(str).str.strip()
     attendance_df["game_id"] = attendance_df["game_id"].astype(str).str.strip()
     attendance_df["status"] = attendance_df["status"].apply(normalize_status)
@@ -58,6 +63,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         for _, row in attendance_df.iterrows()
     }
 
+    # Determine captain's team name
     if "team_name" in players_df.columns:
         captain_team_name = players_df.loc[
             players_df["team_id"] == team_id, "team_name"
@@ -65,12 +71,16 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
     else:
         captain_team_name = team_id
 
+    # -----------------------------
+    # Render each upcoming game
+    # -----------------------------
     for _, g in upcoming_games.iterrows():
 
         game_id = g["game_id"]
         date = g["date"]
         time_raw = g["time"]
         opponent = g["opponent"]
+
         field_raw = g.get("field", "")
         field = str(field_raw).replace("Field ", "").replace("field ", "").strip()
 
@@ -81,7 +91,9 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         except:
             pretty_time = time_raw
 
+        # Build buckets
         buckets = {"Yes": [], "No": [], "Maybe": [], "No Response": []}
+
         for _, p in team_players.iterrows():
             pid = p["player_id"]
             pname = p["player_name"]
@@ -91,6 +103,9 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         yes_count = len(buckets["Yes"])
         undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
+        # -----------------------------
+        # HEADER BOX
+        # -----------------------------
         st.markdown(
             f"""
             <div style="
@@ -121,8 +136,12 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             unsafe_allow_html=True
         )
 
+        # -----------------------------
+        # DETAILS EXPANDER
+        # -----------------------------
         with st.expander("Details"):
 
+            # Summary block
             st.markdown(
                 f"""
                 <div style="
@@ -142,15 +161,16 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                 unsafe_allow_html=True
             )
 
+            # Attendance Breakdown
             st.markdown("#### Attendance Breakdown")
 
             cols = st.columns(4)
             labels = ["Yes", "No", "Maybe", "No Response"]
             colors = {
-                "Yes": "#2e7d32",       # dark green
-                "No": "#c62828",        # dark red
-                "Maybe": "#f57c00",     # dark orange
-                "No Response": "#616161"  # dark gray
+                "Yes": "#2e7d32",
+                "No": "#c62828",
+                "Maybe": "#f57c00",
+                "No Response": "#616161",
             }
 
             for col, label in zip(cols, labels):
@@ -169,33 +189,47 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             st.markdown("---")
             st.markdown("#### Override Player Status")
 
-            # OVERRIDE UI: strong color + tight grouping
+            # -----------------------------
+            # FULL-SECTION COLOR WRAP (fake but effective)
+            # -----------------------------
             for _, p in team_players.iterrows():
                 pid = p["player_id"]
                 pname = p["player_name"]
                 current_status = normalize_status(att_lookup.get((pid, game_id), "No Response"))
 
-                # Strong accent colors for the header strip
+                # Strong header colors
                 header_color = {
-                    "Yes": "#2e7d32",       # dark green
-                    "No": "#c62828",        # dark red
-                    "Maybe": "#f57c00",     # dark orange
-                    "No Response": "#616161"  # dark gray
+                    "Yes": "#2e7d32",
+                    "No": "#c62828",
+                    "Maybe": "#f57c00",
+                    "No Response": "#616161",
                 }[current_status]
 
+                # Light background colors for the whole section
+                bg_color = {
+                    "Yes": "#C8E6C9",
+                    "No": "#F8D7DA",
+                    "Maybe": "#FFE0B2",
+                    "No Response": "#E0E0E0",
+                }[current_status]
+
+                # Entire colored box
                 st.markdown(
                     f"""
                     <div style="
-                        margin-bottom:10px;
+                        background-color:{bg_color};
                         border-radius:10px;
-                        overflow:hidden;
+                        padding:0px;
+                        margin-bottom:14px;
                         border:1px solid var(--secondary-background-color);
                     ">
                         <div style="
-                            padding:8px 12px;
                             background-color:{header_color};
-                            color:#ffffff;
+                            color:white;
+                            padding:10px 14px;
                             font-weight:600;
+                            border-top-left-radius:10px;
+                            border-top-right-radius:10px;
                         ">
                             {pname}
                         </div>
@@ -204,18 +238,33 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     unsafe_allow_html=True
                 )
 
-                options = ["Yes", "No", "Maybe", "No Response"]
-
+                # Radio buttons (visually inside the box)
                 new_status = st.radio(
                     "",
-                    options,
-                    index=options.index(current_status),
+                    ["Yes", "No", "Maybe", "No Response"],
+                    index=["Yes", "No", "Maybe", "No Response"].index(current_status),
                     key=f"capt_{pid}_{game_id}",
                     horizontal=True,
                 )
 
+                # Colored separator line under radio buttons
+                st.markdown(
+                    f"""
+                    <div style="
+                        height:4px;
+                        background-color:{header_color};
+                        margin-top:-8px;
+                        margin-bottom:12px;
+                        border-bottom-left-radius:10px;
+                        border-bottom-right-radius:10px;
+                    "></div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
                 st.session_state.pending_updates[(pid, game_id)] = new_status
 
+            # Save button
             has_unsaved = any(
                 (gid == game_id) for (_, gid) in st.session_state.pending_updates.keys()
             )
