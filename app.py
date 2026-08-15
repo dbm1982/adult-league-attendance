@@ -9,10 +9,9 @@ from attendance_logic import (
 from player_view import player_view
 from captain_view import captain_view
 
-
 st.set_page_config(page_title="Adult League Attendance", layout="wide")
 
-# Cache all sheets in session_state so we don't re-read on every rerun
+# Cache sheets in session_state
 if "players_df" not in st.session_state:
     st.session_state.players_df = load_players_df()
 
@@ -28,7 +27,7 @@ if "teams_df" not in st.session_state:
 if "pending_updates" not in st.session_state:
     st.session_state.pending_updates = {}
 
-# Store selected team/player persistently
+# Persistent selection
 if "selected_team" not in st.session_state:
     st.session_state.selected_team = None
 
@@ -46,20 +45,19 @@ active_team_ids = sorted(
     teams_df[teams_df["active"] == True]["team_id"].unique()
 )
 
-# --- SAFE RESET CALLBACK ---
+# Reset callback
 def reset_selection():
     st.session_state.selected_team = None
     st.session_state.selected_player = None
     st.experimental_rerun()
 
-# --- SHOW SELECTORS ONLY IF NOTHING IS SELECTED ---
+# Show selectors only when nothing is selected
 if st.session_state.selected_team is None and st.session_state.selected_player is None:
 
     selector_container = st.container()
 
     with selector_container:
 
-        # TEAM SELECTOR (starts blank)
         team_id = st.selectbox(
             "Team",
             active_team_ids,
@@ -70,7 +68,6 @@ if st.session_state.selected_team is None and st.session_state.selected_player i
         if team_id:
             st.session_state.selected_team = team_id
 
-            # Filter players for selected team
             team_players = players_df[
                 (players_df["team_id"] == team_id)
                 & (players_df["team_id"].ne(""))
@@ -80,7 +77,6 @@ if st.session_state.selected_team is None and st.session_state.selected_player i
 
             player_names = team_players["player_name"].tolist()
 
-            # PLAYER SELECTOR (starts blank)
             player_name = st.selectbox(
                 "Player",
                 player_names,
@@ -93,7 +89,7 @@ if st.session_state.selected_team is None and st.session_state.selected_player i
                 selector_container.empty()
                 st.experimental_rerun()
 
-# --- COMPACT BADGE DISPLAY AFTER SELECTION ---
+# Compact badge after selection
 if st.session_state.selected_team and st.session_state.selected_player:
 
     badge_col1, badge_col2 = st.columns([0.85, 0.15])
@@ -109,8 +105,8 @@ if st.session_state.selected_team and st.session_state.selected_player:
                 font-size:15px;
                 font-weight:600;
             ">
-                Selected: 
-                <span style="color:#2c3e50;">Team {st.session_state.selected_team}</span> • 
+                Selected:
+                <span style="color:#2c3e50;">Team {st.session_state.selected_team}</span> •
                 <span style="color:#2c3e50;">{st.session_state.selected_player}</span>
             </div>
             """,
@@ -120,11 +116,11 @@ if st.session_state.selected_team and st.session_state.selected_player:
     with badge_col2:
         st.button("Change", on_click=reset_selection)
 
-# If still missing selection, stop here
+# Stop if still missing selection
 if st.session_state.selected_team is None or st.session_state.selected_player is None:
     st.stop()
 
-# --- LOAD PLAYER ROW ---
+# Load player row
 team_id = st.session_state.selected_team
 player_name = st.session_state.selected_player
 
@@ -148,7 +144,7 @@ player_row = player_row.iloc[0]
 player_id = player_row["player_id"]
 is_captain = bool(player_row["is_captain"])
 
-# --- RENDER PLAYER / CAPTAIN VIEW ---
+# Render views
 if is_captain:
     tab_player, tab_captain = st.tabs(["Player View", "Captain View"])
 else:
