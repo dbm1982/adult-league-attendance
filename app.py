@@ -4,13 +4,14 @@ from attendance_logic import (
     load_games_df,
     load_attendance_df,
     load_teams_df,
-    commit_attendance_changes
+    commit_attendance_changes,
 )
 from player_view import player_view
 from captain_view import captain_view
 
 st.set_page_config(page_title="Adult League Attendance", layout="wide")
 
+# Cache sheets in session_state
 if "players_df" not in st.session_state:
     st.session_state.players_df = load_players_df()
 
@@ -26,6 +27,7 @@ if "teams_df" not in st.session_state:
 if "pending_updates" not in st.session_state:
     st.session_state.pending_updates = {}
 
+# Persistent selection
 if "selected_team" not in st.session_state:
     st.session_state.selected_team = None
 
@@ -43,11 +45,13 @@ active_team_ids = sorted(
     teams_df[teams_df["active"] == True]["team_id"].unique()
 )
 
+# Reset callback
 def reset_selection():
     st.session_state.selected_team = None
     st.session_state.selected_player = None
     st.experimental_rerun()
 
+# Show selectors only when nothing is selected
 if st.session_state.selected_team is None and st.session_state.selected_player is None:
 
     selector_container = st.container()
@@ -85,26 +89,39 @@ if st.session_state.selected_team is None and st.session_state.selected_player i
                 selector_container.empty()
                 st.experimental_rerun()
 
+# Compact badge after selection
 if st.session_state.selected_team and st.session_state.selected_player:
 
     badge_col1, badge_col2 = st.columns([0.85, 0.15])
 
     with badge_col1:
         st.markdown(
-            "<div style='background-color:#eef2f7;padding:10px 14px;"
-            "border-radius:8px;margin-bottom:15px;font-size:15px;font-weight:600;'>"
-            "Selected: Team " + str(st.session_state.selected_team) +
-            " • " + str(st.session_state.selected_player) +
-            "</div>",
+            f"""
+            <div style="
+                background-color:#eef2f7;
+                padding:10px 14px;
+                border-radius:8px;
+                margin-bottom:15px;
+                font-size:15px;
+                font-weight:600;
+            ">
+                Selected:
+                <span style="color:#2c3e50;">Team {st.session_state.selected_team}</span> •
+                <span style="color:#2c3e50;">{st.session_state.selected_player}</span>
+            </div>
+            """,
             unsafe_allow_html=True
         )
 
     with badge_col2:
         st.button("Change", on_click=reset_selection)
 
+# Prevent blank page after selection
 if st.session_state.selected_team is None or st.session_state.selected_player is None:
-    st.stop()
+    st.write("")  # harmless placeholder
+    st.experimental_rerun()
 
+# Load player row
 team_id = st.session_state.selected_team
 player_name = st.session_state.selected_player
 
@@ -128,6 +145,7 @@ player_row = player_row.iloc[0]
 player_id = player_row["player_id"]
 is_captain = bool(player_row["is_captain"])
 
+# Render views
 if is_captain:
     tab_player, tab_captain = st.tabs(["Player View", "Captain View"])
 else:
