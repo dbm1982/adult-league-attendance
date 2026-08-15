@@ -81,11 +81,9 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         time_raw = g["time"]
         opponent = g["opponent"]
 
-        # Clean field formatting
         field_raw = g.get("field", "")
         field = str(field_raw).replace("Field ", "").replace("field ", "").strip()
 
-        # Human-friendly date/time
         day_name = date.strftime("%A")
         pretty_date = date.strftime("%B %d")
         try:
@@ -106,7 +104,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
         # -----------------------------
-        # DUAL‑MODE HEADER BOX
+        # HEADER BOX
         # -----------------------------
         st.markdown(
             f"""
@@ -125,7 +123,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                 <div style="font-weight:600;">
                     {captain_team_name} vs {opponent}
                 </div>
-                <div>
+                <div style="opacity:0.8;">
                     Field <strong>{field}</strong>
                 </div>
                 <div style="margin-top:6px;">
@@ -143,7 +141,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         # -----------------------------
         with st.expander("Details"):
 
-            # Summary block (dual‑mode)
+            # Summary block
             st.markdown(
                 f"""
                 <div style="
@@ -191,20 +189,49 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             st.markdown("---")
             st.markdown("#### Override Player Status")
 
-            # Override UI
+            # -----------------------------
+            # UPGRADED OVERRIDE UI (color-coded mini-cards)
+            # -----------------------------
             for _, p in team_players.iterrows():
                 pid = p["player_id"]
                 pname = p["player_name"]
                 current_status = normalize_status(att_lookup.get((pid, game_id), "No Response"))
 
+                # Color accent for current status
+                accent = {
+                    "Yes": "#4CAF50",
+                    "No": "#d9534f",
+                    "Maybe": "#FF9800",
+                    "No Response": "#9E9E9E",
+                }[current_status]
+
+                st.markdown(
+                    f"""
+                    <div style="
+                        padding:10px 12px;
+                        background-color:var(--background-color);
+                        border:1px solid var(--secondary-background-color);
+                        border-left:6px solid {accent};
+                        border-radius:8px;
+                        margin-bottom:10px;
+                        color:var(--text-color);
+                    ">
+                        <div style="font-weight:600; margin-bottom:6px;">
+                            {pname}
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
                 options = ["Yes", "No", "Maybe", "No Response"]
 
-                st.markdown(f"**{pname}**")
                 new_status = st.radio(
-                    f"Status for {pname}",
+                    "",
                     options,
                     index=options.index(current_status),
                     key=f"capt_{pid}_{game_id}",
+                    horizontal=True,
                 )
 
                 st.session_state.pending_updates[(pid, game_id)] = new_status
