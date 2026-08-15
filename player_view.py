@@ -79,7 +79,7 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         current_status = normalize_status(att_lookup.get((player_id, game_id), "No Response"))
 
         # -----------------------------
-        # GAME CARD
+        # GAME CARD (all HTML inside ONE block)
         # -----------------------------
         st.markdown(
             f"""
@@ -88,7 +88,7 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
                 background-color:var(--background-color);
                 border:1px solid var(--secondary-background-color);
                 border-radius:12px;
-                margin-bottom:18px;
+                margin-bottom:12px;
                 color:var(--text-color);
                 line-height:1.4;
             ">
@@ -101,17 +101,16 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
                 <div style="font-size:15px; font-weight:600; margin-bottom:2px;">
                     🆚 {opponent}
                 </div>
-                <div style="font-size:14px; opacity:0.8; margin-bottom:10px;">
+                <div style="font-size:14px; opacity:0.8; margin-bottom:8px;">
                     📍 Field <strong>{field}</strong>
-                </div>
-
-                <div style="font-size:13px; opacity:0.8; margin-bottom:6px;">
-                    Choose your status:
                 </div>
             </div>
             """,
             unsafe_allow_html=True
         )
+
+        # Instruction line (NO HTML)
+        st.markdown("**Choose your status:**")
 
         # Status options (compact, horizontal)
         options = ["Yes", "No", "Maybe", "No Response"]
