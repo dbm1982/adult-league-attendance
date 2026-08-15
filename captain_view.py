@@ -22,7 +22,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
     st.markdown("### Captain View")
 
-    # Filter players on captain's team
     team_players = players_df[
         (players_df["team_id"] == team_id)
         & (players_df["team_id"] != "")
@@ -34,13 +33,10 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         st.info(f"No players found for team '{team_id}'.")
         return
 
-    # Normalize team_id in games
     games_df["team_id_norm"] = games_df["team_id"].astype(str).str.strip().str.lower()
     team_id_norm = team_id.strip().lower()
-
     team_games = games_df[games_df["team_id_norm"] == team_id_norm].copy()
 
-    # Convert date column
     if "date" in team_games.columns:
         team_games["date"] = team_games["date"].apply(
             lambda d: d.date() if hasattr(d, "date") else None
@@ -53,7 +49,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         st.info("No upcoming games found for this team.")
         return
 
-    # Normalize attendance
     attendance_df["player_id"] = attendance_df["player_id"].astype(str).str.strip()
     attendance_df["game_id"] = attendance_df["game_id"].astype(str).str.strip()
     attendance_df["status"] = attendance_df["status"].apply(normalize_status)
@@ -63,7 +58,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         for _, row in attendance_df.iterrows()
     }
 
-    # Determine captain's team name
     if "team_name" in players_df.columns:
         captain_team_name = players_df.loc[
             players_df["team_id"] == team_id, "team_name"
@@ -71,16 +65,12 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
     else:
         captain_team_name = team_id
 
-    # -----------------------------
-    # Render each upcoming game
-    # -----------------------------
     for _, g in upcoming_games.iterrows():
 
         game_id = g["game_id"]
         date = g["date"]
         time_raw = g["time"]
         opponent = g["opponent"]
-
         field_raw = g.get("field", "")
         field = str(field_raw).replace("Field ", "").replace("field ", "").strip()
 
@@ -91,9 +81,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         except:
             pretty_time = time_raw
 
-        # Build buckets
         buckets = {"Yes": [], "No": [], "Maybe": [], "No Response": []}
-
         for _, p in team_players.iterrows():
             pid = p["player_id"]
             pname = p["player_name"]
@@ -103,9 +91,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         yes_count = len(buckets["Yes"])
         undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
-        # -----------------------------
-        # HEADER BOX
-        # -----------------------------
         st.markdown(
             f"""
             <div style="
@@ -127,21 +112,17 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     Field <strong>{field}</strong>
                 </div>
                 <div style="margin-top:6px;">
-                    <span style="color:#4CAF50; font-weight:700;">Playing: {yes_count}</span>
+                    <span style="color:#2e7d32; font-weight:700;">Playing: {yes_count}</span>
                     &nbsp;•&nbsp;
-                    <span style="color:#FF9800; font-weight:700;">Undecided: {undecided_count}</span>
+                    <span style="color:#f57c00; font-weight:700;">Undecided: {undecided_count}</span>
                 </div>
             </div>
             """,
             unsafe_allow_html=True
         )
 
-        # -----------------------------
-        # DETAILS EXPANDER
-        # -----------------------------
         with st.expander("Details"):
 
-            # Summary block
             st.markdown(
                 f"""
                 <div style="
@@ -154,23 +135,22 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     color:var(--text-color);
                 ">
                     <strong>Game Summary</strong><br>
-                    <span style="color:#4CAF50; font-weight:700;">Playing: {yes_count}</span><br>
-                    <span style="color:#FF9800; font-weight:700;">Undecided: {undecided_count}</span>
+                    <span style="color:#2e7d32; font-weight:700;">Playing: {yes_count}</span><br>
+                    <span style="color:#f57c00; font-weight:700;">Undecided: {undecided_count}</span>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
 
-            # Attendance Breakdown
             st.markdown("#### Attendance Breakdown")
 
             cols = st.columns(4)
             labels = ["Yes", "No", "Maybe", "No Response"]
             colors = {
-                "Yes": "#4CAF50",
-                "No": "#d9534f",
-                "Maybe": "#FF9800",
-                "No Response": "#9E9E9E",
+                "Yes": "#2e7d32",       # dark green
+                "No": "#c62828",        # dark red
+                "Maybe": "#f57c00",     # dark orange
+                "No Response": "#616161"  # dark gray
             }
 
             for col, label in zip(cols, labels):
@@ -189,32 +169,34 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             st.markdown("---")
             st.markdown("#### Override Player Status")
 
-            # -----------------------------
-            # FULL-BACKGROUND COLOR-CODED PLAYER ROWS (name + radio buttons)
-            # -----------------------------
+            # OVERRIDE UI: strong color + tight grouping
             for _, p in team_players.iterrows():
                 pid = p["player_id"]
                 pname = p["player_name"]
                 current_status = normalize_status(att_lookup.get((pid, game_id), "No Response"))
 
-                # Solid background colors
-                bg_color = {
-                    "Yes": "#C8E6C9",        # soft green
-                    "No": "#F8D7DA",         # soft red
-                    "Maybe": "#FFE0B2",      # soft orange
-                    "No Response": "#E0E0E0" # soft gray
+                # Strong accent colors for the header strip
+                header_color = {
+                    "Yes": "#2e7d32",       # dark green
+                    "No": "#c62828",        # dark red
+                    "Maybe": "#f57c00",     # dark orange
+                    "No Response": "#616161"  # dark gray
                 }[current_status]
 
-                # Entire block including radio buttons
                 st.markdown(
                     f"""
                     <div style="
-                        padding:14px 16px;
-                        background-color:{bg_color};
+                        margin-bottom:10px;
                         border-radius:10px;
-                        margin-bottom:14px;
+                        overflow:hidden;
+                        border:1px solid var(--secondary-background-color);
                     ">
-                        <div style="font-weight:600; margin-bottom:8px;">
+                        <div style="
+                            padding:8px 12px;
+                            background-color:{header_color};
+                            color:#ffffff;
+                            font-weight:600;
+                        ">
                             {pname}
                         </div>
                     </div>
@@ -234,7 +216,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
                 st.session_state.pending_updates[(pid, game_id)] = new_status
 
-            # Save button
             has_unsaved = any(
                 (gid == game_id) for (_, gid) in st.session_state.pending_updates.keys()
             )
