@@ -18,10 +18,9 @@ def normalize_status(raw):
     return "No Response"
 
 
-def captain_view(players_df, games_df, attendance_df, team_id):
+def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
     st.markdown("### Captain View")
 
-    # Filter players to this team only, no Inactive/Floaters/blank
     team_players = players_df[
         (players_df["team_id"] == team_id)
         & (players_df["team_id"].ne(""))
@@ -33,7 +32,6 @@ def captain_view(players_df, games_df, attendance_df, team_id):
         st.info(f"No players found for team '{team_id}'.")
         return
 
-    # Normalize games
     games_df["team_id_norm"] = games_df["team_id"].astype(str).str.strip().str.lower()
     team_id_norm = team_id.strip().lower()
 
@@ -51,7 +49,6 @@ def captain_view(players_df, games_df, attendance_df, team_id):
         st.info("No upcoming games found for this team.")
         return
 
-    # Build attendance lookup
     attendance_df["player_id"] = attendance_df["player_id"].astype(str).str.strip()
     attendance_df["game_id"] = attendance_df["game_id"].astype(str).str.strip()
     attendance_df["status"] = attendance_df["status"].apply(normalize_status)
@@ -69,7 +66,6 @@ def captain_view(players_df, games_df, attendance_df, team_id):
         field = g.get("field", "")
 
         with st.expander(f"{date} — {time} vs {opponent} ({field})", expanded=False):
-            # Group players by status
             buckets = {"Yes": [], "No": [], "Maybe": [], "No Response": []}
 
             for _, p in team_players.iterrows():
@@ -119,7 +115,41 @@ def captain_view(players_df, games_df, attendance_df, team_id):
                     key=f"capt_{pid}_{game_id}",
                 )
 
-                # Store in pending updates instead of writing directly
                 st.session_state.pending_updates[(pid, game_id)] = new_status
 
-    st.info("Changes made here will be saved when you click 'Save All Changes' at the bottom of the main page.")
+            has_unsaved = any(
+                (gid == game_id) for (_, gid) in st.session_state.pending_updates.keys()
+            )
+
+            if has_unsaved:
+                st.warning("Unsaved changes for this game.")
+                if st.button(f"Save changes for {date} {time}", key=f"save_capt_{game_id}"):
+                    _apply_game_updates(game_id, attendance_df)
+                    updated = commit_changes(attendance_df)
+                    st.session_state.attendance_df = updated
+                    _clear_game_pending(game_id)
+                    st.success("Attendance for this game has been saved.")
+
+
+def _apply_game_updates(game_id, attendance_df):
+    for (pid, gid), status in list(st.session_state.pending_updates.items()):
+        if gid != game_id:
+            continue
+        mask = (attendance_df["player_id"] == pid) & (attendance_df["game_id"] == gid)
+        if mask.any():
+            attendance_df.loc[mask, "status"] = status
+            attendance_df.loc[mask, "updated_at"] = datetime.now(eastern).isoformat()
+        else:
+            attendance_df.loc[len(attendance_df)] = {
+                "player_id": pid,
+                "game_id": gid,
+                "status": status,
+                "updated_at": datetime.now(eastern).isoformat(),
+            }
+
+
+def _clear_game_pending(game_id):
+    for key in list(st.session_state.pending_updates.keys()):
+        pid, gid = key
+        if gid == game_id:
+            del st.session_state.pending_updates[key]
