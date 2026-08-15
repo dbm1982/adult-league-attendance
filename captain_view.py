@@ -18,29 +18,28 @@ def normalize_status(raw):
     return "No Response"
 
 
-def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
+def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
 
-    st.markdown("### Captain View")
+    st.markdown("### Player View")
 
-    # Filter players on captain's team
-    team_players = players_df[
-        (players_df["team_id"] == team_id)
-        & (players_df["team_id"] != "")
-        & (~players_df["team_id"].str.contains("Inactive"))
-        & (~players_df["team_id"].str.contains("Floaters"))
-    ].copy()
-
-    if team_players.empty:
-        st.info(f"No players found for team '{team_id}'.")
+    # Get player info
+    player_row = players_df[players_df["player_id"] == player_id]
+    if player_row.empty:
+        st.error("Player not found.")
         return
 
-    # Normalize team_id in games
+    player_name = player_row.iloc[0]["player_name"]
+    team_id = player_row.iloc[0]["team_id"]
+
+    st.markdown(f"**{player_name} — {team_id}**")
+
+    # Normalize games
     games_df["team_id_norm"] = games_df["team_id"].astype(str).str.strip().str.lower()
     team_id_norm = team_id.strip().lower()
 
     team_games = games_df[games_df["team_id_norm"] == team_id_norm].copy()
 
-    # Convert date column to date objects
+    # Convert date column
     if "date" in team_games.columns:
         team_games["date"] = team_games["date"].apply(
             lambda d: d.date() if hasattr(d, "date") else None
@@ -50,7 +49,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
     upcoming_games = team_games[team_games["date"] >= today_local].sort_values("date")
 
     if upcoming_games.empty:
-        st.info("No upcoming games found for this team.")
+        st.info("No upcoming games found.")
         return
 
     # Normalize attendance
@@ -63,16 +62,8 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         for _, row in attendance_df.iterrows()
     }
 
-    # Captain's team name
-    if "team_name" in players_df.columns:
-        captain_team_name = players_df.loc[
-            players_df["team_id"] == team_id, "team_name"
-        ].iloc[0]
-    else:
-        captain_team_name = team_id
-
     # -----------------------------
-    # Render each upcoming game
+    # Render each game
     # -----------------------------
     for _, g in upcoming_games.iterrows():
 
@@ -85,7 +76,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         field_raw = g.get("field", "")
         field = str(field_raw).replace("Field ", "").replace("field ", "").strip()
 
-        # Format date/time
+        # Human-friendly date/time
         day_name = date.strftime("%A")
         pretty_date = date.strftime("%B %d")
         try:
@@ -93,17 +84,8 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         except:
             pretty_time = time_raw
 
-        # Build buckets
-        buckets = {"Yes": [], "No": [], "Maybe": [], "No Response": []}
-
-        for _, p in team_players.iterrows():
-            pid = p["player_id"]
-            pname = p["player_name"]
-            status = normalize_status(att_lookup.get((pid, game_id), "No Response"))
-            buckets[status].append(pname)
-
-        yes_count = len(buckets["Yes"])
-        undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
+        # Current status
+        current_status = normalize_status(att_lookup.get((player_id, game_id), "No Response"))
 
         # -----------------------------
         # DARK-MODE-SAFE HEADER BOX
@@ -123,15 +105,10 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     {day_name}, {pretty_date} — {pretty_time}
                 </div>
                 <div style="font-weight:600; color:#ffffff;">
-                    {captain_team_name} vs {opponent}
+                    vs {opponent}
                 </div>
                 <div style="color:#cccccc;">
                     Field <strong style="color:#ffffff;">{field}</strong>
-                </div>
-                <div style="margin-top:6px;">
-                    <span style="color:#4CAF50; font-weight:700;">Playing: {yes_count}</span>
-                    &nbsp;•&nbsp;
-                    <span style="color:#FF9800; font-weight:700;">Undecided: {undecided_count}</span>
                 </div>
             </div>
             """,
@@ -139,13 +116,31 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         )
 
         # -----------------------------
-        # SIMPLE EXPANDER FOR DETAILS
+        # STATUS SELECTION
         # -----------------------------
-        with st.expander("Details"):
+        st.markdown(f"#### Your status for {day_name}, {pretty_date} at {pretty_time}")
 
-            # Summary block (dark-mode safe)
+        options = ["Yes", "No", "Maybe", "No Response"]
+
+        new_status = st.radio(
+            f"Status for {pretty_date} {pretty_time}",
+            options,
+            index=options.index(current_status),
+            key=f"player_{player_id}_{game_id}",
+        )
+
+        st.session_state.pending_updates[(player_id, game_id)] = new_status
+
+        # -----------------------------
+        # SAVE BUTTON
+        # -----------------------------
+        has_unsaved = any(
+            (gid == game_id) for (_, gid) in st.session_state.pending_updates.keys()
+        )
+
+        if has_unsaved:
             st.markdown(
-                f"""
+                """
                 <div style="
                     padding:8px 12px;
                     background-color:rgba(255,255,255,0.05);
@@ -155,98 +150,39 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     font-size:14px;
                     color:#e0e0e0;
                 ">
-                    <strong style="color:#ffffff;">Game Summary</strong><br>
-                    <span style="color:#4CAF50; font-weight:700;">Playing: {yes_count}</span><br>
-                    <span style="color:#FF9800; font-weight:700;">Undecided: {undecided_count}</span>
+                    <strong style="color:#ffffff;">Unsaved changes for this game.</strong>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
 
-            # Attendance Breakdown
-            st.markdown("#### Attendance Breakdown")
-
-            cols = st.columns(4)
-            labels = ["Yes", "No", "Maybe", "No Response"]
-            colors = {
-                "Yes": "#4CAF50",
-                "No": "#d9534f",
-                "Maybe": "#FF9800",
-                "No Response": "#9E9E9E",
-            }
-
-            for col, label in zip(cols, labels):
-                with col:
-                    count = len(buckets[label])
-                    st.markdown(
-                        f"<span style='color:{colors[label]}; font-weight:bold;'>{label} ({count})</span>",
-                        unsafe_allow_html=True,
-                    )
-                    if buckets[label]:
-                        for name in sorted(buckets[label]):
-                            st.markdown(f"- {name}")
-                    else:
-                        st.markdown("_None_")
-
-            st.markdown("---")
-            st.markdown("#### Override Player Status")
-
-            # Override UI
-            for _, p in team_players.iterrows():
-                pid = p["player_id"]
-                pname = p["player_name"]
-                current_status = normalize_status(att_lookup.get((pid, game_id), "No Response"))
-
-                options = ["Yes", "No", "Maybe", "No Response"]
-
-                st.markdown(f"**{pname}**")
-                new_status = st.radio(
-                    f"Status for {pname}",
-                    options,
-                    index=options.index(current_status),
-                    key=f"capt_{pid}_{game_id}",
-                )
-
-                st.session_state.pending_updates[(pid, game_id)] = new_status
-
-            # Save button
-            has_unsaved = any(
-                (gid == game_id) for (_, gid) in st.session_state.pending_updates.keys()
-            )
-
-            if has_unsaved:
-                st.warning("Unsaved changes for this game.")
-                if st.button(f"Save changes for {pretty_date} {pretty_time}", key=f"save_capt_{game_id}"):
-                    _apply_game_updates(game_id, attendance_df)
-                    updated = commit_changes(attendance_df)
-                    st.session_state.attendance_df = updated
-                    _clear_game_pending(game_id)
-                    st.success("Attendance for this game has been saved.")
+            if st.button(f"Save changes for {pretty_date} {pretty_time}", key=f"save_player_{game_id}"):
+                _apply_player_update(player_id, game_id, new_status, attendance_df)
+                updated = commit_changes(attendance_df)
+                st.session_state.attendance_df = updated
+                _clear_player_pending(player_id, game_id)
+                st.success("Your status has been saved.")
 
         st.markdown("---")
 
 
-def _apply_game_updates(game_id, attendance_df):
-    for (pid, gid), status in list(st.session_state.pending_updates.items()):
-        if gid != game_id:
-            continue
+def _apply_player_update(player_id, game_id, status, attendance_df):
+    mask = (attendance_df["player_id"] == player_id) & (attendance_df["game_id"] == game_id)
 
-        mask = (attendance_df["player_id"] == pid) & (attendance_df["game_id"] == gid)
-
-        if mask.any():
-            attendance_df.loc[mask, "status"] = status
-            attendance_df.loc[mask, "updated_at"] = datetime.now(eastern).isoformat()
-        else:
-            attendance_df.loc[len(attendance_df)] = {
-                "player_id": pid,
-                "game_id": gid,
-                "status": status,
-                "updated_at": datetime.now(eastern).isoformat(),
-            }
+    if mask.any():
+        attendance_df.loc[mask, "status"] = status
+        attendance_df.loc[mask, "updated_at"] = datetime.now(eastern).isoformat()
+    else:
+        attendance_df.loc[len(attendance_df)] = {
+            "player_id": player_id,
+            "game_id": game_id,
+            "status": status,
+            "updated_at": datetime.now(eastern).isoformat(),
+        }
 
 
-def _clear_game_pending(game_id):
+def _clear_player_pending(player_id, game_id):
     for key in list(st.session_state.pending_updates.keys()):
         pid, gid = key
-        if gid == game_id:
+        if pid == player_id and gid == game_id:
             del st.session_state.pending_updates[key]
