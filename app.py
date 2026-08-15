@@ -9,7 +9,7 @@ from attendance_logic import (
 from player_view import player_view
 from captain_view import captain_view
 
-st.set_page_config(page_title="Adult League Attendance", layout="wide")
+st.set_page_config(page_title="South Shore Coed Adult Soccer League Portal", layout="wide")
 
 # Cache sheets
 if "players_df" not in st.session_state:
