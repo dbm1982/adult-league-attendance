@@ -63,7 +63,7 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
     }
 
     # -----------------------------
-    # Render each game
+    # Render each game as a card
     # -----------------------------
     for _, g in upcoming_games.iterrows():
 
@@ -85,21 +85,18 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         # Current status
         current_status = normalize_status(att_lookup.get((player_id, game_id), "No Response"))
 
-        # -----------------------------
-        # FULL COMPACT GAME CARD
-        # -----------------------------
+        # CARD: game summary + short instruction
         st.markdown(
             f"""
             <div style="
-                padding:14px 16px;
+                padding:12px 14px;
                 background-color:var(--background-color);
                 border:1px solid var(--secondary-background-color);
-                border-radius:12px;
-                margin-bottom:16px;
+                border-radius:10px;
+                margin-bottom:10px;
                 color:var(--text-color);
                 line-height:1.35;
             ">
-                <!-- GAME SUMMARY -->
                 <div style="font-weight:700; font-size:16px;">
                     ⚽ {day_name}, {pretty_date} — {pretty_time}
                 </div>
@@ -109,19 +106,15 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
                 <div style="opacity:0.75; font-size:13px;">
                     📍 Field <strong>{field}</strong>
                 </div>
-
-                <hr style="opacity:0.2; margin-top:10px; margin-bottom:10px;">
-
-                <!-- STATUS HEADER -->
-                <div style="font-weight:600; margin-bottom:6px;">
-                    Your status
+                <div style="margin-top:6px; font-size:13px; opacity:0.8;">
+                    Choose your status below:
                 </div>
             </div>
             """,
             unsafe_allow_html=True
         )
 
-        # Radio buttons INSIDE the card visually
+        # Status options (compact, horizontal)
         options = ["Yes", "No", "Maybe", "No Response"]
 
         new_status = st.radio(
@@ -129,14 +122,12 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
             options,
             index=options.index(current_status),
             key=f"player_{player_id}_{game_id}",
-            horizontal=True
+            horizontal=True,
         )
 
         st.session_state.pending_updates[(player_id, game_id)] = new_status
 
-        # -----------------------------
-        # UNSAVED + SAVE BUTTON (compact)
-        # -----------------------------
+        # Unsaved + save, still compact
         has_unsaved = any(
             (pid == player_id and gid == game_id)
             for (pid, gid) in st.session_state.pending_updates.keys()
