@@ -111,8 +111,9 @@ is_captain = player_row["is_captain"]
 
 st.success(f"Logged in as {selected_player_name} ({team_id})")
 
-st.write("DEBUG — Attendance for Gray:", attendance_df[attendance_df["player_id"] == player_token])
 st.write("DEBUG — Logged in team_id:", team_id)
+st.write("DEBUG — Attendance for Gray:", attendance_df[attendance_df["player_id"] == player_token])
+
 # ---------------------------------------------------------
 # COMMIT FUNCTION — ONE WRITE ONLY
 # ---------------------------------------------------------
