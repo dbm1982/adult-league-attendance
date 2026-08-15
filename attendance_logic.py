@@ -2,35 +2,36 @@ import gspread
 import pandas as pd
 import datetime
 from zoneinfo import ZoneInfo
+import streamlit as st
+
+eastern = ZoneInfo("America/New_York")
 
 # ---------------------------------------------------------
-# GOOGLE SHEETS CONNECTION
+# GOOGLE SHEETS CLIENT (Streamlit Cloud secrets)
 # ---------------------------------------------------------
-# Assumes you already authenticate gspread in app.py or earlier.
-# If you authenticate here, adjust accordingly.
-eastern = ZoneInfo("America/New_York")
+def get_client():
+    return gspread.service_account_from_dict(st.secrets["google_service_account"])
 
 
 # ---------------------------------------------------------
 # LOADERS
 # ---------------------------------------------------------
 def load_players_df():
-    gc = gspread.service_account()
-    sheet = gc.open("AdultLeague")  # <-- CHANGE if your sheet name differs
+    gc = get_client()
+    sheet = gc.open("AdultLeague")   # <-- change if needed
     ws = sheet.worksheet("Players")
     rows = ws.get_all_records()
     return pd.DataFrame(rows)
 
 
 def load_games_df():
-    gc = gspread.service_account()
-    sheet = gc.open("AdultLeague")  # <-- CHANGE if your sheet name differs
+    gc = get_client()
+    sheet = gc.open("AdultLeague")   # <-- change if needed
     ws = sheet.worksheet("Games")
     rows = ws.get_all_records()
 
     df = pd.DataFrame(rows)
 
-    # Convert date column to datetime
     if "date" in df.columns:
         df["date"] = pd.to_datetime(df["date"], errors="coerce")
 
@@ -38,8 +39,8 @@ def load_games_df():
 
 
 def load_attendance_df():
-    gc = gspread.service_account()
-    sheet = gc.open("AdultLeague")  # <-- CHANGE if your sheet name differs
+    gc = get_client()
+    sheet = gc.open("AdultLeague")   # <-- change if needed
     ws = sheet.worksheet("Attendance")
     rows = ws.get_all_records()
     return pd.DataFrame(rows)
@@ -49,24 +50,16 @@ def load_attendance_df():
 # COMMIT ATTENDANCE CHANGES
 # ---------------------------------------------------------
 def commit_attendance_changes(attendance_df, reload_after_save=True):
-    """
-    Writes the entire attendance_df back to Google Sheets.
-    This is used by captain_view and player_view.
-    """
-
-    gc = gspread.service_account()
-    sheet = gc.open("AdultLeague")  # <-- CHANGE if your sheet name differs
+    gc = get_client()
+    sheet = gc.open("AdultLeague")   # <-- change if needed
     ws = sheet.worksheet("Attendance")
 
     headers = ["player_id", "game_id", "status", "updated_at"]
-
-    # Convert DataFrame → list-of-lists
     output = [headers] + attendance_df[headers].values.tolist()
 
     ws.update(output)
 
     if reload_after_save:
-        # Reload fresh data after saving
         rows = ws.get_all_records()
         return pd.DataFrame(rows)
 
@@ -74,14 +67,9 @@ def commit_attendance_changes(attendance_df, reload_after_save=True):
 
 
 # ---------------------------------------------------------
-# SAVE ATTENDANCE (used internally by player view)
+# LEGACY SAVE FUNCTION (player view)
 # ---------------------------------------------------------
 def save_attendance(sheet, updates):
-    """
-    Legacy function — kept for compatibility.
-    Captain view uses commit_attendance_changes instead.
-    """
-
     attendance_sheet = sheet.worksheet("Attendance")
     rows = attendance_sheet.get_all_records()
 
