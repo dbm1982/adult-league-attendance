@@ -16,9 +16,13 @@ def captain_view(data, current_player_id, team_id):
     # NORMALIZE team_id (fixes Gray vs GRAY mismatch)
     # ---------------------------------------------------------
     team_id_normalized = team_id.strip().lower()
-    games["team_id_normalized"] = games["team_id"].astype(str).str.strip().str.lower()
+    games["team_id_normalized"] = (
+        games["team_id"].astype(str).str.strip().str.lower()
+    )
 
-    team_games = games[games["team_id_normalized"] == team_id_normalized].copy()
+    team_games = games[
+        games["team_id_normalized"] == team_id_normalized
+    ].copy()
 
     # ---------------------------------------------------------
     # UPCOMING GAMES
@@ -31,7 +35,9 @@ def captain_view(data, current_player_id, team_id):
             lambda d: d.date() if hasattr(d, "date") else None
         )
 
-    upcoming_games = team_games[team_games["date"] >= today_local].sort_values("date")
+    upcoming_games = team_games[
+        team_games["date"] >= today_local
+    ].sort_values("date")
 
     # ---------------------------------------------------------
     # MISSING RESPONSES
