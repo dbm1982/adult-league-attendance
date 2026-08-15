@@ -1,10 +1,6 @@
 import gspread
 import pandas as pd
-import datetime
-from zoneinfo import ZoneInfo
 import streamlit as st
-
-eastern = ZoneInfo("America/New_York")
 
 SHEET_NAME = "Adult Team Attendance Dev"
 
@@ -20,11 +16,9 @@ def load_players_df():
     rows = ws.get_all_records()
     df = pd.DataFrame(rows)
 
-    # Normalize team_id
     if "team_id" in df.columns:
         df["team_id"] = df["team_id"].astype(str).str.strip()
 
-    # Normalize is_captain (TRUE/FALSE strings)
     if "is_captain" in df.columns:
         df["is_captain"] = df["is_captain"].astype(str).str.upper().eq("TRUE")
 
