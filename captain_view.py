@@ -115,6 +115,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     key=f"capt_{pid}_{game_id}",
                 )
 
+                # Store in pending updates, do not touch Sheets yet
                 st.session_state.pending_updates[(pid, game_id)] = new_status
 
             has_unsaved = any(
