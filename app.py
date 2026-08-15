@@ -22,29 +22,46 @@ if "attendance_df" not in st.session_state:
     st.session_state.attendance_df = attendance_df.copy()
 
 # ---------------------------------------------------------
-# SIDEBAR
+# SIDEBAR — RESTORED TO DROPDOWNS
 # ---------------------------------------------------------
 st.sidebar.header("Access")
-role = st.sidebar.selectbox("Role", ["Player", "Captain"])
-team_id = st.sidebar.text_input("Team ID", value="GRAY").strip()
-player_token = st.sidebar.text_input("Player ID (for Player role)", value="")
 
+# Role dropdown
+role = st.sidebar.selectbox("Role", ["Player", "Captain"])
+
+# Team dropdown (from Players sheet)
+team_list = sorted(players_df["team_id"].unique())
+team_id = st.sidebar.selectbox("Team", team_list)
+
+# Player dropdown (filtered by team)
+team_players = players_df[players_df["team_id"] == team_id]
+player_names = team_players["player_name"].tolist()
+
+# Player selection only when role = Player
+if role == "Player":
+    player_name = st.sidebar.selectbox("Player", player_names)
+    player_token = team_players.loc[
+        team_players["player_name"] == player_name, "player_id"
+    ].iloc[0]
+else:
+    player_token = None
+
+# ---------------------------------------------------------
+# PAGE TITLE
+# ---------------------------------------------------------
 st.title("Adult League Attendance")
 
 # ---------------------------------------------------------
 # PLAYER VIEW
 # ---------------------------------------------------------
 if role == "Player":
-    if not player_token:
-        st.info("Enter your Player ID to continue.")
-    else:
-        player_view(
-            players_df=players_df,
-            games_df=games_df,
-            attendance_df=st.session_state.attendance_df,
-            player_id=player_token,
-            commit_changes=commit_attendance_changes,
-        )
+    player_view(
+        players_df=players_df,
+        games_df=games_df,
+        attendance_df=st.session_state.attendance_df,
+        player_id=player_token,
+        commit_changes=commit_attendance_changes,
+    )
 
 # ---------------------------------------------------------
 # CAPTAIN VIEW
@@ -61,7 +78,7 @@ else:
     )
 
 # ---------------------------------------------------------
-# SAVE BUTTON (GLOBAL)
+# SAVE BUTTON
 # ---------------------------------------------------------
 st.markdown("---")
 if st.button("Save All Changes"):
