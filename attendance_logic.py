@@ -18,7 +18,7 @@ def get_client():
 # ---------------------------------------------------------
 def load_players_df():
     gc = get_client()
-    sheet = gc.open("AdultLeague")   # <-- change if needed
+    sheet = gc.open("Adult Team Attendance Dev")   # <-- change if needed
     ws = sheet.worksheet("Players")
     rows = ws.get_all_records()
     return pd.DataFrame(rows)
@@ -26,7 +26,7 @@ def load_players_df():
 
 def load_games_df():
     gc = get_client()
-    sheet = gc.open("AdultLeague")   # <-- change if needed
+    sheet = gc.open("Adult Team Attendance Dev")   # <-- change if needed
     ws = sheet.worksheet("Games")
     rows = ws.get_all_records()
 
@@ -40,7 +40,7 @@ def load_games_df():
 
 def load_attendance_df():
     gc = get_client()
-    sheet = gc.open("AdultLeague")   # <-- change if needed
+    sheet = gc.open("Adult Team Attendance Dev")   # <-- change if needed
     ws = sheet.worksheet("Attendance")
     rows = ws.get_all_records()
     return pd.DataFrame(rows)
@@ -51,7 +51,7 @@ def load_attendance_df():
 # ---------------------------------------------------------
 def commit_attendance_changes(attendance_df, reload_after_save=True):
     gc = get_client()
-    sheet = gc.open("AdultLeague")   # <-- change if needed
+    sheet = gc.open("Adult Team Attendance Dev")   # <-- change if needed
     ws = sheet.worksheet("Attendance")
 
     headers = ["player_id", "game_id", "status", "updated_at"]
