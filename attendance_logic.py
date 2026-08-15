@@ -10,7 +10,7 @@ eastern = ZoneInfo("America/New_York")
 # GOOGLE SHEETS CLIENT (Streamlit Cloud secrets)
 # ---------------------------------------------------------
 def get_client():
-    return gspread.service_account_from_dict(st.secrets["google_service_account"])
+    return gspread.service_account_from_dict(st.secrets["gcp_service_account"])
 
 
 # ---------------------------------------------------------
