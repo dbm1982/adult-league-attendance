@@ -1,5 +1,4 @@
 import streamlit as st
-from datetime import datetime
 from attendance_logic import (
     load_players_df,
     load_games_df,
@@ -25,7 +24,6 @@ if "pending_updates" not in st.session_state:
 
 st.title("Adult League Attendance")
 
-# ACTIVE TEAMS ONLY
 active_team_ids = sorted(
     teams_df[teams_df["active"] == True]["team_id"].unique()
 )
@@ -36,7 +34,6 @@ if not active_team_ids:
 
 team_id = st.selectbox("Team", active_team_ids)
 
-# FILTER PLAYERS BY TEAM, ONLY REAL TEAMS
 team_players = players_df[
     (players_df["team_id"] == team_id)
     & (players_df["team_id"].ne(""))
@@ -51,7 +48,6 @@ if team_players.empty or not player_names:
     st.warning(f"No players found for team '{team_id}'.")
     st.stop()
 
-# SAFE PLAYER LOOKUP (normalized)
 player_row = team_players[
     team_players["player_name"].astype(str).str.strip().str.lower()
     == str(player_name).strip().lower()
@@ -65,7 +61,6 @@ player_row = player_row.iloc[0]
 player_id = player_row["player_id"]
 is_captain = bool(player_row["is_captain"])
 
-# TABS
 if is_captain:
     tab_player, tab_captain = st.tabs(["Player View", "Captain View"])
 else:
@@ -87,28 +82,5 @@ if is_captain:
             games_df=games_df,
             attendance_df=st.session_state.attendance_df,
             team_id=team_id,
+            commit_changes=commit_attendance_changes,
         )
-
-st.markdown("---")
-if st.button("Save All Changes"):
-    # Apply pending updates into attendance_df
-    for (pid, gid), status in st.session_state.pending_updates.items():
-        mask = (
-            (st.session_state.attendance_df["player_id"] == pid)
-            & (st.session_state.attendance_df["game_id"] == gid)
-        )
-        if mask.any():
-            st.session_state.attendance_df.loc[mask, "status"] = status
-            st.session_state.attendance_df.loc[mask, "updated_at"] = datetime.now().isoformat()
-        else:
-            st.session_state.attendance_df.loc[len(st.session_state.attendance_df)] = {
-                "player_id": pid,
-                "game_id": gid,
-                "status": status,
-                "updated_at": datetime.now().isoformat(),
-            }
-
-    updated = commit_attendance_changes(st.session_state.attendance_df)
-    st.session_state.attendance_df = updated
-    st.session_state.pending_updates = {}
-    st.success("All changes submitted.")
