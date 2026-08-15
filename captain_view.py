@@ -70,9 +70,17 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         game_time = game["display_time"]
         opponent = game["opponent"]
 
-        grouped = {s: [] for s in valid_statuses}
+        # ---------------------------------------------------------
+        # STICKY EXPANDER STATE
+        # ---------------------------------------------------------
+        exp_key = f"expander_{game_id}"
+
+        if exp_key not in st.session_state:
+            st.session_state[exp_key] = False  # default collapsed
 
         # Build grouped attendance lists
+        grouped = {s: [] for s in valid_statuses}
+
         for _, player in team_players.iterrows():
             pid = player["token"]
             raw = attendance_lookup.get((pid, game_id), "No Response")
@@ -93,7 +101,13 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         with colB:
             st.write(f"**Unconfirmed:** {unconfirmed_count}")
 
-        with st.expander("View Details", expanded=False):
+        # ---------------------------------------------------------
+        # EXPANDER (sticky)
+        # ---------------------------------------------------------
+        with st.expander("View Details", expanded=st.session_state[exp_key]):
+
+            # Mark expander as open
+            st.session_state[exp_key] = True
 
             def pill_row(label, names, css_class):
                 if not names:
@@ -139,7 +153,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     st.session_state.unsaved_changes = True
 
             # ---------------------------------------------------------
-            # SAVE BUTTON — WITH INSTANT RELOAD
+            # SAVE BUTTON — WITH INSTANT RELOAD + AUTO-COLLAPSE
             # ---------------------------------------------------------
             if st.button(f"Save All Changes for {game_date}", key=f"save_{game_id}"):
 
@@ -151,8 +165,11 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                         "status"
                     ] = new_status
 
-                # 🔥 Instant reload so captain sees updates immediately
+                # Instant reload so captain sees updates immediately
                 commit_changes(reload_after_save=True)
+
+                # Auto-collapse expander after saving
+                st.session_state[exp_key] = False
 
                 st.session_state.unsaved_changes = False
                 st.success(f"Saved all attendance updates for {game_date}")
