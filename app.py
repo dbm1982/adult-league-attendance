@@ -21,42 +21,45 @@ if "attendance_df" not in st.session_state:
 
 st.title("Adult League Attendance")
 
-# ACTIVE TEAMS ONLY (handle TRUE/FALSE as strings)
+# ACTIVE TEAMS ONLY
 active_team_ids = sorted(
-    teams_df[
-        teams_df["active"].astype(str).str.upper() == "TRUE"
-    ]["team_id"].unique()
+    teams_df[teams_df["active"] == True]["team_id"].unique()
 )
 
-team_id = st.selectbox("Team", active_team_ids)
-
-# If no active teams, stop cleanly
 if not active_team_ids:
     st.warning("No active teams found in Teams sheet.")
     st.stop()
 
-# FILTER PLAYERS BY TEAM
-team_players = players_df[players_df["team_id"] == team_id]
+team_id = st.selectbox("Team", active_team_ids)
+
+# FILTER PLAYERS BY TEAM, ONLY REAL TEAMS
+team_players = players_df[
+    (players_df["team_id"] == team_id)
+    & (players_df["team_id"].ne(""))
+    & (~players_df["team_id"].str.contains("Inactive", case=False))
+    & (~players_df["team_id"].str.contains("Floaters", case=False))
+]
 
 player_names = team_players["player_name"].tolist()
 player_name = st.selectbox("Player", player_names)
 
-# If no players for this team, stop cleanly
 if team_players.empty or not player_names:
     st.warning(f"No players found for team '{team_id}'.")
     st.stop()
 
-# SAFE PLAYER ROW LOOKUP
-player_row = team_players[team_players["player_name"] == player_name]
+# SAFE PLAYER LOOKUP (normalized)
+player_row = team_players[
+    team_players["player_name"].astype(str).str.strip().str.lower()
+    == str(player_name).strip().lower()
+]
+
 if player_row.empty:
     st.error("Selected player not found in Players sheet.")
     st.stop()
 
 player_row = player_row.iloc[0]
 player_id = player_row["player_id"]
-
-# is_captain is stored as TRUE/FALSE string
-is_captain = str(player_row["is_captain"]).strip().upper() == "TRUE"
+is_captain = bool(player_row["is_captain"])
 
 # TABS
 if is_captain:
@@ -76,12 +79,9 @@ with tab_player:
 if is_captain:
     with tab_captain:
         captain_view(
-            data={
-                "players": players_df.to_dict("records"),
-                "games": games_df,
-                "attendance": st.session_state.attendance_df.to_dict("records"),
-            },
-            current_player_id=player_id,
+            players_df=players_df,
+            games_df=games_df,
+            attendance_df=st.session_state.attendance_df,
             team_id=team_id,
         )
 
