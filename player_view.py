@@ -86,19 +86,20 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         current_status = normalize_status(att_lookup.get((player_id, game_id), "No Response"))
 
         # -----------------------------
-        # ULTRA‑COMPACT GAME SUMMARY + STATUS HEADER
+        # FULL COMPACT GAME CARD
         # -----------------------------
         st.markdown(
             f"""
             <div style="
-                padding:10px 14px;
+                padding:14px 16px;
                 background-color:var(--background-color);
                 border:1px solid var(--secondary-background-color);
-                border-radius:10px;
-                margin-bottom:10px;
+                border-radius:12px;
+                margin-bottom:16px;
                 color:var(--text-color);
                 line-height:1.35;
             ">
+                <!-- GAME SUMMARY -->
                 <div style="font-weight:700; font-size:16px;">
                     ⚽ {day_name}, {pretty_date} — {pretty_time}
                 </div>
@@ -108,14 +109,19 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
                 <div style="opacity:0.75; font-size:13px;">
                     📍 Field <strong>{field}</strong>
                 </div>
+
+                <hr style="opacity:0.2; margin-top:10px; margin-bottom:10px;">
+
+                <!-- STATUS HEADER -->
+                <div style="font-weight:600; margin-bottom:6px;">
+                    Your status
+                </div>
             </div>
             """,
             unsafe_allow_html=True
         )
 
-        # -----------------------------
-        # RADIO BUTTONS (no extra card)
-        # -----------------------------
+        # Radio buttons INSIDE the card visually
         options = ["Yes", "No", "Maybe", "No Response"]
 
         new_status = st.radio(
@@ -123,13 +129,13 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
             options,
             index=options.index(current_status),
             key=f"player_{player_id}_{game_id}",
-            horizontal=True  # SUPER compact
+            horizontal=True
         )
 
         st.session_state.pending_updates[(player_id, game_id)] = new_status
 
         # -----------------------------
-        # TINY UNSAVED CHANGES BLOCK
+        # UNSAVED + SAVE BUTTON (compact)
         # -----------------------------
         has_unsaved = any(
             (pid == player_id and gid == game_id)
