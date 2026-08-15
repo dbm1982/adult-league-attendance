@@ -63,7 +63,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         opponent = g["opponent"]
         field = g.get("field", "")
 
-        # Build buckets BEFORE rendering expander title
         buckets = {"Yes": [], "No": [], "Maybe": [], "No Response": []}
 
         for _, p in team_players.iterrows():
@@ -165,3 +164,15 @@ def _apply_game_updates(game_id, attendance_df):
             attendance_df.loc[mask, "status"] = status
             attendance_df.loc[mask, "updated_at"] = datetime.now(eastern).isoformat()
         else:
+            attendance_df.loc[len(attendance_df)] = {
+                "player_id": pid,
+                "game_id": gid,
+                "status": status,
+                "updated_at": datetime.now(eastern).isoformat(),
+            }
+
+def _clear_game_pending(game_id):
+    for key in list(st.session_state.pending_updates.keys()):
+        pid, gid = key
+        if gid == game_id:
+            del st.session_state.pending_updates[key]
