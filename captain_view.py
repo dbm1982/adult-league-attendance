@@ -154,7 +154,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     st.session_state.unsaved_changes = True
 
             # ---------------------------------------------------------
-            # SAVE BUTTON — WITH INSERT-IF-MISSING + INSTANT RELOAD
+            # SAVE BUTTON — INSERT-IF-MISSING + SAFE RERUN FLAG
             # ---------------------------------------------------------
             if st.button(f"Save All Changes for {game_date}", key=f"save_{game_id}"):
 
@@ -178,7 +178,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                         attendance_df.loc[mask, "status"] = new_status
                         attendance_df.loc[mask, "updated_at"] = datetime.datetime.now(eastern).isoformat()
 
-                # Instant reload so captain sees updates immediately
+                # Commit to Google Sheets (with reload)
                 commit_changes(reload_after_save=True)
 
                 # Auto-collapse expander after saving
@@ -187,5 +187,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                 # Clear unsaved changes
                 st.session_state.unsaved_changes = False
 
-                # 🔥 Force full UI refresh so counts update
-                st.experimental_rerun()
+                # Tell app.py to rerun safely
+                st.session_state["force_rerun"] = True
+                return
