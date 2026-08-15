@@ -22,7 +22,6 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
 
     st.markdown("### Player View")
 
-    # Get player info
     player_row = players_df[players_df["player_id"] == player_id]
     if player_row.empty:
         st.error("Player not found.")
@@ -33,13 +32,10 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
 
     st.markdown(f"**{player_name} — {team_id}**")
 
-    # Normalize games
     games_df["team_id_norm"] = games_df["team_id"].astype(str).str.strip().str.lower()
     team_id_norm = team_id.strip().lower()
-
     team_games = games_df[games_df["team_id_norm"] == team_id_norm].copy()
 
-    # Convert date column
     if "date" in team_games.columns:
         team_games["date"] = team_games["date"].apply(
             lambda d: d.date() if hasattr(d, "date") else None
@@ -52,7 +48,6 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         st.info("No upcoming games found.")
         return
 
-    # Normalize attendance
     attendance_df["player_id"] = attendance_df["player_id"].astype(str).str.strip()
     attendance_df["game_id"] = attendance_df["game_id"].astype(str).str.strip()
     attendance_df["status"] = attendance_df["status"].apply(normalize_status)
@@ -62,9 +57,6 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         for _, row in attendance_df.iterrows()
     }
 
-    # -----------------------------
-    # Render each game as a compact card
-    # -----------------------------
     for _, g in upcoming_games.iterrows():
 
         game_id = g["game_id"]
@@ -74,7 +66,6 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         field_raw = g.get("field", "")
         field = str(field_raw).replace("Field ", "").replace("field ", "").strip()
 
-        # Human-friendly date/time
         day_name = date.strftime("%A")
         pretty_date = date.strftime("%B %d")
         try:
@@ -82,47 +73,40 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         except:
             pretty_time = time_raw
 
-        # Current status
         current_status = normalize_status(att_lookup.get((player_id, game_id), "No Response"))
 
-        # -----------------------------
-        # FULL GAME CARD (tight, readable)
-        # -----------------------------
+        # Single card for game info
         st.markdown(
             f"""
             <div style="
-                padding:14px 16px;
+                padding:12px 14px;
                 background-color:var(--background-color);
                 border:1px solid var(--secondary-background-color);
-                border-radius:12px;
-                margin-bottom:18px;
+                border-radius:10px;
+                margin-bottom:8px;
                 color:var(--text-color);
                 line-height:1.4;
             ">
-                <div style="font-weight:700; font-size:16px; margin-bottom:4px;">
+                <div style="font-weight:700; font-size:16px;">
                     ⚽ {day_name}, {pretty_date}
                 </div>
-                <div style="font-size:15px; font-weight:600; margin-bottom:2px;">
+                <div style="font-size:15px; font-weight:600;">
                     🕒 {pretty_time}
                 </div>
-                <div style="font-size:15px; font-weight:600; margin-bottom:2px;">
+                <div style="font-size:15px; font-weight:600;">
                     🆚 {opponent}
                 </div>
-                <div style="font-size:14px; opacity:0.8; margin-bottom:10px;">
+                <div style="font-size:14px; opacity:0.8;">
                     📍 Field <strong>{field}</strong>
-                </div>
-
-                <div style="font-size:13px; opacity:0.8; margin-bottom:6px;">
-                    Choose your status:
                 </div>
             </div>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
 
-        # Status options (compact, horizontal)
-        options = ["Yes", "No", "Maybe", "No Response"]
+        st.markdown("Choose your status below:")
 
+        options = ["Yes", "No", "Maybe", "No Response"]
         new_status = st.radio(
             "",
             options,
@@ -133,9 +117,6 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
 
         st.session_state.pending_updates[(player_id, game_id)] = new_status
 
-        # -----------------------------
-        # UNSAVED + SAVE (inside same card visually)
-        # -----------------------------
         has_unsaved = any(
             (pid == player_id and gid == game_id)
             for (pid, gid) in st.session_state.pending_updates.keys()
@@ -157,7 +138,7 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
                     ⚠️ Unsaved changes
                 </div>
                 """,
-                unsafe_allow_html=True
+                unsafe_allow_html=True,
             )
 
             if st.button(f"💾 Save {pretty_date} {pretty_time}", key=f"save_player_{game_id}"):
@@ -172,7 +153,6 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
 
 def _apply_player_update(player_id, game_id, status, attendance_df):
     mask = (attendance_df["player_id"] == player_id) & (attendance_df["game_id"] == game_id)
-
     if mask.any():
         attendance_df.loc[mask, "status"] = status
         attendance_df.loc[mask, "updated_at"] = datetime.now(eastern).isoformat()
