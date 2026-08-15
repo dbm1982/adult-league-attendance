@@ -3,10 +3,7 @@ from attendance_logic import (
     load_players_df,
     load_games_df,
     load_attendance_df,
-    commit_attendance_changes,
-    load_players_df,
-    load_games_df,
-    load_attendance_df,
+    load_teams_df,
     commit_attendance_changes,
 )
 from player_view import player_view
@@ -14,28 +11,20 @@ from captain_view import captain_view
 
 st.set_page_config(page_title="Adult League Attendance", layout="wide")
 
-# ---------------------------------------------------------
-# LOAD DATA
-# ---------------------------------------------------------
 players_df = load_players_df()
 games_df = load_games_df()
 attendance_df = load_attendance_df()
+teams_df = load_teams_df()
 
-# Store attendance in session state for editing
 if "attendance_df" not in st.session_state:
     st.session_state.attendance_df = attendance_df.copy()
 
-# ---------------------------------------------------------
-# ACTIVE TEAMS ONLY
-# ---------------------------------------------------------
-active_team_ids = sorted(
-    players_df[players_df["active"] == True]["team_id"].unique()
-)
-
-# ---------------------------------------------------------
-# TOP-OF-PAGE TEAM + PLAYER SELECTORS
-# ---------------------------------------------------------
 st.title("Adult League Attendance")
+
+# ACTIVE TEAMS ONLY
+active_team_ids = sorted(
+    teams_df[teams_df["active"] == True]["team_id"].unique()
+)
 
 team_id = st.selectbox("Team", active_team_ids)
 
@@ -47,9 +36,7 @@ player_row = team_players[team_players["player_name"] == player_name].iloc[0]
 player_id = player_row["player_id"]
 is_captain = bool(player_row["is_captain"])
 
-# ---------------------------------------------------------
-# TABS — ORIGINAL LAYOUT
-# ---------------------------------------------------------
+# TABS
 if is_captain:
     tab_player, tab_captain = st.tabs(["Player View", "Captain View"])
 else:
@@ -76,9 +63,6 @@ if is_captain:
             team_id=team_id,
         )
 
-# ---------------------------------------------------------
-# GLOBAL SAVE BUTTON
-# ---------------------------------------------------------
 st.markdown("---")
 if st.button("Save All Changes"):
     updated = commit_attendance_changes(st.session_state.attendance_df)
