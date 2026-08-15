@@ -47,7 +47,6 @@ active_team_ids = sorted(
 
 # --- CLEAN TEAM & PLAYER SELECTORS (blank, no auto-select, shrink away) ---
 
-# Only show selectors if team/player not yet chosen
 if st.session_state.selected_team is None or st.session_state.selected_player is None:
 
     selector_container = st.container()
@@ -90,23 +89,33 @@ if st.session_state.selected_team is None or st.session_state.selected_player is
 # --- COMPACT BADGE DISPLAY AFTER SELECTION ---
 
 if st.session_state.selected_team and st.session_state.selected_player:
-    st.markdown(
-        f"""
-        <div style="
-            background-color:#eef2f7;
-            padding:10px 14px;
-            border-radius:8px;
-            margin-bottom:15px;
-            font-size:15px;
-            font-weight:600;
-        ">
-            Selected: 
-            <span style="color:#2c3e50;">Team {st.session_state.selected_team}</span> • 
-            <span style="color:#2c3e50;">{st.session_state.selected_player}</span>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+
+    badge_col1, badge_col2 = st.columns([0.85, 0.15])
+
+    with badge_col1:
+        st.markdown(
+            f"""
+            <div style="
+                background-color:#eef2f7;
+                padding:10px 14px;
+                border-radius:8px;
+                margin-bottom:15px;
+                font-size:15px;
+                font-weight:600;
+            ">
+                Selected: 
+                <span style="color:#2c3e50;">Team {st.session_state.selected_team}</span> • 
+                <span style="color:#2c3e50;">{st.session_state.selected_player}</span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    with badge_col2:
+        if st.button("Change"):
+            st.session_state.selected_team = None
+            st.session_state.selected_player = None
+            st.experimental_rerun()
 
 # If still missing selection, stop here
 if st.session_state.selected_team is None or st.session_state.selected_player is None:
