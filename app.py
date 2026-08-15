@@ -80,7 +80,7 @@ games_df["display_time"] = pd.to_datetime(
 st.write("DEBUG — Parsed game dates:", games_df[["game_id", "date"]])
 st.write("DEBUG — All games for Gray:", games_df[games_df["team_id"] == "Gray"])
 
-st.write("DEBUG — Logged in team_id:", team_id)
+
 
 
 
@@ -112,6 +112,7 @@ is_captain = player_row["is_captain"]
 st.success(f"Logged in as {selected_player_name} ({team_id})")
 
 st.write("DEBUG — Attendance for Gray:", attendance_df[attendance_df["player_id"] == player_token])
+st.write("DEBUG — Logged in team_id:", team_id)
 # ---------------------------------------------------------
 # COMMIT FUNCTION — ONE WRITE ONLY
 # ---------------------------------------------------------
