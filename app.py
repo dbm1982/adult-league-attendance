@@ -22,29 +22,27 @@ if "attendance_df" not in st.session_state:
     st.session_state.attendance_df = attendance_df.copy()
 
 # ---------------------------------------------------------
-# SIDEBAR — RESTORED TO DROPDOWNS
+# SIDEBAR — ORIGINAL LOGIN FLOW RESTORED
 # ---------------------------------------------------------
 st.sidebar.header("Access")
 
-# Role dropdown
-role = st.sidebar.selectbox("Role", ["Player", "Captain"])
+# Only show ACTIVE teams
+active_teams = sorted(
+    players_df[players_df["active_team"] == True]["team_id"].unique()
+)
 
-# Team dropdown (from Players sheet)
-team_list = sorted(players_df["team_id"].unique())
-team_id = st.sidebar.selectbox("Team", team_list)
+team_id = st.sidebar.selectbox("Team", active_teams)
 
-# Player dropdown (filtered by team)
+# Filter players by team
 team_players = players_df[players_df["team_id"] == team_id]
 player_names = team_players["player_name"].tolist()
 
-# Player selection only when role = Player
-if role == "Player":
-    player_name = st.sidebar.selectbox("Player", player_names)
-    player_token = team_players.loc[
-        team_players["player_name"] == player_name, "player_id"
-    ].iloc[0]
-else:
-    player_token = None
+player_name = st.sidebar.selectbox("Player", player_names)
+
+# Get player_id and captain flag
+player_row = team_players[team_players["player_name"] == player_name].iloc[0]
+player_id = player_row["player_id"]
+is_captain = bool(player_row["is_captain"])
 
 # ---------------------------------------------------------
 # PAGE TITLE
@@ -52,29 +50,25 @@ else:
 st.title("Adult League Attendance")
 
 # ---------------------------------------------------------
-# PLAYER VIEW
+# ROUTING BASED ON CAPTAIN FLAG
 # ---------------------------------------------------------
-if role == "Player":
-    player_view(
-        players_df=players_df,
-        games_df=games_df,
-        attendance_df=st.session_state.attendance_df,
-        player_id=player_token,
-        commit_changes=commit_attendance_changes,
-    )
-
-# ---------------------------------------------------------
-# CAPTAIN VIEW
-# ---------------------------------------------------------
-else:
+if is_captain:
     captain_view(
         data={
             "players": players_df.to_dict("records"),
             "games": games_df,
             "attendance": st.session_state.attendance_df.to_dict("records"),
         },
-        current_player_id=player_token,
+        current_player_id=player_id,
         team_id=team_id,
+    )
+else:
+    player_view(
+        players_df=players_df,
+        games_df=games_df,
+        attendance_df=st.session_state.attendance_df,
+        player_id=player_id,
+        commit_changes=commit_attendance_changes,
     )
 
 # ---------------------------------------------------------
