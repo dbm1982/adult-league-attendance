@@ -51,21 +51,45 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
             f"Your status for {date} {time}",
             options,
             index=options.index(current_status) if current_status in options else options.index("No Response"),
-            key=f"{player_id}_{game_id}",
+            key=f"player_{player_id}_{game_id}",
         )
 
-        mask = (attendance_df["player_id"] == player_id) & (attendance_df["game_id"] == game_id)
+        st.session_state.pending_updates[(player_id, game_id)] = new_status
+
+        has_unsaved = any(
+            (pid == player_id and gid == game_id)
+            for (pid, gid) in st.session_state.pending_updates.keys()
+        )
+
+        if has_unsaved:
+            st.warning("Unsaved changes for this game.")
+            if st.button(f"Save changes for {date} {time}", key=f"save_player_{game_id}"):
+                _apply_game_updates(game_id, attendance_df)
+                updated = commit_changes(attendance_df)
+                st.session_state.attendance_df = updated
+                _clear_game_pending(game_id)
+                st.success("Your attendance has been saved.")
+
+
+def _apply_game_updates(game_id, attendance_df):
+    for (pid, gid), status in list(st.session_state.pending_updates.items()):
+        if gid != game_id:
+            continue
+        mask = (attendance_df["player_id"] == pid) & (attendance_df["game_id"] == gid)
         if mask.any():
-            attendance_df.loc[mask, "status"] = new_status
+            attendance_df.loc[mask, "status"] = status
             attendance_df.loc[mask, "updated_at"] = datetime.now(eastern).isoformat()
         else:
             attendance_df.loc[len(attendance_df)] = {
-                "player_id": player_id,
-                "game_id": game_id,
-                "status": new_status,
+                "player_id": pid,
+                "game_id": gid,
+                "status": status,
                 "updated_at": datetime.now(eastern).isoformat(),
             }
 
-    if st.button("Save My Responses"):
-        commit_changes(attendance_df)
-        st.success("Your attendance has been saved!")
+
+def _clear_game_pending(game_id):
+    for key in list(st.session_state.pending_updates.keys()):
+        pid, gid = key
+        if gid == game_id:
+            del st.session_state.pending_updates[key]
