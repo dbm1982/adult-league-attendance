@@ -2,11 +2,15 @@ import streamlit as st
 import pandas as pd
 import gspread
 from datetime import datetime
+import pytz
 
 from captain_view import captain_view
 from player_view import player_view
 
 st.set_page_config(page_title="Adult Team Attendance", layout="wide")
+
+# Eastern timezone
+eastern = pytz.timezone("US/Eastern")
 
 # ---------------------------------------------------------
 # CONNECT TO GOOGLE SHEETS ONCE
@@ -40,7 +44,6 @@ if "attendance_df" not in st.session_state:
     raw_df = sheet_to_df(sheet.worksheet("Attendance"))
     raw_df.columns = raw_df.columns.str.strip().str.lower()
 
-    # Deduplicate once
     raw_df = raw_df.drop_duplicates(
         subset=["player_id", "game_id"],
         keep="last"
@@ -48,14 +51,13 @@ if "attendance_df" not in st.session_state:
 
     st.session_state.attendance_df = raw_df
 
-# Always work on the in-memory DataFrames
 teams_df = st.session_state.teams_df
 players_df = st.session_state.players_df
 games_df = st.session_state.games_df
 attendance_df = st.session_state.attendance_df
 
 # ---------------------------------------------------------
-# CLEANUP (safe because no more reads)
+# CLEANUP
 # ---------------------------------------------------------
 
 teams_df.columns = teams_df.columns.str.strip().str.lower()
@@ -76,10 +78,6 @@ games_df["display_date"] = games_df["date"].dt.strftime("%A, %b %d")
 games_df["display_time"] = pd.to_datetime(
     games_df["time"], format="%I:%M %p", errors="coerce"
 ).dt.strftime("%-I:%M %p")
-
-
-
-
 
 # ---------------------------------------------------------
 # LOGIN FLOW
@@ -107,6 +105,7 @@ team_id = player_row["team_id"]
 is_captain = player_row["is_captain"]
 
 st.success(f"Logged in as {selected_player_name} ({team_id})")
+
 # ---------------------------------------------------------
 # COMMIT FUNCTION — ONE WRITE ONLY
 # ---------------------------------------------------------
@@ -116,18 +115,17 @@ attendance_ws = sheet.worksheet("Attendance")
 def commit_attendance_changes(reload_after_save=False):
     df = st.session_state.attendance_df
 
-    # Write once
     attendance_ws.update(
         [df.columns.values.tolist()] +
         df.values.tolist()
     )
 
-    st.session_state.last_saved = datetime.now().strftime("%I:%M %p")
+    # FIX: Local Eastern time
+    st.session_state.last_saved = datetime.now(eastern).strftime("%I:%M %p")
     st.session_state.unsaved_changes = False
 
     st.success("All attendance changes have been saved.")
 
-    # Optional reload (ONE read)
     if reload_after_save:
         new_df = sheet_to_df(attendance_ws)
         new_df.columns = new_df.columns.str.strip().str.lower()
