@@ -4,7 +4,6 @@ from zoneinfo import ZoneInfo
 
 eastern = ZoneInfo("America/New_York")
 
-
 def captain_view(data, current_player_id, team_id):
     st.markdown("### Captain View")
 
@@ -12,7 +11,6 @@ def captain_view(data, current_player_id, team_id):
     games = data["games"]
     attendance = data["attendance"]
 
-    # Normalize team_id
     team_id_normalized = team_id.strip().lower()
     games["team_id_normalized"] = (
         games["team_id"].astype(str).str.strip().str.lower()
@@ -44,7 +42,6 @@ def captain_view(data, current_player_id, team_id):
 
     for p in players:
         pid = p["player_id"]
-
         if pid == current_player_id:
             continue
 
@@ -75,18 +72,9 @@ def captain_view(data, current_player_id, team_id):
     for _, g in upcoming_games.iterrows():
         game_id = g["game_id"]
 
-        yes = sum(
-            1 for a in attendance
-            if a["game_id"] == game_id and a["status"] == "Yes"
-        )
-        no = sum(
-            1 for a in attendance
-            if a["game_id"] == game_id and a["status"] == "No"
-        )
-        maybe = sum(
-            1 for a in attendance
-            if a["game_id"] == game_id and a["status"] == "Maybe"
-        )
+        yes = sum(1 for a in attendance if a["game_id"] == game_id and a["status"] == "Yes")
+        no = sum(1 for a in attendance if a["game_id"] == game_id and a["status"] == "No")
+        maybe = sum(1 for a in attendance if a["game_id"] == game_id and a["status"] == "Maybe")
 
         st.markdown(
             f"""
