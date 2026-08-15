@@ -3,6 +3,23 @@ import pandas as pd
 
 def player_view(players_df, games_df, attendance_df, team_id, player_name, commit_changes):
 
+    # ---------------------------------------------------------
+    # FIX: ENSURE DATE COLUMN IS CLEANED & PARSED
+    # ---------------------------------------------------------
+    games_df["date"] = (
+        games_df["date"]
+        .astype(str)
+        .str.replace("\u00A0", " ", regex=False)
+        .str.strip()
+        .replace("", pd.NA)
+    )
+
+    games_df["date"] = pd.to_datetime(
+        games_df["date"],
+        format=None,
+        errors="coerce"
+    )
+
     # Identify player
     player_row = players_df[players_df["player_name"] == player_name].iloc[0]
     player_token = player_row["token"]
@@ -59,7 +76,7 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
         "Yes": "🟢",
         "No": "🔴",
         "Maybe": "🟡",
-        "No Response": "⚪"   # light gray / empty circle
+        "No Response": "⚪"
     }
 
     timeline = []
@@ -75,7 +92,7 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
     # UPCOMING GAMES — FIXED TO KEEP TODAY'S GAME
     # ---------------------------------------------------------
 
-    today = pd.Timestamp.now().normalize()  # strip time → date only
+    today = pd.Timestamp.now().normalize()
 
     upcoming_games = games_df[
         (games_df["team_id"] == team_id) &
@@ -125,13 +142,11 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
                 key=f"player_{player_token}_{game_id}"
             )
 
-            # Mark unsaved changes
             if new_status != current_status:
                 st.session_state.unsaved_changes = True
 
             if st.button(f"Save Changes for {game['display_date']}", key=f"save_{player_token}_{game_id}"):
 
-                # UPDATE or INSERT (in-memory only)
                 if df.loc[mask].empty:
                     st.session_state.attendance_df.loc[len(df)] = {
                         "player_id": player_token,
@@ -141,14 +156,12 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
                 else:
                     st.session_state.attendance_df.loc[mask, "status"] = new_status
 
-                # HARD DEDUPE
                 st.session_state.attendance_df = (
                     st.session_state.attendance_df
                     .drop_duplicates(subset=["player_id", "game_id"], keep="last")
                     .reset_index(drop=True)
                 )
 
-                # Write once
                 commit_changes()
 
                 st.session_state.unsaved_changes = False
