@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 
 eastern = ZoneInfo("America/New_York")
 
+
 def normalize_status(raw):
     s = str(raw).strip()
     if s == "" or s.lower() in ["none", "no response"]:
@@ -105,25 +106,27 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
         # -----------------------------
-        # ALWAYS-VISIBLE HEADER BOX (the one you liked)
+        # DARK-MODE-SAFE HEADER BOX
         # -----------------------------
         st.markdown(
             f"""
             <div style="
                 padding:12px 16px;
-                background-color:#eef2f7;
+                background-color:rgba(255,255,255,0.08);
+                border:1px solid rgba(255,255,255,0.25);
                 border-radius:10px;
                 margin-bottom:12px;
                 font-size:16px;
+                color:#e0e0e0;
             ">
-                <div style="font-weight:600;">
+                <div style="font-weight:600; color:#ffffff;">
                     {day_name}, {pretty_date} — {pretty_time}
                 </div>
-                <div style="font-weight:600;">
+                <div style="font-weight:600; color:#ffffff;">
                     {captain_team_name} vs {opponent}
                 </div>
-                <div>
-                    Field <strong>{field}</strong>
+                <div style="color:#cccccc;">
+                    Field <strong style="color:#ffffff;">{field}</strong>
                 </div>
                 <div style="margin-top:6px;">
                     <span style="color:#4CAF50; font-weight:700;">Playing: {yes_count}</span>
@@ -140,17 +143,19 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         # -----------------------------
         with st.expander("Details"):
 
-            # Summary block
+            # Summary block (dark-mode safe)
             st.markdown(
                 f"""
                 <div style="
                     padding:8px 12px;
-                    background-color:#f7f7f7;
+                    background-color:rgba(255,255,255,0.05);
+                    border:1px solid rgba(255,255,255,0.15);
                     border-radius:6px;
                     margin-bottom:10px;
                     font-size:14px;
+                    color:#e0e0e0;
                 ">
-                    <strong>Game Summary</strong><br>
+                    <strong style="color:#ffffff;">Game Summary</strong><br>
                     <span style="color:#4CAF50; font-weight:700;">Playing: {yes_count}</span><br>
                     <span style="color:#FF9800; font-weight:700;">Undecided: {undecided_count}</span>
                 </div>
