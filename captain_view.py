@@ -6,10 +6,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
     st.title("Captain View")
     st.info("Expand a game below to see player attendance and make updates.")
 
-    # ---------------------------------------------------------
-    # STATUS / SAVE FEEDBACK
-    # ---------------------------------------------------------
-
     if "unsaved_changes" not in st.session_state:
         st.session_state.unsaved_changes = False
 
@@ -17,11 +13,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         st.info(f"Last saved at {st.session_state.last_saved}")
 
     if st.session_state.unsaved_changes:
-        st.warning("You have unsaved changes.")
-
-    # ---------------------------------------------------------
-    # FILTER TEAM DATA
-    # ---------------------------------------------------------
+        st.warning("You have unsaved_changes.")
 
     players_df["team_id"] = players_df["team_id"].astype(str).str.strip()
     games_df["team_id"] = games_df["team_id"].astype(str).str.strip()
@@ -30,13 +22,13 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
     team_games = games_df[games_df["team_id"] == team_id].copy()
 
     # ---------------------------------------------------------
-    # FIX: KEEP TODAY'S GAME VISIBLE UNTIL TOMORROW
+    # FIX: KEEP TODAY'S GAME VISIBLE EVEN IF SERVER IS ON TOMORROW
     # ---------------------------------------------------------
-
-    today = pd.Timestamp.now().normalize()  # strip time → date only
+    today = pd.Timestamp.now().normalize()
+    cutoff = today - pd.Timedelta(days=1)
 
     upcoming_games = team_games[
-        team_games["date"].dt.normalize() >= today
+        team_games["date"].dt.normalize() >= cutoff
     ].sort_values("date")
 
     if upcoming_games.empty:
@@ -45,15 +37,11 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
     valid_statuses = ["Yes", "No", "Maybe", "No Response"]
 
-    # Build lookup from in-memory attendance_df (NO SHEET READS)
     attendance_lookup = {
         (row["player_id"], row["game_id"]): row["status"]
         for _, row in attendance_df.iterrows()
     }
 
-    # ---------------------------------------------------------
-    # CSS FOR PILLS
-    # ---------------------------------------------------------
     st.markdown("""
         <style>
             .pill {
@@ -71,9 +59,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         </style>
     """, unsafe_allow_html=True)
 
-    # ---------------------------------------------------------
-    # GAME LOOP
-    # ---------------------------------------------------------
     for _, game in upcoming_games.iterrows():
 
         game_id = game["game_id"]
@@ -81,7 +66,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         game_time = game["display_time"]
         opponent = game["opponent"]
 
-        # Group attendance
         grouped = {s: [] for s in valid_statuses}
 
         for _, player in team_players.iterrows():
@@ -104,9 +88,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         with colB:
             st.write(f"**Unconfirmed:** {unconfirmed_count}")
 
-        # ---------------------------------------------------------
-        # EXPANDER
-        # ---------------------------------------------------------
         with st.expander("View Details", expanded=False):
 
             def pill_row(label, names, css_class):
@@ -148,16 +129,11 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
                 updated.append((pid, game_id, new_status))
 
-                # Mark unsaved changes
                 if new_status != status:
                     st.session_state.unsaved_changes = True
 
-            # ---------------------------------------------------------
-            # SAVE BUTTON — ONE WRITE ONLY
-            # ---------------------------------------------------------
             if st.button(f"Save All Changes for {game_date}", key=f"save_{game_id}"):
 
-                # Update in-memory DataFrame (NO SHEET READS)
                 for pid, gid, new_status in updated:
                     attendance_df.loc[
                         (attendance_df["player_id"] == pid) &
@@ -165,7 +141,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                         "status"
                     ] = new_status
 
-                # Write once
                 commit_changes()
 
                 st.session_state.unsaved_changes = False
