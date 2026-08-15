@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
+from zoneinfo import ZoneInfo
+import datetime
 
 def player_view(players_df, games_df, attendance_df, team_id, player_name, commit_changes):
 
-    # Ensure date column is parsed
     games_df["date"] = pd.to_datetime(games_df["date"], errors="coerce")
 
     player_row = players_df[players_df["player_name"] == player_name].iloc[0]
@@ -59,14 +60,14 @@ def player_view(players_df, games_df, attendance_df, team_id, player_name, commi
     st.write("   ".join(timeline))
 
     # ---------------------------------------------------------
-    # FIX: KEEP TODAY'S GAME VISIBLE EVEN IF SERVER IS ON TOMORROW
+    # LOCAL MIDNIGHT CUTOFF
     # ---------------------------------------------------------
-    today = pd.Timestamp.now().normalize()
-    cutoff = today - pd.Timedelta(days=1)
+    eastern = ZoneInfo("America/New_York")
+    today_local = datetime.datetime.now(eastern).date()
 
     upcoming_games = games_df[
         (games_df["team_id"] == team_id) &
-        (games_df["date"].dt.normalize() >= cutoff)
+        (games_df["date"].dt.date >= today_local)
     ].sort_values("date")
 
     if upcoming_games.empty:
