@@ -4,11 +4,9 @@ from zoneinfo import ZoneInfo
 
 eastern = ZoneInfo("America/New_York")
 
-
 def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
     st.markdown("### Player View")
 
-    # Identify player
     player_row = players_df[players_df["player_id"] == player_id]
     if player_row.empty:
         st.error("Player not found.")
@@ -19,7 +17,6 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
 
     st.markdown(f"#### {player_name} — {team_id}")
 
-    # Normalize team_id
     games_df["team_id_normalized"] = (
         games_df["team_id"].astype(str).str.strip().str.lower()
     )
@@ -29,7 +26,6 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         games_df["team_id_normalized"] == team_id_normalized
     ].copy()
 
-    # Ensure date is datetime.date
     if "date" in team_games.columns:
         team_games["date"] = team_games["date"].apply(
             lambda d: d.date() if hasattr(d, "date") else None
