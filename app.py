@@ -1,26 +1,14 @@
 import streamlit as st
-from zoneinfo import ZoneInfo
-import datetime
-
-# ---------------------------------------------------------
-# SAFE RERUN HANDLER
-# ---------------------------------------------------------
-if st.session_state.get("force_rerun", False):
-    st.session_state["force_rerun"] = False
-    st.experimental_rerun()
-
-# ---------------------------------------------------------
-# IMPORTS
-# ---------------------------------------------------------
 from attendance_logic import (
     load_players_df,
     load_games_df,
     load_attendance_df,
     commit_attendance_changes,
 )
-
-from captain_view import captain_view
 from player_view import player_view
+from captain_view import captain_view
+
+st.set_page_config(page_title="Adult League Attendance", layout="wide")
 
 # ---------------------------------------------------------
 # LOAD DATA
@@ -29,30 +17,54 @@ players_df = load_players_df()
 games_df = load_games_df()
 attendance_df = load_attendance_df()
 
-st.set_page_config(page_title="Adult League Attendance", layout="wide")
+# Store attendance in session state for editing
+if "attendance_df" not in st.session_state:
+    st.session_state.attendance_df = attendance_df.copy()
+
+# ---------------------------------------------------------
+# SIDEBAR
+# ---------------------------------------------------------
+st.sidebar.header("Access")
+role = st.sidebar.selectbox("Role", ["Player", "Captain"])
+team_id = st.sidebar.text_input("Team ID", value="GRAY").strip()
+player_token = st.sidebar.text_input("Player ID (for Player role)", value="")
 
 st.title("Adult League Attendance")
 
-# Sidebar role/team selection
-role = st.sidebar.selectbox("Role", ["Captain", "Player"])
-team_id = st.sidebar.text_input("Team ID", "GRAY")
+# ---------------------------------------------------------
+# PLAYER VIEW
+# ---------------------------------------------------------
+if role == "Player":
+    if not player_token:
+        st.info("Enter your Player ID to continue.")
+    else:
+        player_view(
+            players_df=players_df,
+            games_df=games_df,
+            attendance_df=st.session_state.attendance_df,
+            player_id=player_token,
+            commit_changes=commit_attendance_changes,
+        )
 
 # ---------------------------------------------------------
-# ROUTING
+# CAPTAIN VIEW
 # ---------------------------------------------------------
-if role == "Captain":
-    captain_view(
-        players_df=players_df,
-        games_df=games_df,
-        attendance_df=attendance_df,
-        team_id=team_id,
-        commit_changes=commit_attendance_changes,
-    )
 else:
-    player_view(
-        players_df=players_df,
-        games_df=games_df,
-        attendance_df=attendance_df,
+    captain_view(
+        data={
+            "players": players_df.to_dict("records"),
+            "games": games_df,
+            "attendance": st.session_state.attendance_df.to_dict("records"),
+        },
+        current_player_id=player_token,
         team_id=team_id,
-        commit_changes=commit_attendance_changes,
     )
+
+# ---------------------------------------------------------
+# SAVE BUTTON (GLOBAL)
+# ---------------------------------------------------------
+st.markdown("---")
+if st.button("Save All Changes"):
+    updated = commit_attendance_changes(st.session_state.attendance_df)
+    st.session_state.attendance_df = updated
+    st.success("Attendance saved successfully!")
