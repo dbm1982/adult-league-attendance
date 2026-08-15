@@ -119,16 +119,7 @@ def captain_view(players_df, games_df, attendance_df, team_id):
                     key=f"capt_{pid}_{game_id}",
                 )
 
-                mask = (attendance_df["player_id"] == pid) & (attendance_df["game_id"] == game_id)
-                if mask.any():
-                    attendance_df.loc[mask, "status"] = new_status
-                    attendance_df.loc[mask, "updated_at"] = datetime.now(eastern).isoformat()
-                else:
-                    attendance_df.loc[len(attendance_df)] = {
-                        "player_id": pid,
-                        "game_id": game_id,
-                        "status": new_status,
-                        "updated_at": datetime.now(eastern).isoformat(),
-                    }
+                # Store in pending updates instead of writing directly
+                st.session_state.pending_updates[(pid, game_id)] = new_status
 
     st.info("Changes made here will be saved when you click 'Save All Changes' at the bottom of the main page.")
