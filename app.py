@@ -11,7 +11,7 @@ from captain_view import captain_view
 
 st.set_page_config(page_title="Adult League Attendance", layout="wide")
 
-# Cache sheets in session_state
+# Cache sheets
 if "players_df" not in st.session_state:
     st.session_state.players_df = load_players_df()
 
@@ -31,8 +31,8 @@ if "pending_updates" not in st.session_state:
 if "selected_team" not in st.session_state:
     st.session_state.selected_team = None
 
-if "selected_player" not in st.session_state:
-    st.session_state.selected_player = None
+if "selected_player_id" not in st.session_state:
+    st.session_state.selected_player_id = None
 
 players_df = st.session_state.players_df
 games_df = st.session_state.games_df
@@ -45,14 +45,13 @@ active_team_ids = sorted(
     teams_df[teams_df["active"] == True]["team_id"].unique()
 )
 
-# Reset callback
 def reset_selection():
     st.session_state.selected_team = None
-    st.session_state.selected_player = None
-    st.experimental_rerun()
+    st.session_state.selected_player_id = None
+    st.rerun()
 
-# Show selectors only when nothing is selected
-if st.session_state.selected_team is None and st.session_state.selected_player is None:
+# Selectors
+if st.session_state.selected_team is None or st.session_state.selected_player_id is None:
 
     selector_container = st.container()
 
@@ -75,22 +74,29 @@ if st.session_state.selected_team is None and st.session_state.selected_player i
                 & (~players_df["team_id"].str.contains("Floaters"))
             ]
 
-            player_names = team_players["player_name"].tolist()
+            # Use player_id as the actual value
+            player_name_to_id = {
+                row["player_name"]: row["player_id"]
+                for _, row in team_players.iterrows()
+            }
 
             player_name = st.selectbox(
                 "Player",
-                player_names,
+                list(player_name_to_id.keys()),
                 index=None,
                 placeholder="Select a player"
             )
 
             if player_name:
-                st.session_state.selected_player = player_name
+                st.session_state.selected_player_id = player_name_to_id[player_name]
                 selector_container.empty()
-                st.experimental_rerun()
+                st.rerun()
 
-# Compact badge after selection
-if st.session_state.selected_team and st.session_state.selected_player:
+# Badge
+if st.session_state.selected_team and st.session_state.selected_player_id:
+
+    player_row = players_df[players_df["player_id"] == st.session_state.selected_player_id].iloc[0]
+    player_name = player_row["player_name"]
 
     badge_col1, badge_col2 = st.columns([0.85, 0.15])
 
@@ -107,7 +113,7 @@ if st.session_state.selected_team and st.session_state.selected_player:
             ">
                 Selected:
                 <span style="color:#2c3e50;">Team {st.session_state.selected_team}</span> •
-                <span style="color:#2c3e50;">{st.session_state.selected_player}</span>
+                <span style="color:#2c3e50;">{player_name}</span>
             </div>
             """,
             unsafe_allow_html=True
@@ -116,29 +122,15 @@ if st.session_state.selected_team and st.session_state.selected_player:
     with badge_col2:
         st.button("Change", on_click=reset_selection)
 
-# Prevent blank page (NO RERUN HERE)
-if st.session_state.selected_team is None or st.session_state.selected_player is None:
-    st.write("")  # placeholder
+# Stop if still missing selection
+if st.session_state.selected_team is None or st.session_state.selected_player_id is None:
     st.stop()
 
-# Load player row
-team_id = st.session_state.selected_team
-player_name = st.session_state.selected_player
-
-team_players = players_df[
-    (players_df["team_id"] == team_id)
-    & (players_df["team_id"] != "")
-    & (~players_df["team_id"].str.contains("Inactive"))
-    & (~players_df["team_id"].str.contains("Floaters"))
-]
-
-player_row = team_players[
-    team_players["player_name"].str.strip().str.lower()
-    == player_name.strip().lower()
-]
+# Load player row safely
+player_row = players_df[players_df["player_id"] == st.session_state.selected_player_id]
 
 if player_row.empty:
-    st.error("Selected player not found.")
+    st.error("Player not found in Players sheet.")
     st.stop()
 
 player_row = player_row.iloc[0]
@@ -166,6 +158,6 @@ if is_captain:
             players_df=players_df,
             games_df=games_df,
             attendance_df=st.session_state.attendance_df,
-            team_id=team_id,
+            team_id=st.session_state.selected_team,
             commit_changes=commit_attendance_changes
         )
