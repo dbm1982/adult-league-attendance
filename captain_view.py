@@ -154,17 +154,29 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     st.session_state.unsaved_changes = True
 
             # ---------------------------------------------------------
-            # SAVE BUTTON — WITH INSTANT RELOAD + AUTO-COLLAPSE
+            # SAVE BUTTON — WITH INSERT-IF-MISSING + INSTANT RELOAD
             # ---------------------------------------------------------
             if st.button(f"Save All Changes for {game_date}", key=f"save_{game_id}"):
 
-                # Update local session DF
                 for pid, gid, new_status in updated:
-                    attendance_df.loc[
+
+                    mask = (
                         (attendance_df["player_id"] == pid) &
-                        (attendance_df["game_id"] == gid),
-                        "status"
-                    ] = new_status
+                        (attendance_df["game_id"] == gid)
+                    )
+
+                    if attendance_df.loc[mask].empty:
+                        # INSERT NEW ROW
+                        attendance_df.loc[len(attendance_df)] = {
+                            "player_id": pid,
+                            "game_id": gid,
+                            "status": new_status,
+                            "updated_at": datetime.datetime.now(eastern).isoformat()
+                        }
+                    else:
+                        # UPDATE EXISTING ROW
+                        attendance_df.loc[mask, "status"] = new_status
+                        attendance_df.loc[mask, "updated_at"] = datetime.datetime.now(eastern).isoformat()
 
                 # Instant reload so captain sees updates immediately
                 commit_changes(reload_after_save=True)
