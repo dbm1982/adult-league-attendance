@@ -36,7 +36,7 @@ def load_attendance_df():
 def load_teams_df():
     gc = get_client()
     sheet = gc.open("Adult Team Attendance Dev")
-    ws = sheet.worksheet("Teams")
+    ws = sheet.worksheet("Teams")   # YOU CONFIRMED THIS NAME
     rows = ws.get_all_records()
     return pd.DataFrame(rows)
 
