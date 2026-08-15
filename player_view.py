@@ -71,6 +71,8 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         date = g["date"]
         time_raw = g["time"]
         opponent = g["opponent"]
+        field_raw = g.get("field", "")
+        field = str(field_raw).replace("Field ", "").replace("field ", "").strip()
 
         # Human-friendly date/time
         day_name = date.strftime("%A")
@@ -84,19 +86,18 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         current_status = normalize_status(att_lookup.get((player_id, game_id), "No Response"))
 
         # -----------------------------
-        # BEAUTIFUL DUAL‑MODE HEADER CARD
+        # COMPACT GAME SUMMARY CARD
         # -----------------------------
         st.markdown(
             f"""
             <div style="
-                padding:16px 20px;
+                padding:14px 18px;
                 background-color:var(--background-color);
                 border:1px solid var(--secondary-background-color);
                 border-radius:12px;
                 margin-bottom:16px;
-                font-size:17px;
                 color:var(--text-color);
-                line-height:1.5;
+                line-height:1.45;
             ">
                 <div style="font-weight:700; font-size:18px;">
                     ⚽ {day_name}, {pretty_date} — {pretty_time}
@@ -104,8 +105,8 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
                 <div style="font-weight:600; margin-top:2px;">
                     vs {opponent}
                 </div>
-                <div style="opacity:0.7; font-size:14px; margin-top:4px;">
-                    Your availability for this match
+                <div style="opacity:0.75; font-size:14px; margin-top:4px;">
+                    📍 Field <strong>{field}</strong>
                 </div>
             </div>
             """,
@@ -113,7 +114,7 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         )
 
         # -----------------------------
-        # STATUS CARD
+        # STATUS SELECTION CARD
         # -----------------------------
         st.markdown(
             f"""
@@ -126,7 +127,10 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
                 color:var(--text-color);
             ">
                 <div style="font-weight:600; margin-bottom:6px;">
-                    Your status for {day_name}, {pretty_date} at {pretty_time}
+                    Your availability for this match
+                </div>
+                <div style="opacity:0.75; font-size:14px;">
+                    Choose your status below
                 </div>
             </div>
             """,
