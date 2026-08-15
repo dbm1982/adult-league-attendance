@@ -8,11 +8,8 @@ eastern = ZoneInfo("America/New_York")
 def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
     st.markdown("### Player View")
 
-    # ---------------------------------------------------------
-    # Identify the player
-    # ---------------------------------------------------------
+    # Identify player
     player_row = players_df[players_df["player_id"] == player_id]
-
     if player_row.empty:
         st.error("Player not found.")
         return
@@ -22,9 +19,7 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
 
     st.markdown(f"#### {player_name} — {team_id}")
 
-    # ---------------------------------------------------------
-    # Filter games for this player's team
-    # ---------------------------------------------------------
+    # Normalize team_id
     games_df["team_id_normalized"] = (
         games_df["team_id"].astype(str).str.strip().str.lower()
     )
@@ -43,17 +38,11 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
     today_local = datetime.now(eastern).date()
     upcoming_games = team_games[team_games["date"] >= today_local].sort_values("date")
 
-    # ---------------------------------------------------------
-    # Attendance lookup
-    # ---------------------------------------------------------
     attendance_lookup = {
         (a["player_id"], a["game_id"]): a["status"]
         for a in attendance_df.to_dict("records")
     }
 
-    # ---------------------------------------------------------
-    # UI for each upcoming game
-    # ---------------------------------------------------------
     for _, g in upcoming_games.iterrows():
         game_id = g["game_id"]
         date = g["date"]
@@ -73,7 +62,6 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
             key=f"{player_id}_{game_id}",
         )
 
-        # Update session state
         attendance_df.loc[
             (attendance_df["player_id"] == player_id)
             & (attendance_df["game_id"] == game_id),
@@ -86,9 +74,6 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
             "updated_at",
         ] = datetime.now(eastern).isoformat()
 
-    # ---------------------------------------------------------
-    # Save button
-    # ---------------------------------------------------------
     if st.button("Save My Responses"):
         commit_changes(attendance_df)
         st.success("Your attendance has been saved!")
