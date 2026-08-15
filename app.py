@@ -7,20 +7,30 @@ from attendance_logic import (
     commit_attendance_changes,
 )
 from player_view import player_view
-from captain_view import captain_view
+    from captain_view import captain_view
 
 st.set_page_config(page_title="Adult League Attendance", layout="wide")
 
-players_df = load_players_df()
-games_df = load_games_df()
-attendance_df = load_attendance_df()
-teams_df = load_teams_df()
+# Cache all sheets in session_state so we don't re-read on every rerun
+if "players_df" not in st.session_state:
+    st.session_state.players_df = load_players_df()
+
+if "games_df" not in st.session_state:
+    st.session_state.games_df = load_games_df()
 
 if "attendance_df" not in st.session_state:
-    st.session_state.attendance_df = attendance_df.copy()
+    st.session_state.attendance_df = load_attendance_df()
+
+if "teams_df" not in st.session_state:
+    st.session_state.teams_df = load_teams_df()
 
 if "pending_updates" not in st.session_state:
     st.session_state.pending_updates = {}
+
+players_df = st.session_state.players_df
+games_df = st.session_state.games_df
+attendance_df = st.session_state.attendance_df
+teams_df = st.session_state.teams_df
 
 st.title("Adult League Attendance")
 
