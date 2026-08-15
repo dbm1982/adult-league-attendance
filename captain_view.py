@@ -4,86 +4,131 @@ from zoneinfo import ZoneInfo
 
 eastern = ZoneInfo("America/New_York")
 
-def captain_view(data, current_player_id, team_id):
+
+def normalize_status(raw):
+    s = str(raw).strip()
+    if s == "" or s.lower() in ["none", "no response"]:
+        return "No Response"
+    if s.lower() in ["yes", "y"]:
+        return "Yes"
+    if s.lower() in ["no", "n"]:
+        return "No"
+    if s.lower() in ["maybe", "m"]:
+        return "Maybe"
+    return "No Response"
+
+
+def captain_view(players_df, games_df, attendance_df, team_id):
     st.markdown("### Captain View")
 
-    players = data["players"]
-    games = data["games"]
-    attendance = data["attendance"]
-
-    team_id_normalized = team_id.strip().lower()
-    games["team_id_normalized"] = (
-        games["team_id"].astype(str).str.strip().str.lower()
-    )
-
-    team_games = games[
-        games["team_id_normalized"] == team_id_normalized
+    # Filter players to this team only, no Inactive/Floaters/blank
+    team_players = players_df[
+        (players_df["team_id"] == team_id)
+        & (players_df["team_id"].ne(""))
+        & (~players_df["team_id"].str.contains("Inactive", case=False))
+        & (~players_df["team_id"].str.contains("Floaters", case=False))
     ].copy()
 
-    today_local = datetime.now(eastern).date()
+    if team_players.empty:
+        st.info(f"No players found for team '{team_id}'.")
+        return
+
+    # Normalize games
+    games_df["team_id_norm"] = games_df["team_id"].astype(str).str.strip().str.lower()
+    team_id_norm = team_id.strip().lower()
+
+    team_games = games_df[games_df["team_id_norm"] == team_id_norm].copy()
 
     if "date" in team_games.columns:
         team_games["date"] = team_games["date"].apply(
             lambda d: d.date() if hasattr(d, "date") else None
         )
 
-    upcoming_games = team_games[
-        team_games["date"] >= today_local
-    ].sort_values("date")
-
-    st.markdown("#### Players Missing Responses")
-
-    attendance_lookup = {
-        (a["player_id"], a["game_id"]): a["status"]
-        for a in attendance
-    }
-
-    missing = []
-
-    for p in players:
-        pid = p["player_id"]
-        if pid == current_player_id:
-            continue
-
-        for _, g in upcoming_games.iterrows():
-            key = (pid, g["game_id"])
-            if key not in attendance_lookup:
-                missing.append((p["player_name"], g["date"], g["time"]))
-
-    unique_missing = sorted(set(missing))
-
-    if unique_missing:
-        for name, date, time in unique_missing:
-            st.markdown(
-                f"<span style='color:#d9534f; font-weight:bold;'>⚠ {name}</span> "
-                f"<span style='color:#555;'>— {date} {time}</span>",
-                unsafe_allow_html=True,
-            )
-    else:
-        st.success("All players have responded!")
-
-    st.markdown("---")
-    st.markdown("#### Team Attendance Summary")
+    today_local = datetime.now(eastern).date()
+    upcoming_games = team_games[team_games["date"] >= today_local].sort_values("date")
 
     if upcoming_games.empty:
         st.info("No upcoming games found for this team.")
         return
 
+    # Build attendance lookup
+    attendance_df["player_id"] = attendance_df["player_id"].astype(str).str.strip()
+    attendance_df["game_id"] = attendance_df["game_id"].astype(str).str.strip()
+    attendance_df["status"] = attendance_df["status"].apply(normalize_status)
+
+    att_lookup = {
+        (row["player_id"], row["game_id"]): row["status"]
+        for _, row in attendance_df.iterrows()
+    }
+
     for _, g in upcoming_games.iterrows():
         game_id = g["game_id"]
+        date = g["date"]
+        time = g["time"]
+        opponent = g["opponent"]
+        field = g.get("field", "")
 
-        yes = sum(1 for a in attendance if a["game_id"] == game_id and a["status"] == "Yes")
-        no = sum(1 for a in attendance if a["game_id"] == game_id and a["status"] == "No")
-        maybe = sum(1 for a in attendance if a["game_id"] == game_id and a["status"] == "Maybe")
+        with st.expander(f"{date} — {time} vs {opponent} ({field})", expanded=False):
+            # Group players by status
+            buckets = {"Yes": [], "No": [], "Maybe": [], "No Response": []}
 
-        st.markdown(
-            f"""
-            <div style='padding:6px 10px; border-radius:6px; background:#f7f7f7; margin-bottom:4px;'>
-              <strong>{g['date']} — {g['time']}</strong><br>
-              <span style='color:#5cb85c;'>Yes: {yes}</span> &nbsp;|&nbsp;
-              <span style='color:#d9534f;'>No: {no}</span> &nbsp;|&nbsp;
-              <span style='color:#f0ad4e;'>Maybe: {maybe}</span>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+            for _, p in team_players.iterrows():
+                pid = p["player_id"]
+                pname = p["player_name"]
+                status = att_lookup.get((pid, game_id), "No Response")
+                status = normalize_status(status)
+                buckets[status].append(pname)
+
+            cols = st.columns(4)
+            labels = ["Yes", "No", "Maybe", "No Response"]
+            colors = {
+                "Yes": "#5cb85c",
+                "No": "#d9534f",
+                "Maybe": "#f0ad4e",
+                "No Response": "#999999",
+            }
+
+            for col, label in zip(cols, labels):
+                with col:
+                    st.markdown(
+                        f"<span style='color:{colors[label]}; font-weight:bold;'>{label}</span>",
+                        unsafe_allow_html=True,
+                    )
+                    if buckets[label]:
+                        for name in sorted(buckets[label]):
+                            st.markdown(f"- {name}")
+                    else:
+                        st.markdown("_None_")
+
+            st.markdown("---")
+            st.markdown("#### Override individual player status")
+
+            for _, p in team_players.iterrows():
+                pid = p["player_id"]
+                pname = p["player_name"]
+                current_status = att_lookup.get((pid, game_id), "No Response")
+                current_status = normalize_status(current_status)
+
+                options = ["Yes", "No", "Maybe", "No Response"]
+
+                st.markdown(f"**{pname}**")
+                new_status = st.radio(
+                    f"Status for {pname} ({date} {time})",
+                    options,
+                    index=options.index(current_status),
+                    key=f"capt_{pid}_{game_id}",
+                )
+
+                mask = (attendance_df["player_id"] == pid) & (attendance_df["game_id"] == game_id)
+                if mask.any():
+                    attendance_df.loc[mask, "status"] = new_status
+                    attendance_df.loc[mask, "updated_at"] = datetime.now(eastern).isoformat()
+                else:
+                    attendance_df.loc[len(attendance_df)] = {
+                        "player_id": pid,
+                        "game_id": game_id,
+                        "status": new_status,
+                        "updated_at": datetime.now(eastern).isoformat(),
+                    }
+
+    st.info("Changes made here will be saved when you click 'Save All Changes' at the bottom of the main page.")
