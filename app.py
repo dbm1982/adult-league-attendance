@@ -7,7 +7,7 @@ from attendance_logic import (
     commit_attendance_changes,
 )
 from player_view import player_view
-    from captain_view import captain_view
+from captain_view import captain_view
 
 st.set_page_config(page_title="Adult League Attendance", layout="wide")
 
