@@ -4,7 +4,6 @@ from zoneinfo import ZoneInfo
 
 eastern = ZoneInfo("America/New_York")
 
-
 def normalize_status(raw):
     s = str(raw).strip()
     if s == "" or s.lower() in ["none", "no response"]:
@@ -106,16 +105,16 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
         # -----------------------------
-        # HEADER BOX (what you liked)
+        # ALWAYS-VISIBLE HEADER BOX (the one you liked)
         # -----------------------------
         st.markdown(
             f"""
             <div style="
-                padding:10px 14px;
+                padding:12px 16px;
                 background-color:#eef2f7;
-                border-radius:8px;
+                border-radius:10px;
                 margin-bottom:12px;
-                font-size:15px;
+                font-size:16px;
             ">
                 <div style="font-weight:600;">
                     {day_name}, {pretty_date} — {pretty_time}
@@ -126,7 +125,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                 <div>
                     Field <strong>{field}</strong>
                 </div>
-                <div style="margin-top:4px;">
+                <div style="margin-top:6px;">
                     <span style="color:#4CAF50; font-weight:700;">Playing: {yes_count}</span>
                     &nbsp;•&nbsp;
                     <span style="color:#FF9800; font-weight:700;">Undecided: {undecided_count}</span>
@@ -137,90 +136,87 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         )
 
         # -----------------------------
-        # GAME SUMMARY
+        # SIMPLE EXPANDER FOR DETAILS
         # -----------------------------
-        st.markdown(
-            f"""
-            <div style="
-                padding:8px 12px;
-                background-color:#f7f7f7;
-                border-radius:6px;
-                margin-bottom:10px;
-                font-size:14px;
-            ">
-                <strong>Game Summary</strong><br>
-                <span style="color:#4CAF50; font-weight:700;">Playing: {yes_count}</span><br>
-                <span style="color:#FF9800; font-weight:700;">Undecided: {undecided_count}</span>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        with st.expander("Details"):
 
-        # -----------------------------
-        # ATTENDANCE BREAKDOWN
-        # -----------------------------
-        st.markdown("#### Attendance Breakdown")
-
-        cols = st.columns(4)
-        labels = ["Yes", "No", "Maybe", "No Response"]
-        colors = {
-            "Yes": "#4CAF50",
-            "No": "#d9534f",
-            "Maybe": "#FF9800",
-            "No Response": "#9E9E9E",
-        }
-
-        for col, label in zip(cols, labels):
-            with col:
-                count = len(buckets[label])
-                st.markdown(
-                    f"<span style='color:{colors[label]}; font-weight:bold;'>{label} ({count})</span>",
-                    unsafe_allow_html=True,
-                )
-                if buckets[label]:
-                    for name in sorted(buckets[label]):
-                        st.markdown(f"- {name}")
-                else:
-                    st.markdown("_None_")
-
-        st.markdown("---")
-        st.markdown("#### Override Player Status")
-
-        # -----------------------------
-        # OVERRIDE UI
-        # -----------------------------
-        for _, p in team_players.iterrows():
-            pid = p["player_id"]
-            pname = p["player_name"]
-            current_status = normalize_status(att_lookup.get((pid, game_id), "No Response"))
-
-            options = ["Yes", "No", "Maybe", "No Response"]
-
-            st.markdown(f"**{pname}**")
-            new_status = st.radio(
-                f"Status for {pname}",
-                options,
-                index=options.index(current_status),
-                key=f"capt_{pid}_{game_id}",
+            # Summary block
+            st.markdown(
+                f"""
+                <div style="
+                    padding:8px 12px;
+                    background-color:#f7f7f7;
+                    border-radius:6px;
+                    margin-bottom:10px;
+                    font-size:14px;
+                ">
+                    <strong>Game Summary</strong><br>
+                    <span style="color:#4CAF50; font-weight:700;">Playing: {yes_count}</span><br>
+                    <span style="color:#FF9800; font-weight:700;">Undecided: {undecided_count}</span>
+                </div>
+                """,
+                unsafe_allow_html=True
             )
 
-            st.session_state.pending_updates[(pid, game_id)] = new_status
+            # Attendance Breakdown
+            st.markdown("#### Attendance Breakdown")
 
-        # -----------------------------
-        # SAVE BUTTON
-        # -----------------------------
-        has_unsaved = any(
-            (gid == game_id) for (_, gid) in st.session_state.pending_updates.keys()
-        )
+            cols = st.columns(4)
+            labels = ["Yes", "No", "Maybe", "No Response"]
+            colors = {
+                "Yes": "#4CAF50",
+                "No": "#d9534f",
+                "Maybe": "#FF9800",
+                "No Response": "#9E9E9E",
+            }
 
-        if has_unsaved:
-            st.warning("Unsaved changes for this game.")
-            if st.button(f"Save changes for {pretty_date} {pretty_time}", key=f"save_capt_{game_id}"):
-                _apply_game_updates(game_id, attendance_df)
-                updated = commit_changes(attendance_df)
-                st.session_state.attendance_df = updated
-                _clear_game_pending(game_id)
-                st.success("Attendance for this game has been saved.")
+            for col, label in zip(cols, labels):
+                with col:
+                    count = len(buckets[label])
+                    st.markdown(
+                        f"<span style='color:{colors[label]}; font-weight:bold;'>{label} ({count})</span>",
+                        unsafe_allow_html=True,
+                    )
+                    if buckets[label]:
+                        for name in sorted(buckets[label]):
+                            st.markdown(f"- {name}")
+                    else:
+                        st.markdown("_None_")
+
+            st.markdown("---")
+            st.markdown("#### Override Player Status")
+
+            # Override UI
+            for _, p in team_players.iterrows():
+                pid = p["player_id"]
+                pname = p["player_name"]
+                current_status = normalize_status(att_lookup.get((pid, game_id), "No Response"))
+
+                options = ["Yes", "No", "Maybe", "No Response"]
+
+                st.markdown(f"**{pname}**")
+                new_status = st.radio(
+                    f"Status for {pname}",
+                    options,
+                    index=options.index(current_status),
+                    key=f"capt_{pid}_{game_id}",
+                )
+
+                st.session_state.pending_updates[(pid, game_id)] = new_status
+
+            # Save button
+            has_unsaved = any(
+                (gid == game_id) for (_, gid) in st.session_state.pending_updates.keys()
+            )
+
+            if has_unsaved:
+                st.warning("Unsaved changes for this game.")
+                if st.button(f"Save changes for {pretty_date} {pretty_time}", key=f"save_capt_{game_id}"):
+                    _apply_game_updates(game_id, attendance_df)
+                    updated = commit_changes(attendance_df)
+                    st.session_state.attendance_df = updated
+                    _clear_game_pending(game_id)
+                    st.success("Attendance for this game has been saved.")
 
         st.markdown("---")
 
