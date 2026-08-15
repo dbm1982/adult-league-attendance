@@ -71,22 +71,29 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         opponent = g["opponent"]
         field = g.get("field", "")
 
-        with st.expander(f"{date} — {time} vs {opponent} ({field})", expanded=False):
+        # Build buckets BEFORE rendering expander title
+        buckets = {"Yes": [], "No": [], "Maybe": [], "No Response": []}
 
-            # Build buckets
-            buckets = {"Yes": [], "No": [], "Maybe": [], "No Response": []}
+        for _, p in team_players.iterrows():
+            pid = p["player_id"]
+            pname = p["player_name"]
+            status = att_lookup.get((pid, game_id), "No Response")
+            status = normalize_status(status)
+            buckets[status].append(pname)
 
-            for _, p in team_players.iterrows():
-                pid = p["player_id"]
-                pname = p["player_name"]
-                status = att_lookup.get((pid, game_id), "No Response")
-                status = normalize_status(status)
-                buckets[status].append(pname)
+        # Summary counts
+        yes_count = len(buckets["Yes"])
+        undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
-            # SUMMARY BAR (Yes + Undecided)
-            yes_count = len(buckets["Yes"])
-            undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
+        # Expander title now includes summary
+        expander_title = (
+            f"{date} — {time} vs {opponent} ({field})  "
+            f" |  Yes: {yes_count} • Undecided: {undecided_count}"
+        )
 
+        with st.expander(expander_title, expanded=False):
+
+            # Summary bar inside expander
             st.markdown(
                 f"""
                 <div style="
