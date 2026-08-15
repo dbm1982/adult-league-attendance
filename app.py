@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import gspread
 from datetime import datetime
-import pytz
+from zoneinfo import ZoneInfo
 
 from captain_view import captain_view
 from player_view import player_view
@@ -10,10 +10,10 @@ from player_view import player_view
 st.set_page_config(page_title="Adult Team Attendance", layout="wide")
 
 # Eastern timezone
-eastern = pytz.timezone("US/Eastern")
+eastern = ZoneInfo("America/New_York")
 
 # ---------------------------------------------------------
-# CONNECT TO GOOGLE SHEETS ONCE
+# CONNECT TO GOOGLE SHEETS
 # ---------------------------------------------------------
 
 gc = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
@@ -28,7 +28,7 @@ def sheet_to_df(ws):
     return pd.DataFrame(rows, columns=header)
 
 # ---------------------------------------------------------
-# LOAD ALL SHEETS ONCE INTO SESSION STATE
+# LOAD ALL SHEETS INTO SESSION STATE
 # ---------------------------------------------------------
 
 if "teams_df" not in st.session_state:
@@ -107,7 +107,7 @@ is_captain = player_row["is_captain"]
 st.success(f"Logged in as {selected_player_name} ({team_id})")
 
 # ---------------------------------------------------------
-# COMMIT FUNCTION — ONE WRITE ONLY
+# COMMIT FUNCTION
 # ---------------------------------------------------------
 
 attendance_ws = sheet.worksheet("Attendance")
@@ -120,7 +120,7 @@ def commit_attendance_changes(reload_after_save=False):
         df.values.tolist()
     )
 
-    # FIX: Local Eastern time
+    # Local Eastern time
     st.session_state.last_saved = datetime.now(eastern).strftime("%I:%M %p")
     st.session_state.unsaved_changes = False
 
