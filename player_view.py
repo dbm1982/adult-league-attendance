@@ -4,7 +4,6 @@ from zoneinfo import ZoneInfo
 
 eastern = ZoneInfo("America/New_York")
 
-
 def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
     st.markdown("### Player View")
 
@@ -50,7 +49,7 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         new_status = st.radio(
             f"Your status for {date} {time}",
             options,
-            index=options.index(current_status) if current_status in options else options.index("No Response"),
+            index=options.index(current_status),
             key=f"player_{player_id}_{game_id}",
         )
 
@@ -70,7 +69,6 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
                 _clear_game_pending(game_id)
                 st.success("Your attendance has been saved.")
 
-
 def _apply_game_updates(game_id, attendance_df):
     for (pid, gid), status in list(st.session_state.pending_updates.items()):
         if gid != game_id:
@@ -86,7 +84,6 @@ def _apply_game_updates(game_id, attendance_df):
                 "status": status,
                 "updated_at": datetime.now(eastern).isoformat(),
             }
-
 
 def _clear_game_pending(game_id):
     for key in list(st.session_state.pending_updates.keys()):
