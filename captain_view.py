@@ -40,11 +40,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
     valid_statuses = ["Yes", "No", "Maybe", "No Response"]
 
-    attendance_lookup = {
-        (row["player_id"], row["game_id"]): row["status"]
-        for _, row in attendance_df.iterrows()
-    }
-
     # Pills CSS
     st.markdown("""
         <style>
@@ -77,6 +72,12 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
         if exp_key not in st.session_state:
             st.session_state[exp_key] = False  # default collapsed
+
+        # Build attendance lookup fresh each rerun
+        attendance_lookup = {
+            (row["player_id"], row["game_id"]): row["status"]
+            for _, row in attendance_df.iterrows()
+        }
 
         # Build grouped attendance lists
         grouped = {s: [] for s in valid_statuses}
@@ -171,5 +172,8 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                 # Auto-collapse expander after saving
                 st.session_state[exp_key] = False
 
+                # Clear unsaved changes
                 st.session_state.unsaved_changes = False
-                st.success(f"Saved all attendance updates for {game_date}")
+
+                # 🔥 Force full UI refresh so counts update
+                st.experimental_rerun()
