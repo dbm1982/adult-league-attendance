@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 eastern = ZoneInfo("America/New_York")
 
 # -----------------------------
-# Normalization helpers
+# Status normalization
 # -----------------------------
 def normalize_status(raw):
     s = str(raw).strip()
@@ -21,7 +21,7 @@ def normalize_status(raw):
 
 
 # -----------------------------
-# Main Captain View
+# Captain View
 # -----------------------------
 def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
@@ -108,11 +108,15 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         yes_count = len(buckets["Yes"])
         undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
-        # Clean expander title
+        # -----------------------------
+        # Clean, human-friendly header
+        # -----------------------------
         expander_title = (
-            f"{day_name}, {pretty_date} | {pretty_time} | "
-            f"{captain_team_name} vs {opponent} | Field {field} "
-            f"| Playing: {yes_count} ({captain_team_name}) • Undecided: {undecided_count}"
+            f"**{day_name}, {pretty_date}** — "
+            f"**{pretty_time}**  \n"
+            f"**{captain_team_name} vs {opponent}**  \n"
+            f"Field **{field}**  \n"
+            f"Playing: **{yes_count}** • Undecided: **{undecided_count}**"
         )
 
         # -----------------------------
@@ -124,14 +128,14 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             st.markdown(
                 f"""
                 <div style="
-                    padding:8px 12px;
-                    background-color:#f7f7f7;
-                    border-radius:6px;
-                    margin-bottom:12px;
+                    padding:10px 14px;
+                    background-color:#f2f4f7;
+                    border-radius:8px;
+                    margin-bottom:15px;
                     font-size:15px;
                 ">
-                    <strong>Summary:</strong>
-                    <span style="color:#5cb85c; font-weight:600;">Playing: {yes_count}</span> •
+                    <strong>Game Summary</strong><br>
+                    <span style="color:#5cb85c; font-weight:600;">Playing: {yes_count}</span><br>
                     <span style="color:#999999; font-weight:600;">Undecided: {undecided_count}</span>
                 </div>
                 """,
@@ -139,6 +143,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             )
 
             # Buckets
+            st.markdown("### Attendance Breakdown")
             cols = st.columns(4)
             labels = ["Yes", "No", "Maybe", "No Response"]
             colors = {
@@ -162,7 +167,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                         st.markdown("_None_")
 
             st.markdown("---")
-            st.markdown("#### Override individual player status")
+            st.markdown("### Override Player Status")
 
             # Override UI
             for _, p in team_players.iterrows():
@@ -175,7 +180,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
                 st.markdown(f"**{pname}**")
                 new_status = st.radio(
-                    f"Status for {pname} ({pretty_date} {pretty_time})",
+                    f"Status for {pname}",
                     options,
                     index=options.index(current_status),
                     key=f"capt_{pid}_{game_id}",
