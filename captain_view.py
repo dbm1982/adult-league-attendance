@@ -277,6 +277,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     st.session_state.attendance_df = updated
                     _clear_game_pending(game_id)
                     st.success("Attendance for this game has been saved.")
+                    st.rerun()   # ⭐ THIS IS THE FIX
 
         st.markdown("---")
 
