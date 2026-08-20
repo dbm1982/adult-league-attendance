@@ -190,14 +190,13 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             st.markdown("#### Override Player Status")
 
             # -----------------------------
-            # FULL-SECTION COLOR WRAP (fake but effective)
+            # FULL-SECTION COLOR WRAP
             # -----------------------------
             for _, p in team_players.iterrows():
                 pid = p["player_id"]
                 pname = p["player_name"]
                 current_status = normalize_status(att_lookup.get((pid, game_id), "No Response"))
 
-                # Strong header colors
                 header_color = {
                     "Yes": "#2e7d32",
                     "No": "#c62828",
@@ -205,7 +204,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     "No Response": "#616161",
                 }[current_status]
 
-                # Light background colors for the whole section
                 bg_color = {
                     "Yes": "#C8E6C9",
                     "No": "#F8D7DA",
@@ -213,7 +211,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     "No Response": "#E0E0E0",
                 }[current_status]
 
-                # Entire colored box
                 st.markdown(
                     f"""
                     <div style="
@@ -238,7 +235,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     unsafe_allow_html=True
                 )
 
-                # Radio buttons (visually inside the box)
                 new_status = st.radio(
                     "",
                     ["Yes", "No", "Maybe", "No Response"],
@@ -247,7 +243,11 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     horizontal=True,
                 )
 
-                # Colored separator line under radio buttons
+                # ⭐ One‑click saving fix: detect radio change → rerun immediately
+                if st.session_state.pending_updates.get((pid, game_id)) != new_status:
+                    st.session_state.pending_updates[(pid, game_id)] = new_status
+                    st.rerun()
+
                 st.markdown(
                     f"""
                     <div style="
@@ -262,8 +262,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     unsafe_allow_html=True
                 )
 
-                st.session_state.pending_updates[(pid, game_id)] = new_status
-
             # Save button
             has_unsaved = any(
                 (gid == game_id) for (_, gid) in st.session_state.pending_updates.keys()
@@ -277,7 +275,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     st.session_state.attendance_df = updated
                     _clear_game_pending(game_id)
                     st.success("Attendance for this game has been saved.")
-                    st.rerun()   # ⭐ THIS IS THE FIX
+                    st.rerun()
 
         st.markdown("---")
 
