@@ -1,0 +1,12 @@
+name: Keep Streamlit Awake
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # every 5 minutes
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Streamlit app
+        run: curl -s https://adult-league-attendance-kb768k8aqwvdpknbz2wk8k.streamlit.app/
