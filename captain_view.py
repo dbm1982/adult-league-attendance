@@ -104,7 +104,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
         # -----------------------------
-        # CLEAN STREAMLIT HEADER (NO HTML)
+        # CLEAN STREAMLIT HEADER WITH COLOR
         # -----------------------------
         st.subheader(f"{day_name}, {pretty_date}")
 
@@ -112,7 +112,14 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         st.write(f"**🆚 Match:** {captain_team_name} vs {opponent}")
         st.write(f"**📍 Field:** {field}")
 
-        st.info(f"**Playing:** {yes_count}   |   **Undecided:** {undecided_count}")
+        # Color accents using Streamlit markdown
+        st.markdown(
+            f"""
+**<span style='color:#2e7d32;'>Playing:</span> {yes_count}**  
+**<span style='color:#f57c00;'>Undecided:</span> {undecided_count}**
+""",
+            unsafe_allow_html=True,
+        )
 
         # -----------------------------
         # DETAILS EXPANDER
@@ -124,16 +131,19 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             cols = st.columns(4)
             labels = ["Yes", "No", "Maybe", "No Response"]
             colors = {
-                "Yes": "green",
-                "No": "red",
-                "Maybe": "orange",
-                "No Response": "gray",
+                "Yes": "#2e7d32",
+                "No": "#c62828",
+                "Maybe": "#f57c00",
+                "No Response": "#616161",
             }
 
             for col, label in zip(cols, labels):
                 with col:
                     count = len(buckets[label])
-                    st.write(f"**{label} ({count})**")
+                    st.markdown(
+                        f"<span style='color:{colors[label]}; font-weight:bold;'>{label} ({count})</span>",
+                        unsafe_allow_html=True,
+                    )
                     if buckets[label]:
                         for name in sorted(buckets[label]):
                             st.write(f"- {name}")
@@ -144,14 +154,24 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             st.markdown("#### Override Player Status")
 
             # -----------------------------
-            # STREAMLIT OVERRIDE BLOCKS
+            # STREAMLIT OVERRIDE BLOCKS WITH COLOR
             # -----------------------------
             for _, p in team_players.iterrows():
                 pid = p["player_id"]
                 pname = p["player_name"]
                 current_status = normalize_status(att_lookup.get((pid, game_id), "No Response"))
 
-                st.write(f"**{pname}**")
+                accent = {
+                    "Yes": "#2e7d32",
+                    "No": "#c62828",
+                    "Maybe": "#f57c00",
+                    "No Response": "#616161",
+                }[current_status]
+
+                st.markdown(
+                    f"<span style='color:{accent}; font-weight:bold;'>{pname}</span>",
+                    unsafe_allow_html=True,
+                )
 
                 new_status = st.radio(
                     f"Status for {pname}",
