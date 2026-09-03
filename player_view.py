@@ -121,23 +121,23 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
             horizontal=True,
         )
 
-        # ⭐ One-click saving fix: detect radio change → rerun immediately
+        # ⭐ One-click saving fix
         if st.session_state.pending_updates.get((player_id, game_id)) != new_status:
             st.session_state.pending_updates[(player_id, game_id)] = new_status
             st.rerun()
 
-        # ⭐ Improved color palette
+        # ⭐ Improved color palette (MUCH softer orange)
         bg_color = {
-            "Yes": "#A5D6A7",        # deeper green (no yellow tint)
-            "No": "#F2B8B5",         # strong red
-            "Maybe": "#FFCC80",      # clean orange
-            "No Response": "#E0E0E0" # neutral gray
+            "Yes": "#D0ECD2",        # soft green
+            "No": "#F4C7C3",         # soft red
+            "Maybe": "#FFE8C6",      # **soft peach**, readable
+            "No Response": "#E6E6E6" # neutral gray
         }[new_status]
 
         text_color = {
             "Yes": "#1E8E3E",        # strong green
             "No": "#D93025",         # strong red
-            "Maybe": "#F9AB00",      # clean orange
+            "Maybe": "#B46900",      # **dark amber**, readable
             "No Response": "#5F6368" # neutral gray
         }[new_status]
 
