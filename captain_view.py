@@ -104,50 +104,50 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
         # -----------------------------
-        # CLEAN + MODERN HEADER
+        # CLEAN + MODERN HEADER (FLUSH-LEFT HTML)
         # -----------------------------
         st.markdown(
-            f"""
-            <div style="
-                padding:16px;
-                background-color:#FAFAFA;
-                border:1px solid #E0E0E0;
-                border-radius:12px;
-                margin-bottom:16px;
-                color:var(--text-color);
-                line-height:1.45;
-            ">
-                <div style="font-weight:700; font-size:18px; margin-bottom:6px;">
-                    ⚽ {day_name}, {pretty_date}
-                </div>
+f"""
+<div style="
+    padding:16px;
+    background-color:#FAFAFA;
+    border:1px solid #E0E0E0;
+    border-radius:12px;
+    margin-bottom:16px;
+    color:var(--text-color);
+    line-height:1.45;
+">
+    <div style="font-weight:700; font-size:18px; margin-bottom:6px;">
+        ⚽ {day_name}, {pretty_date}
+    </div>
 
-                <div style="font-size:15px; font-weight:600; margin-bottom:2px;">
-                    <span style="color:#1976D2;">🕒</span> {pretty_time}
-                </div>
+    <div style="font-size:15px; font-weight:600; margin-bottom:2px;">
+        <span style="color:#1976D2;">🕒</span> {pretty_time}
+    </div>
 
-                <div style="font-size:15px; font-weight:600; margin-bottom:2px;">
-                    <span style="color:#7B1FA2;">🆚</span> {captain_team_name} vs {opponent}
-                </div>
+    <div style="font-size:15px; font-weight:600; margin-bottom:2px;">
+        <span style="color:#7B1FA2;">🆚</span> {captain_team_name} vs {opponent}
+    </div>
 
-                <div style="font-size:14px; opacity:0.85; margin-bottom:10px;">
-                    <span style="color:#00897B;">📍</span> Field <strong>{field}</strong>
-                </div>
+    <div style="font-size:14px; opacity:0.85; margin-bottom:10px;">
+        <span style="color:#00897B;">📍</span> Field <strong>{field}</strong>
+    </div>
 
-                <div style="
-                    margin-top:10px;
-                    font-size:14px;
-                    padding:8px 10px;
-                    background-color:#FFFFFF;
-                    border-radius:10px;
-                    border:1px solid #E0E0E0;
-                ">
-                    <span style="color:#2e7d32; font-weight:700;">Playing: {yes_count}</span>
-                    &nbsp;•&nbsp;
-                    <span style="color:#f57c00; font-weight:700;">Undecided: {undecided_count}</span>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
+    <div style="
+        margin-top:10px;
+        font-size:14px;
+        padding:8px 10px;
+        background-color:#FFFFFF;
+        border-radius:10px;
+        border:1px solid #E0E0E0;
+    ">
+        <span style="color:#2e7d32; font-weight:700;">Playing: {yes_count}</span>
+        &nbsp;•&nbsp;
+        <span style="color:#f57c00; font-weight:700;">Undecided: {undecided_count}</span>
+    </div>
+</div>
+""",
+unsafe_allow_html=True
         )
 
         # -----------------------------
@@ -155,7 +155,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         # -----------------------------
         with st.expander("Details"):
 
-            # Summary block
             st.markdown(
 f"""
 <div style="
@@ -173,9 +172,8 @@ f"""
 </div>
 """,
 unsafe_allow_html=True
-        )
+            )
 
-            # Attendance Breakdown
             st.markdown("#### Attendance Breakdown")
 
             cols = st.columns(4)
@@ -203,9 +201,8 @@ unsafe_allow_html=True
             st.markdown("---")
             st.markdown("#### Override Player Status")
 
-
             # -----------------------------
-            # CLEAN + COLOR ACCENT OVERRIDE BLOCKS
+            # CLEAN OVERRIDE BLOCKS (FLUSH-LEFT HTML)
             # -----------------------------
             for _, p in team_players.iterrows():
                 pid = p["player_id"]
@@ -220,18 +217,18 @@ unsafe_allow_html=True
                 }[current_status]
 
                 st.markdown(
-                    f"""
-                    <div style="
-                        padding:10px 14px;
-                        background-color:#FAFAFA;
-                        border-left:6px solid {accent};
-                        border-radius:8px;
-                        margin-bottom:12px;
-                    ">
-                        <strong style="color:{accent};">{pname}</strong>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
+f"""
+<div style="
+    padding:10px 14px;
+    background-color:#FAFAFA;
+    border-left:6px solid {accent};
+    border-radius:8px;
+    margin-bottom:12px;
+">
+    <strong style="color:{accent};">{pname}</strong>
+</div>
+""",
+unsafe_allow_html=True
                 )
 
                 new_status = st.radio(
