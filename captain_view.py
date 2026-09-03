@@ -104,7 +104,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
         # -----------------------------
-        # MODERN HEADER CARD
+        # MODERN CAPTAIN HEADER CARD
         # -----------------------------
         st.markdown(
             f"""
@@ -113,23 +113,27 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                 background-color:var(--background-color);
                 border:1px solid var(--secondary-background-color);
                 border-radius:14px;
-                margin-bottom:14px;
+                margin-bottom:16px;
                 color:var(--text-color);
+                line-height:1.5;
             ">
                 <div style="font-weight:700; font-size:18px; margin-bottom:4px;">
                     ⚽ {day_name}, {pretty_date}
                 </div>
+        
                 <div style="font-size:16px; font-weight:600; margin-bottom:2px;">
                     🕒 {pretty_time}
                 </div>
+        
                 <div style="font-size:16px; font-weight:600; margin-bottom:2px;">
                     🆚 {captain_team_name} vs {opponent}
                 </div>
-                <div style="font-size:14px; opacity:0.8; margin-bottom:10px;">
+        
+                <div style="font-size:14px; opacity:0.85; margin-bottom:10px;">
                     📍 Field <strong>{field}</strong>
                 </div>
-
-                <div style="margin-top:8px;">
+        
+                <div style="margin-top:10px; font-size:15px;">
                     <span style="color:#2e7d32; font-weight:700;">Playing: {yes_count}</span>
                     &nbsp;•&nbsp;
                     <span style="color:#f57c00; font-weight:700;">Undecided: {undecided_count}</span>
@@ -138,6 +142,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             """,
             unsafe_allow_html=True
         )
+
 
         # -----------------------------
         # DETAILS EXPANDER
