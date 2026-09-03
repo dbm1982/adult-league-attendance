@@ -57,7 +57,7 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
     }
 
     # -----------------------------
-    # Render each game as a compact card
+    # Render each game
     # -----------------------------
     for _, g in upcoming_games.iterrows():
 
@@ -79,7 +79,7 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         current_status = normalize_status(att_lookup.get((player_id, game_id), "No Response"))
 
         # -----------------------------
-        # GAME CARD (all HTML inside ONE block)
+        # GAME CARD
         # -----------------------------
         st.markdown(
             f"""
@@ -109,10 +109,8 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
             unsafe_allow_html=True
         )
 
-        # Instruction line (NO HTML)
         st.markdown("**Choose your status:**")
 
-        # Status options (compact, horizontal)
         options = ["Yes", "No", "Maybe", "No Response"]
 
         new_status = st.radio(
@@ -123,10 +121,34 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
             horizontal=True,
         )
 
-        st.session_state.pending_updates[(player_id, game_id)] = new_status
+        # ⭐ One-click saving fix: detect radio change → rerun immediately
+        if st.session_state.pending_updates.get((player_id, game_id)) != new_status:
+            st.session_state.pending_updates[(player_id, game_id)] = new_status
+            st.rerun()
+
+        # ⭐ Color feedback bar under radio buttons
+        selected_color = {
+            "Yes": "#2e7d32",       # green
+            "No": "#c62828",        # red
+            "Maybe": "#f57c00",     # orange
+            "No Response": "#616161"
+        }[new_status]
+
+        st.markdown(
+            f"""
+            <div style="
+                height:6px;
+                background-color:{selected_color};
+                margin-top:-10px;
+                margin-bottom:12px;
+                border-radius:4px;
+            "></div>
+            """,
+            unsafe_allow_html=True
+        )
 
         # -----------------------------
-        # UNSAVED + SAVE (compact)
+        # UNSAVED + SAVE
         # -----------------------------
         has_unsaved = any(
             (pid == player_id and gid == game_id)
@@ -158,6 +180,7 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
                 st.session_state.attendance_df = updated
                 _clear_player_pending(player_id, game_id)
                 st.success("Saved.")
+                st.rerun()
 
         st.markdown("---")
 
