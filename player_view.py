@@ -126,25 +126,35 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
             st.session_state.pending_updates[(player_id, game_id)] = new_status
             st.rerun()
 
-        # ⭐ Full background shading for selected option
+        # ⭐ Improved color palette
         bg_color = {
-            "Yes": "#C8E6C9",        # light green
-            "No": "#F8D7DA",         # light red
-            "Maybe": "#FFE0B2",      # light orange
-            "No Response": "#E0E0E0" # light gray
+            "Yes": "#A5D6A7",        # deeper green (no yellow tint)
+            "No": "#F2B8B5",         # strong red
+            "Maybe": "#FFCC80",      # clean orange
+            "No Response": "#E0E0E0" # neutral gray
         }[new_status]
 
+        text_color = {
+            "Yes": "#1E8E3E",        # strong green
+            "No": "#D93025",         # strong red
+            "Maybe": "#F9AB00",      # clean orange
+            "No Response": "#5F6368" # neutral gray
+        }[new_status]
+
+        # ⭐ Selected status box
         st.markdown(
             f"""
             <div style="
                 background-color:{bg_color};
-                padding:10px;
-                border-radius:8px;
+                padding:12px;
+                border-radius:10px;
                 margin-top:6px;
                 margin-bottom:12px;
-                border:1px solid var(--secondary-background-color);
+                border:2px solid {text_color};
             ">
-                <strong style="color:var(--text-color);">Selected: {new_status}</strong>
+                <strong style="color:{text_color}; font-size:16px;">
+                    Selected: {new_status}
+                </strong>
             </div>
             """,
             unsafe_allow_html=True
@@ -153,7 +163,6 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         # -----------------------------
         # UNSAVED + SAVE
         # -----------------------------
-        # ⭐ Only show unsaved if the radio selection differs from what is saved
         has_unsaved = (new_status != current_status)
 
         if has_unsaved:
