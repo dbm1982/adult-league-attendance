@@ -157,23 +157,23 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
             # Summary block
             st.markdown(
-                f"""
-                <div style="
-                    padding:10px 14px;
-                    background-color:#FFFFFF;
-                    border:1px solid #E0E0E0;
-                    border-radius:10px;
-                    margin-bottom:12px;
-                    font-size:15px;
-                    color:var(--text-color);
-                ">
-                    <strong style="color:#1976D2;">Game Summary</strong><br>
-                    <span style="color:#2e7d32; font-weight:700;">Playing: {yes_count}</span><br>
-                    <span style="color:#f57c00; font-weight:700;">Undecided: {undecided_count}</span>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+f"""
+<div style="
+    padding:10px 14px;
+    background-color:#FFFFFF;
+    border:1px solid #E0E0E0;
+    border-radius:10px;
+    margin-bottom:12px;
+    font-size:15px;
+    color:var(--text-color);
+">
+    <strong style="color:#1976D2;">Game Summary</strong><br>
+    <span style="color:#2e7d32; font-weight:700;">Playing: {yes_count}</span><br>
+    <span style="color:#f57c00; font-weight:700;">Undecided: {undecided_count}</span>
+</div>
+""",
+unsafe_allow_html=True
+        )
 
             # Attendance Breakdown
             st.markdown("#### Attendance Breakdown")
