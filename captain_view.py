@@ -94,7 +94,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         yes_count = len(buckets["Yes"])
         undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
-        # HEADER
+        # HEADER (flush-left HTML)
         st.markdown(
 f"""
 <div style="
@@ -139,9 +139,10 @@ f"""
 unsafe_allow_html=True
         )
 
+        # EXPANDER
         with st.expander("Details"):
 
-            # SUMMARY
+            # SUMMARY (flush-left HTML)
             st.markdown(
 f"""
 <div style="
@@ -188,7 +189,7 @@ unsafe_allow_html=True
             st.markdown("---")
             st.markdown("#### Override Player Status")
 
-            # OVERRIDE BLOCKS
+            # OVERRIDE BLOCKS (flush-left HTML)
             for _, p in team_players.iterrows():
                 pid = p["player_id"]
                 pname = p["player_name"]
