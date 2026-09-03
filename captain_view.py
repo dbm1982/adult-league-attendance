@@ -104,29 +104,32 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
         # -----------------------------
-        # HEADER BOX
+        # MODERN HEADER CARD
         # -----------------------------
         st.markdown(
             f"""
             <div style="
-                padding:12px 16px;
+                padding:16px;
                 background-color:var(--background-color);
                 border:1px solid var(--secondary-background-color);
-                border-radius:10px;
-                margin-bottom:12px;
-                font-size:16px;
+                border-radius:14px;
+                margin-bottom:14px;
                 color:var(--text-color);
             ">
-                <div style="font-weight:600;">
-                    {day_name}, {pretty_date} — {pretty_time}
+                <div style="font-weight:700; font-size:18px; margin-bottom:4px;">
+                    ⚽ {day_name}, {pretty_date}
                 </div>
-                <div style="font-weight:600;">
-                    {captain_team_name} vs {opponent}
+                <div style="font-size:16px; font-weight:600; margin-bottom:2px;">
+                    🕒 {pretty_time}
                 </div>
-                <div style="opacity:0.8;">
-                    Field <strong>{field}</strong>
+                <div style="font-size:16px; font-weight:600; margin-bottom:2px;">
+                    🆚 {captain_team_name} vs {opponent}
                 </div>
-                <div style="margin-top:6px;">
+                <div style="font-size:14px; opacity:0.8; margin-bottom:10px;">
+                    📍 Field <strong>{field}</strong>
+                </div>
+
+                <div style="margin-top:8px;">
                     <span style="color:#2e7d32; font-weight:700;">Playing: {yes_count}</span>
                     &nbsp;•&nbsp;
                     <span style="color:#f57c00; font-weight:700;">Undecided: {undecided_count}</span>
@@ -145,12 +148,12 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             st.markdown(
                 f"""
                 <div style="
-                    padding:8px 12px;
+                    padding:10px 14px;
                     background-color:var(--background-color);
                     border:1px solid var(--secondary-background-color);
-                    border-radius:6px;
-                    margin-bottom:10px;
-                    font-size:14px;
+                    border-radius:10px;
+                    margin-bottom:12px;
+                    font-size:15px;
                     color:var(--text-color);
                 ">
                     <strong>Game Summary</strong><br>
@@ -190,7 +193,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             st.markdown("#### Override Player Status")
 
             # -----------------------------
-            # FULL-SECTION COLOR WRAP
+            # MODERN PLAYER STATUS BLOCKS
             # -----------------------------
             for _, p in team_players.iterrows():
                 pid = p["player_id"]
@@ -215,18 +218,19 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     f"""
                     <div style="
                         background-color:{bg_color};
-                        border-radius:10px;
+                        border-radius:12px;
                         padding:0px;
-                        margin-bottom:14px;
+                        margin-bottom:18px;
                         border:1px solid var(--secondary-background-color);
                     ">
                         <div style="
                             background-color:{header_color};
                             color:white;
-                            padding:10px 14px;
+                            padding:12px 16px;
                             font-weight:600;
-                            border-top-left-radius:10px;
-                            border-top-right-radius:10px;
+                            border-top-left-radius:12px;
+                            border-top-right-radius:12px;
+                            font-size:15px;
                         ">
                             {pname}
                         </div>
@@ -243,7 +247,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                     horizontal=True,
                 )
 
-                # ⭐ One‑click saving fix: detect radio change → rerun immediately
+                # ⭐ One‑click saving fix
                 if st.session_state.pending_updates.get((pid, game_id)) != new_status:
                     st.session_state.pending_updates[(pid, game_id)] = new_status
                     st.rerun()
@@ -254,9 +258,9 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
                         height:4px;
                         background-color:{header_color};
                         margin-top:-8px;
-                        margin-bottom:12px;
-                        border-bottom-left-radius:10px;
-                        border-bottom-right-radius:10px;
+                        margin-bottom:16px;
+                        border-bottom-left-radius:12px;
+                        border-bottom-right-radius:12px;
                     "></div>
                     """,
                     unsafe_allow_html=True
