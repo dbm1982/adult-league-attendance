@@ -39,7 +39,27 @@ games_df = st.session_state.games_df
 attendance_df = st.session_state.attendance_df
 teams_df = st.session_state.teams_df
 
-st.title("South Shore Coed Adult Soccer League Portal")
+# ⭐ Modern App Header Bar (Option A)
+st.markdown(
+    """
+    <div style="
+        padding: 12px 18px;
+        background-color: #1a73e8;
+        border-radius: 8px;
+        margin-bottom: 18px;
+    ">
+        <h2 style="
+            color: white;
+            margin: 0;
+            font-weight: 600;
+            font-size: 22px;
+        ">
+            South Shore Coed Adult Soccer League Portal
+        </h2>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 active_team_ids = sorted(
     teams_df[teams_df["active"] == True]["team_id"].unique()
