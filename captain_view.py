@@ -203,6 +203,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             st.markdown("---")
             st.markdown("#### Override Player Status")
 
+
             # -----------------------------
             # CLEAN + COLOR ACCENT OVERRIDE BLOCKS
             # -----------------------------
