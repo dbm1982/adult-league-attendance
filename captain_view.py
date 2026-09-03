@@ -103,54 +103,54 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         yes_count = len(buckets["Yes"])
         undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
-    # -----------------------------
-    # PERFECTLY RENDERED CAPTAIN HEADER CARD
-    # -----------------------------
-    st.markdown(
-        f"""
-        <div style="
-            padding:18px;
-            background-color:#F7F7F7;
-            border:1px solid var(--secondary-background-color);
-            border-radius:14px;
-            margin-bottom:18px;
-            color:var(--text-color);
-            line-height:1.55;
-            box-shadow:0px 1px 3px rgba(0,0,0,0.08);
-        ">
-            <div style="font-weight:700; font-size:18px; margin-bottom:6px;">
-                ⚽ {day_name}, {pretty_date}
-            </div>
-    
-            <div style="font-size:16px; font-weight:600; margin-bottom:4px;">
-                🕒 {pretty_time}
-            </div>
-    
-            <div style="font-size:16px; font-weight:600; margin-bottom:4px;">
-                🆚 {captain_team_name} vs {opponent}
-            </div>
-    
-            <div style="font-size:14px; opacity:0.85; margin-bottom:12px;">
-                📍 Field <strong>{field}</strong>
-            </div>
-    
-            <div style="
-                margin-top:10px;
-                font-size:15px;
-                padding:10px 12px;
-                background-color:#FFFFFF;
-                border-radius:10px;
-                border:1px solid var(--secondary-background-color);
-            ">
-                <span style="color:#2e7d32; font-weight:700;">Playing: {yes_count}</span>
-                &nbsp;•&nbsp;
-                <span style="color:#f57c00; font-weight:700;">Undecided: {undecided_count}</span>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
 
+        # -----------------------------
+        # MODERN CAPTAIN HEADER CARD
+        # -----------------------------
+        st.markdown(
+            f"""
+            <div style="
+                padding:18px;
+                background-color:#F7F7F7;
+                border:1px solid var(--secondary-background-color);
+                border-radius:14px;
+                margin-bottom:18px;
+                color:var(--text-color);
+                line-height:1.55;
+                box-shadow:0px 1px 3px rgba(0,0,0,0.08);
+            ">
+                <div style="font-weight:700; font-size:18px; margin-bottom:6px;">
+                    ⚽ {day_name}, {pretty_date}
+                </div>
+
+                <div style="font-size:16px; font-weight:600; margin-bottom:4px;">
+                    🕒 {pretty_time}
+                </div>
+
+                <div style="font-size:16px; font-weight:600; margin-bottom:4px;">
+                    🆚 {captain_team_name} vs {opponent}
+                </div>
+
+                <div style="font-size:14px; opacity:0.85; margin-bottom:12px;">
+                    📍 Field <strong>{field}</strong>
+                </div>
+
+                <div style="
+                    margin-top:10px;
+                    font-size:15px;
+                    padding:10px 12px;
+                    background-color:#FFFFFF;
+                    border-radius:10px;
+                    border:1px solid var(--secondary-background-color);
+                ">
+                    <span style="color:#2e7d32; font-weight:700;">Playing: {yes_count}</span>
+                    &nbsp;•&nbsp;
+                    <span style="color:#f57c00; font-weight:700;">Undecided: {undecided_count}</span>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
         # -----------------------------
         # DETAILS EXPANDER
@@ -204,120 +204,3 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
             st.markdown("---")
             st.markdown("#### Override Player Status")
-
-                # -----------------------------
-                # MODERN PLAYER STATUS BLOCKS
-                # -----------------------------
-                for _, p in team_players.iterrows():
-                    pid = p["player_id"]
-                    pname = p["player_name"]
-                    current_status = normalize_status(att_lookup.get((pid, game_id), "No Response"))
-    
-                    header_color = {
-                        "Yes": "#2e7d32",
-                        "No": "#c62828",
-                        "Maybe": "#f57c00",
-                        "No Response": "#616161",
-                    }[current_status]
-    
-                    bg_color = {
-                        "Yes": "#C8E6C9",
-                        "No": "#F8D7DA",
-                        "Maybe": "#FFE0B2",
-                        "No Response": "#E0E0E0",
-                    }[current_status]
-    
-                    st.markdown(
-                        f"""
-                        <div style="
-                            background-color:{bg_color};
-                            border-radius:12px;
-                            padding:0px;
-                            margin-bottom:18px;
-                            border:1px solid var(--secondary-background-color);
-                        ">
-                            <div style="
-                                background-color:{header_color};
-                                color:white;
-                                padding:12px 16px;
-                                font-weight:600;
-                                border-top-left-radius:12px;
-                                border-top-right-radius:12px;
-                                font-size:15px;
-                            ">
-                                {pname}
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-
-                new_status = st.radio(
-                    "",
-                    ["Yes", "No", "Maybe", "No Response"],
-                    index=["Yes", "No", "Maybe", "No Response"].index(current_status),
-                    key=f"capt_{pid}_{game_id}",
-                    horizontal=True,
-                )
-
-                # ⭐ One‑click saving fix
-                if st.session_state.pending_updates.get((pid, game_id)) != new_status:
-                    st.session_state.pending_updates[(pid, game_id)] = new_status
-                    st.rerun()
-
-                st.markdown(
-                    f"""
-                    <div style="
-                        height:4px;
-                        background-color:{header_color};
-                        margin-top:-8px;
-                        margin-bottom:16px;
-                        border-bottom-left-radius:12px;
-                        border-bottom-right-radius:12px;
-                    "></div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-            # Save button
-            has_unsaved = any(
-                (gid == game_id) for (_, gid) in st.session_state.pending_updates.keys()
-            )
-
-            if has_unsaved:
-                st.warning("Unsaved changes for this game.")
-                if st.button(f"Save changes for {pretty_date} {pretty_time}", key=f"save_capt_{game_id}"):
-                    _apply_game_updates(game_id, attendance_df)
-                    updated = commit_changes(attendance_df)
-                    st.session_state.attendance_df = updated
-                    _clear_game_pending(game_id)
-                    st.success("Attendance for this game has been saved.")
-                    st.rerun()
-
-        st.markdown("---")
-
-
-def _apply_game_updates(game_id, attendance_df):
-    for (pid, gid), status in list(st.session_state.pending_updates.items()):
-        if gid != game_id:
-            continue
-
-        mask = (attendance_df["player_id"] == pid) & (attendance_df["game_id"] == gid)
-
-        if mask.any():
-            attendance_df.loc[mask, "status"] = status
-            attendance_df.loc[mask, "updated_at"] = datetime.now(eastern).isoformat()
-        else:
-            attendance_df.loc[len(attendance_df)] = {
-                "player_id": pid,
-                "game_id": gid,
-                "status": status,
-                "updated_at": datetime.now(eastern).isoformat(),
-            }
-
-
-def _clear_game_pending(game_id):
-    for key in list(st.session_state.pending_updates.keys()):
-        pid, gid = key
-        if gid == game_id:
-            del st.session_state.pending_updates[key]
