@@ -104,36 +104,44 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
         # -----------------------------
-        # MODERN CAPTAIN HEADER CARD
+        # PERFECTLY MATCHED CAPTAIN HEADER CARD
         # -----------------------------
         st.markdown(
             f"""
             <div style="
-                padding:16px;
-                background-color:var(--background-color);
+                padding:18px;
+                background-color:#F7F7F7;   /* subtle shading like Player View */
                 border:1px solid var(--secondary-background-color);
                 border-radius:14px;
-                margin-bottom:16px;
+                margin-bottom:18px;
                 color:var(--text-color);
-                line-height:1.5;
+                line-height:1.55;
+                box-shadow:0px 1px 3px rgba(0,0,0,0.08);
             ">
-                <div style="font-weight:700; font-size:18px; margin-bottom:4px;">
+                <div style="font-weight:700; font-size:18px; margin-bottom:6px;">
                     ⚽ {day_name}, {pretty_date}
                 </div>
         
-                <div style="font-size:16px; font-weight:600; margin-bottom:2px;">
+                <div style="font-size:16px; font-weight:600; margin-bottom:4px;">
                     🕒 {pretty_time}
                 </div>
         
-                <div style="font-size:16px; font-weight:600; margin-bottom:2px;">
+                <div style="font-size:16px; font-weight:600; margin-bottom:4px;">
                     🆚 {captain_team_name} vs {opponent}
                 </div>
         
-                <div style="font-size:14px; opacity:0.85; margin-bottom:10px;">
+                <div style="font-size:14px; opacity:0.85; margin-bottom:12px;">
                     📍 Field <strong>{field}</strong>
                 </div>
         
-                <div style="margin-top:10px; font-size:15px;">
+                <div style="
+                    margin-top:10px;
+                    font-size:15px;
+                    padding:10px 12px;
+                    background-color:#FFFFFF;
+                    border-radius:10px;
+                    border:1px solid var(--secondary-background-color);
+                ">
                     <span style="color:#2e7d32; font-weight:700;">Playing: {yes_count}</span>
                     &nbsp;•&nbsp;
                     <span style="color:#f57c00; font-weight:700;">Undecided: {undecided_count}</span>
@@ -142,6 +150,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             """,
             unsafe_allow_html=True
         )
+
 
 
         # -----------------------------
