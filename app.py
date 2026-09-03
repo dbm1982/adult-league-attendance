@@ -11,7 +11,7 @@ from captain_view import captain_view
 
 st.set_page_config(page_title="South Shore Coed Adult Soccer League Portal", layout="wide")
 
-# Global app CSS: mobile-friendly, still clean on desktop
+# Global app CSS: mobile-friendly, still clean on desktop, fix header clipping
 st.markdown(
     """
     <style>
@@ -19,13 +19,29 @@ st.markdown(
     .main > div {
         max-width: 900px;
         margin: 0 auto;
-        padding-top: 8px;
     }
 
-    /* Reduce default Streamlit padding */
+    /* Remove default top padding so header isn't clipped */
     .block-container {
-        padding-top: 0.5rem;
+        padding-top: 0 !important;
         padding-bottom: 2rem;
+    }
+
+    /* App header safe margin */
+    .app-header {
+        margin-top: 14px !important;
+    }
+
+    @media (max-width: 600px) {
+        .main > div {
+            max-width: 100%;
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+
+        .app-header {
+            margin-top: 18px !important;
+        }
     }
 
     /* Make selectboxes and buttons feel more app-like */
@@ -50,14 +66,7 @@ st.markdown(
         font-size: 14px;
     }
 
-    /* Mobile tweaks */
     @media (max-width: 600px) {
-        .main > div {
-            max-width: 100%;
-            padding-left: 8px;
-            padding-right: 8px;
-        }
-
         .stTabs [role="tab"] {
             font-size: 13px;
             padding: 6px 10px;
@@ -96,20 +105,23 @@ games_df = st.session_state.games_df
 attendance_df = st.session_state.attendance_df
 teams_df = st.session_state.teams_df
 
-# App header bar
+# App header bar (with class to avoid clipping)
 st.markdown(
     """
-    <div style="
-        padding: 12px 18px;
+    <div class="app-header" style="
+        width: 100%;
+        padding: 14px 20px;
         background-color: #1a73e8;
-        border-radius: 8px;
+        border-radius: 0 0 8px 8px;
         margin-bottom: 14px;
+        box-sizing: border-box;
     ">
         <h2 style="
             color: white;
             margin: 0;
             font-weight: 600;
             font-size: 22px;
+            text-align: center;
         ">
             South Shore Coed Adult Soccer League Portal
         </h2>
