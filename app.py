@@ -11,7 +11,64 @@ from captain_view import captain_view
 
 st.set_page_config(page_title="South Shore Coed Adult Soccer League Portal", layout="wide")
 
-# Cache sheets
+# Global app CSS: mobile-friendly, still clean on desktop
+st.markdown(
+    """
+    <style>
+    /* Center content with a max width for desktop, full width on mobile */
+    .main > div {
+        max-width: 900px;
+        margin: 0 auto;
+        padding-top: 8px;
+    }
+
+    /* Reduce default Streamlit padding */
+    .block-container {
+        padding-top: 0.5rem;
+        padding-bottom: 2rem;
+    }
+
+    /* Make selectboxes and buttons feel more app-like */
+    .stSelectbox, .stButton button {
+        border-radius: 8px !important;
+        min-height: 40px;
+    }
+
+    .stButton button {
+        width: 100%;
+    }
+
+    /* Tabs: tighter, more app-like */
+    .stTabs [role="tablist"] {
+        justify-content: center;
+    }
+
+    .stTabs [role="tab"] {
+        padding: 6px 14px;
+        border-radius: 999px;
+        margin: 0 4px;
+        font-size: 14px;
+    }
+
+    /* Mobile tweaks */
+    @media (max-width: 600px) {
+        .main > div {
+            max-width: 100%;
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+
+        .stTabs [role="tab"] {
+            font-size: 13px;
+            padding: 6px 10px;
+        }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Cache sheets (single load per session, no repeated pulls)
 if "players_df" not in st.session_state:
     st.session_state.players_df = load_players_df()
 
@@ -39,14 +96,14 @@ games_df = st.session_state.games_df
 attendance_df = st.session_state.attendance_df
 teams_df = st.session_state.teams_df
 
-# ⭐ Modern App Header Bar (Option A)
+# App header bar
 st.markdown(
     """
     <div style="
         padding: 12px 18px;
         background-color: #1a73e8;
         border-radius: 8px;
-        margin-bottom: 18px;
+        margin-bottom: 14px;
     ">
         <h2 style="
             color: white;
@@ -65,18 +122,20 @@ active_team_ids = sorted(
     teams_df[teams_df["active"] == True]["team_id"].unique()
 )
 
-# Selectors
+# Selectors (mobile-friendly, still fine on desktop)
 if st.session_state.selected_team is None or st.session_state.selected_player_id is None:
 
     selector_container = st.container()
 
     with selector_container:
 
+        st.markdown("#### Select your team and player")
+
         team_id = st.selectbox(
             "Team",
             active_team_ids,
             index=None,
-            placeholder="Select a team"
+            placeholder="Select a team",
         )
 
         if team_id:
@@ -89,7 +148,6 @@ if st.session_state.selected_team is None or st.session_state.selected_player_id
                 & (~players_df["team_id"].str.contains("Floaters"))
             ]
 
-            # Use player_id as the actual value
             player_name_to_id = {
                 row["player_name"]: row["player_id"]
                 for _, row in team_players.iterrows()
@@ -99,7 +157,7 @@ if st.session_state.selected_team is None or st.session_state.selected_player_id
                 "Player",
                 list(player_name_to_id.keys()),
                 index=None,
-                placeholder="Select a player"
+                placeholder="Select a player",
             )
 
             if player_name:
@@ -116,7 +174,7 @@ if st.session_state.selected_team and st.session_state.selected_player_id:
 
     player_name = player_row["player_name"]
 
-    badge_col1, badge_col2 = st.columns([0.85, 0.15])
+    badge_col1, badge_col2 = st.columns([0.8, 0.2])
 
     with badge_col1:
         st.markdown(
@@ -125,7 +183,7 @@ if st.session_state.selected_team and st.session_state.selected_player_id:
                 background-color:#eef2f7;
                 padding:10px 14px;
                 border-radius:8px;
-                margin-bottom:15px;
+                margin-bottom:12px;
                 font-size:15px;
                 font-weight:600;
             ">
@@ -160,7 +218,7 @@ player_row = player_row.iloc[0]
 player_id = player_row["player_id"]
 is_captain = bool(player_row["is_captain"])
 
-# Render views
+# Views: tabs already behave well on mobile, we just styled them
 if is_captain:
     tab_player, tab_captain = st.tabs(["Player View", "Captain View"])
 else:
@@ -172,7 +230,7 @@ with tab_player:
         games_df=games_df,
         attendance_df=st.session_state.attendance_df,
         player_id=player_id,
-        commit_changes=commit_attendance_changes
+        commit_changes=commit_attendance_changes,
     )
 
 if is_captain:
@@ -182,5 +240,5 @@ if is_captain:
             games_df=games_df,
             attendance_df=st.session_state.attendance_df,
             team_id=st.session_state.selected_team,
-            commit_changes=commit_attendance_changes
+            commit_changes=commit_attendance_changes,
         )
