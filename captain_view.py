@@ -103,104 +103,34 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         yes_count = len(buckets["Yes"])
         undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
-
-            # -----------------------------
-            # MODERN CAPTAIN HEADER CARD
-            # -----------------------------
-            st.markdown(
-                f"""
-                <div style="
-                    padding:18px;
-                    background-color:#F7F7F7;
-                    border:1px solid var(--secondary-background-color);
-                    border-radius:14px;
-                    margin-bottom:18px;
-                    color:var(--text-color);
-                    line-height:1.55;
-                    box-shadow:0px 1px 3px rgba(0,0,0,0.08);
-                ">
-                    <div style="font-weight:700; font-size:18px; margin-bottom:6px;">
-                        ⚽ {day_name}, {pretty_date}
-                    </div>
-    
-                    <div style="font-size:16px; font-weight:600; margin-bottom:4px;">
-                        🕒 {pretty_time}
-                    </div>
-    
-                    <div style="font-size:16px; font-weight:600; margin-bottom:4px;">
-                        🆚 {captain_team_name} vs {opponent}
-                    </div>
-    
-                    <div style="font-size:14px; opacity:0.85; margin-bottom:12px;">
-                        📍 Field <strong>{field}</strong>
-                    </div>
-    
-                    <div style="
-                        margin-top:10px;
-                        font-size:15px;
-                        padding:10px 12px;
-                        background-color:#FFFFFF;
-                        border-radius:10px;
-                        border:1px solid var(--secondary-background-color);
-                    ">
-                        <span style="color:#2e7d32; font-weight:700;">Playing: {yes_count}</span>
-                        &nbsp;•&nbsp;
-                        <span style="color:#f57c00; font-weight:700;">Undecided: {undecided_count}</span>
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
         # -----------------------------
-        # DETAILS EXPANDER
+        # MODERN CAPTAIN HEADER CARD
         # -----------------------------
-        with st.expander("Details"):
-
-            # Summary block
-            st.markdown(
-                f"""
-                <div style="
-                    padding:10px 14px;
-                    background-color:var(--background-color);
-                    border:1px solid var(--secondary-background-color);
-                    border-radius:10px;
-                    margin-bottom:12px;
-                    font-size:15px;
-                    color:var(--text-color);
-                ">
-                    <strong>Game Summary</strong><br>
-                    <span style="color:#2e7d32; font-weight:700;">Playing: {yes_count}</span><br>
-                    <span style="color:#f57c00; font-weight:700;">Undecided: {undecided_count}</span>
+        st.markdown(
+            f"""
+            <div style="
+                padding:18px;
+                background-color:#F7F7F7;
+                border:1px solid var(--secondary-background-color);
+                border-radius:14px;
+                margin-bottom:18px;
+                color:var(--text-color);
+                line-height:1.55;
+                box-shadow:0px 1px 3px rgba(0,0,0,0.08);
+            ">
+                <div style="font-weight:700; font-size:18px; margin-bottom:6px;">
+                    ⚽ {day_name}, {pretty_date}
                 </div>
-                """,
-                unsafe_allow_html=True
-            )
 
-            # Attendance Breakdown
-            st.markdown("#### Attendance Breakdown")
+                <div style="font-size:16px; font-weight:600; margin-bottom:4px;">
+                    🕒 {pretty_time}
+                </div>
 
-            cols = st.columns(4)
-            labels = ["Yes", "No", "Maybe", "No Response"]
-            colors = {
-                "Yes": "#2e7d32",
-                "No": "#c62828",
-                "Maybe": "#f57c00",
-                "No Response": "#616161",
-            }
+                <div style="font-size:16px; font-weight:600; margin-bottom:4px;">
+                    🆚 {captain_team_name} vs {opponent}
+                </div>
 
-            for col, label in zip(cols, labels):
-                with col:
-                    count = len(buckets[label])
-                    st.markdown(
-                        f"<span style='color:{colors[label]}; font-weight:bold;'>{label} ({count})</span>",
-                        unsafe_allow_html=True,
-                    )
-                    if buckets[label]:
-                        for name in sorted(buckets[label]):
-                            st.markdown(f"- {name}")
-                    else:
-                        st.markdown("_None_")
+                <div style="font-size:14px; opacity:0.85; margin-bottom:12px;">
+                    📍 Field <strong>{field}</strong>
+                </div>
 
-            st.markdown("---")
-            st.markdown("#### Override Player Status")
