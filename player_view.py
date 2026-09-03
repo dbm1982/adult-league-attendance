@@ -126,23 +126,26 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
             st.session_state.pending_updates[(player_id, game_id)] = new_status
             st.rerun()
 
-        # ⭐ Color feedback bar under radio buttons
-        selected_color = {
-            "Yes": "#2e7d32",       # green
-            "No": "#c62828",        # red
-            "Maybe": "#f57c00",     # orange
-            "No Response": "#616161"
+        # ⭐ Full background shading for selected option
+        bg_color = {
+            "Yes": "#C8E6C9",        # light green
+            "No": "#F8D7DA",         # light red
+            "Maybe": "#FFE0B2",      # light orange
+            "No Response": "#E0E0E0" # light gray
         }[new_status]
 
         st.markdown(
             f"""
             <div style="
-                height:6px;
-                background-color:{selected_color};
-                margin-top:-10px;
+                background-color:{bg_color};
+                padding:10px;
+                border-radius:8px;
+                margin-top:6px;
                 margin-bottom:12px;
-                border-radius:4px;
-            "></div>
+                border:1px solid var(--secondary-background-color);
+            ">
+                <strong style="color:var(--text-color);">Selected: {new_status}</strong>
+            </div>
             """,
             unsafe_allow_html=True
         )
@@ -150,10 +153,8 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         # -----------------------------
         # UNSAVED + SAVE
         # -----------------------------
-        has_unsaved = any(
-            (pid == player_id and gid == game_id)
-            for (pid, gid) in st.session_state.pending_updates.keys()
-        )
+        # ⭐ Only show unsaved if the radio selection differs from what is saved
+        has_unsaved = (new_status != current_status)
 
         if has_unsaved:
             st.markdown(
