@@ -22,7 +22,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
 
     st.markdown("### Captain View")
 
-    # Filter players on captain's team
     team_players = players_df[
         (players_df["team_id"] == team_id)
         & (players_df["team_id"] != "")
@@ -34,13 +33,11 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         st.info(f"No players found for team '{team_id}'.")
         return
 
-    # Normalize team_id in games
     games_df["team_id_norm"] = games_df["team_id"].astype(str).str.strip().str.lower()
     team_id_norm = team_id.strip().lower()
 
     team_games = games_df[games_df["team_id_norm"] == team_id_norm].copy()
 
-    # Convert date column
     if "date" in team_games.columns:
         team_games["date"] = team_games["date"].apply(
             lambda d: d.date() if hasattr(d, "date") else None
@@ -53,7 +50,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         st.info("No upcoming games found for this team.")
         return
 
-    # Normalize attendance
     attendance_df["player_id"] = attendance_df["player_id"].astype(str).str.strip()
     attendance_df["game_id"] = attendance_df["game_id"].astype(str).str.strip()
     attendance_df["status"] = attendance_df["status"].apply(normalize_status)
@@ -63,7 +59,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         for _, row in attendance_df.iterrows()
     }
 
-    # Determine captain's team name
     if "team_name" in players_df.columns:
         captain_team_name = players_df.loc[
             players_df["team_id"] == team_id, "team_name"
@@ -71,9 +66,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
     else:
         captain_team_name = team_id
 
-    # -----------------------------
-    # Render each upcoming game
-    # -----------------------------
     for _, g in upcoming_games.iterrows():
 
         game_id = g["game_id"]
@@ -91,7 +83,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         except:
             pretty_time = time_raw
 
-        # Build buckets
         buckets = {"Yes": [], "No": [], "Maybe": [], "No Response": []}
 
         for _, p in team_players.iterrows():
@@ -103,9 +94,7 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         yes_count = len(buckets["Yes"])
         undecided_count = len(buckets["Maybe"]) + len(buckets["No Response"])
 
-        # -----------------------------
-        # CLEAN + MODERN HEADER (FLUSH-LEFT HTML)
-        # -----------------------------
+        # HEADER
         st.markdown(
 f"""
 <div style="
@@ -150,11 +139,9 @@ f"""
 unsafe_allow_html=True
         )
 
-        # -----------------------------
-        # DETAILS EXPANDER
-        # -----------------------------
         with st.expander("Details"):
 
+            # SUMMARY
             st.markdown(
 f"""
 <div style="
@@ -201,9 +188,7 @@ unsafe_allow_html=True
             st.markdown("---")
             st.markdown("#### Override Player Status")
 
-            # -----------------------------
-            # CLEAN OVERRIDE BLOCKS (FLUSH-LEFT HTML)
-            # -----------------------------
+            # OVERRIDE BLOCKS
             for _, p in team_players.iterrows():
                 pid = p["player_id"]
                 pname = p["player_name"]
@@ -239,13 +224,11 @@ unsafe_allow_html=True
                     horizontal=True,
                 )
 
-                # One-click saving fix
                 if st.session_state.get("pending_updates", {}).get((pid, game_id)) != new_status:
                     st.session_state.setdefault("pending_updates", {})
                     st.session_state.pending_updates[(pid, game_id)] = new_status
                     st.rerun()
 
-            # Save button
             has_unsaved = any(
                 (gid == game_id) for (_, gid) in st.session_state.get("pending_updates", {}).keys()
             )
