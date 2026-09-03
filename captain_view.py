@@ -205,52 +205,52 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
             st.markdown("---")
             st.markdown("#### Override Player Status")
 
-            # -----------------------------
-            # MODERN PLAYER STATUS BLOCKS
-            # -----------------------------
-            for _, p in team_players.iterrows():
-                pid = p["player_id"]
-                pname = p["player_name"]
-                current_status = normalize_status(att_lookup.get((pid, game_id), "No Response"))
-
-                header_color = {
-                    "Yes": "#2e7d32",
-                    "No": "#c62828",
-                    "Maybe": "#f57c00",
-                    "No Response": "#616161",
-                }[current_status]
-
-                bg_color = {
-                    "Yes": "#C8E6C9",
-                    "No": "#F8D7DA",
-                    "Maybe": "#FFE0B2",
-                    "No Response": "#E0E0E0",
-                }[current_status]
-
-                st.markdown(
-                    f"""
-                    <div style="
-                        background-color:{bg_color};
-                        border-radius:12px;
-                        padding:0px;
-                        margin-bottom:18px;
-                        border:1px solid var(--secondary-background-color);
-                    ">
+                # -----------------------------
+                # MODERN PLAYER STATUS BLOCKS
+                # -----------------------------
+                for _, p in team_players.iterrows():
+                    pid = p["player_id"]
+                    pname = p["player_name"]
+                    current_status = normalize_status(att_lookup.get((pid, game_id), "No Response"))
+    
+                    header_color = {
+                        "Yes": "#2e7d32",
+                        "No": "#c62828",
+                        "Maybe": "#f57c00",
+                        "No Response": "#616161",
+                    }[current_status]
+    
+                    bg_color = {
+                        "Yes": "#C8E6C9",
+                        "No": "#F8D7DA",
+                        "Maybe": "#FFE0B2",
+                        "No Response": "#E0E0E0",
+                    }[current_status]
+    
+                    st.markdown(
+                        f"""
                         <div style="
-                            background-color:{header_color};
-                            color:white;
-                            padding:12px 16px;
-                            font-weight:600;
-                            border-top-left-radius:12px;
-                            border-top-right-radius:12px;
-                            font-size:15px;
+                            background-color:{bg_color};
+                            border-radius:12px;
+                            padding:0px;
+                            margin-bottom:18px;
+                            border:1px solid var(--secondary-background-color);
                         ">
-                            {pname}
+                            <div style="
+                                background-color:{header_color};
+                                color:white;
+                                padding:12px 16px;
+                                font-weight:600;
+                                border-top-left-radius:12px;
+                                border-top-right-radius:12px;
+                                font-size:15px;
+                            ">
+                                {pname}
+                            </div>
                         </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                        """,
+                        unsafe_allow_html=True
+                    )
 
                 new_status = st.radio(
                     "",
