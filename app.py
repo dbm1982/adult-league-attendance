@@ -174,7 +174,6 @@ if st.session_state.selected_team is None or st.session_state.selected_player_id
 
             if player_name:
                 st.session_state.selected_player_id = player_name_to_id[player_name]
-                st.experimental_set_query_params()  # forces Streamlit to acknowledge state change
                 st.rerun()
 
 
