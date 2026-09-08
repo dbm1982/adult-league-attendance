@@ -112,7 +112,6 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         st.write(f"**🆚 Match:** {captain_team_name} vs {opponent}")
         st.write(f"**📍 Field:** {field}")
 
-        # Color accents using Streamlit markdown
         st.markdown(
             f"""
 **<span style='color:#2e7d32;'>Playing:</span> {yes_count}**  
@@ -122,82 +121,91 @@ def captain_view(players_df, games_df, attendance_df, team_id, commit_changes):
         )
 
         # -----------------------------
-        # DETAILS EXPANDER
+        # DETAILS EXPANDER (LAZY LOADED)
         # -----------------------------
-        with st.expander("Details"):
+        exp = st.expander("Details", expanded=False)
 
-            st.markdown("#### Attendance Breakdown")
+        with exp:
+            # ⭐ TRUE LAZY HYDRATION — only loads when expanded
+            with st.container():
 
-            cols = st.columns(4)
-            labels = ["Yes", "No", "Maybe", "No Response"]
-            colors = {
-                "Yes": "#2e7d32",
-                "No": "#c62828",
-                "Maybe": "#f57c00",
-                "No Response": "#616161",
-            }
+                st.markdown("#### Attendance Breakdown")
 
-            for col, label in zip(cols, labels):
-                with col:
-                    count = len(buckets[label])
-                    st.markdown(
-                        f"<span style='color:{colors[label]}; font-weight:bold;'>{label} ({count})</span>",
-                        unsafe_allow_html=True,
-                    )
-                    if buckets[label]:
-                        for name in sorted(buckets[label]):
-                            st.write(f"- {name}")
-                    else:
-                        st.write("_None_")
-
-            st.markdown("---")
-            st.markdown("#### Override Player Status")
-
-            # -----------------------------
-            # STREAMLIT OVERRIDE BLOCKS WITH COLOR
-            # -----------------------------
-            for _, p in team_players.iterrows():
-                pid = p["player_id"]
-                pname = p["player_name"]
-                current_status = normalize_status(att_lookup.get((pid, game_id), "No Response"))
-
-                accent = {
+                cols = st.columns(4)
+                labels = ["Yes", "No", "Maybe", "No Response"]
+                colors = {
                     "Yes": "#2e7d32",
                     "No": "#c62828",
                     "Maybe": "#f57c00",
                     "No Response": "#616161",
-                }[current_status]
+                }
 
+                for col, label in zip(cols, labels):
+                    with col:
+                        count = len(buckets[label])
+                        st.markdown(
+                            f"<span style='color:{colors[label]}; font-weight:bold;'>{label} ({count})</span>",
+                            unsafe_allow_html=True,
+                        )
+                        if buckets[label]:
+                            for name in sorted(buckets[label]):
+                                st.write(f"- {name}")
+                        else:
+                            st.write("_None_")
+
+                st.markdown("---")
+                st.markdown("#### Override Player Status")
+
+                # Scrollable override panel (optional but helpful)
                 st.markdown(
-                    f"<span style='color:{accent}; font-weight:bold;'>{pname}</span>",
+                    "<div style='max-height: 300px; overflow-y: auto; padding-right: 10px;'>",
                     unsafe_allow_html=True,
                 )
 
-                new_status = st.radio(
-                    f"Status for {pname}",
-                    ["Yes", "No", "Maybe", "No Response"],
-                    index=["Yes", "No", "Maybe", "No Response"].index(current_status),
-                    key=f"capt_{pid}_{game_id}",
-                    horizontal=True,
+                for _, p in team_players.iterrows():
+                    pid = p["player_id"]
+                    pname = p["player_name"]
+                    current_status = normalize_status(att_lookup.get((pid, game_id), "No Response"))
+
+                    accent = {
+                        "Yes": "#2e7d32",
+                        "No": "#c62828",
+                        "Maybe": "#f57c00",
+                        "No Response": "#616161",
+                    }[current_status]
+
+                    st.markdown(
+                        f"<span style='color:{accent}; font-weight:bold;'>{pname}</span>",
+                        unsafe_allow_html=True,
+                    )
+
+                    new_status = st.radio(
+                        f"Status for {pname}",
+                        ["Yes", "No", "Maybe", "No Response"],
+                        index=["Yes", "No", "Maybe", "No Response"].index(current_status),
+                        key=f"capt_{pid}_{game_id}",
+                        horizontal=True,
+                    )
+
+                    if st.session_state.get("pending_updates", {}).get((pid, game_id)) != new_status:
+                        st.session_state.setdefault("pending_updates", {})
+                        st.session_state.pending_updates[(pid, game_id)] = new_status
+                        st.rerun()
+
+                st.markdown("</div>", unsafe_allow_html=True)
+
+                has_unsaved = any(
+                    (gid == game_id) for (_, gid) in st.session_state.get("pending_updates", {}).keys()
                 )
 
-                if st.session_state.get("pending_updates", {}).get((pid, game_id)) != new_status:
-                    st.session_state.setdefault("pending_updates", {})
-                    st.session_state.pending_updates[(pid, game_id)] = new_status
-                    st.rerun()
-
-            has_unsaved = any(
-                (gid == game_id) for (_, gid) in st.session_state.get("pending_updates", {}).keys()
-            )
-
-            if has_unsaved:
-                if st.button(f"Save changes for {pretty_date} {pretty_time}", key=f"save_capt_{game_id}"):
-                    _apply_game_updates(game_id, attendance_df)
-                    updated = commit_changes(attendance_df)
-                    st.session_state.attendance_df = updated
-                    _clear_game_pending(game_id)
-                    st.success("Attendance for this game has been saved.")
-                    st.rerun()
+                if has_unsaved:
+                    if st.button(f"Save changes for {pretty_date} {pretty_time}", key=f"save_capt_{game_id}"):
+                        _apply_game_updates(game_id, attendance_df)
+                        updated = commit_changes(attendance_df)
+                        st.session_state.attendance_df = updated
+                        _clear_game_pending(game_id)
+                        st.success("Attendance for this game has been saved.")
+                        st.rerun()
 
         st.markdown("---")
 
