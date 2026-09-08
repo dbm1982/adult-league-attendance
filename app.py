@@ -9,6 +9,39 @@ from attendance_logic import (
 from player_view import player_view
 from captain_view import captain_view
 
+name: Keep Streamlit Awake
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Playwright
+        run: |
+          pip install playwright
+          playwright install --with-deps
+
+      - name: Ping Streamlit app
+        run: |
+          python - << 'EOF'
+          from playwright.sync_api import sync_playwright
+
+          url = "https://adult-league-attendance-kb768k8aqwvdpknbz2wk8k.streamlit.app/"
+
+          with sync_playwright() as p:
+              browser = p.chromium.launch(headless=True)
+              page = browser.new_page()
+              page.goto(url, timeout=60000)
+              page.wait_for_timeout(5000)  # wait 5 seconds for websocket handshake
+              browser.close()
+          EOF
+
+
+
+
 st.set_page_config(page_title="South Shore Coed Adult Soccer League Portal", layout="wide")
 
 # Global app CSS: mobile-friendly, still clean on desktop, fix header clipping
