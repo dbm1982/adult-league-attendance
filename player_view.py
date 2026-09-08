@@ -121,23 +121,22 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
             horizontal=True,
         )
 
-        # ⭐ One-click saving fix
+        # ⭐ FIXED: No forced rerun — Streamlit already reruns automatically
         if st.session_state.pending_updates.get((player_id, game_id)) != new_status:
             st.session_state.pending_updates[(player_id, game_id)] = new_status
-            st.rerun()
 
-        # ⭐ Improved color palette (MUCH softer orange)
+        # ⭐ Improved color palette (soft, readable)
         bg_color = {
             "Yes": "#D0ECD2",        # soft green
             "No": "#F4C7C3",         # soft red
-            "Maybe": "#FFE8C6",      # **soft peach**, readable
+            "Maybe": "#FFE8C6",      # soft peach
             "No Response": "#E6E6E6" # neutral gray
         }[new_status]
 
         text_color = {
             "Yes": "#1E8E3E",        # strong green
             "No": "#D93025",         # strong red
-            "Maybe": "#B46900",      # **dark amber**, readable
+            "Maybe": "#B46900",      # dark amber
             "No Response": "#5F6368" # neutral gray
         }[new_status]
 
