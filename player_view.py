@@ -18,6 +18,22 @@ def normalize_status(raw):
     return "No Response"
 
 
+# Pastel background colors
+BG_COLORS = {
+    "Yes": "#D0ECD2",        # soft green
+    "No": "#F4C7C3",         # soft red
+    "Maybe": "#FFE8C6",      # soft peach
+    "No Response": "#E6E6E6" # soft gray
+}
+
+TEXT_COLORS = {
+    "Yes": "#1E8E3E",
+    "No": "#D93025",
+    "Maybe": "#B46900",
+    "No Response": "#5F6368"
+}
+
+
 def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
 
     # Get player info
@@ -57,8 +73,10 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
     }
 
     # -----------------------------
-    # Render each game
+    # COMPACT COLOR-CODED ROW VIEW
     # -----------------------------
+    st.markdown("### Upcoming Games")
+
     for _, g in upcoming_games.iterrows():
 
         game_id = g["game_id"]
@@ -69,8 +87,8 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
         field = str(field_raw).replace("Field ", "").replace("field ", "").strip()
 
         # Human-friendly date/time
-        day_name = date.strftime("%A")
-        pretty_date = date.strftime("%B %d")
+        day_name = date.strftime("%a")
+        pretty_date = date.strftime("%b %d")
         try:
             pretty_time = datetime.strptime(time_raw, "%H:%M").strftime("%I:%M %p")
         except:
@@ -78,120 +96,60 @@ def player_view(players_df, games_df, attendance_df, player_id, commit_changes):
 
         current_status = normalize_status(att_lookup.get((player_id, game_id), "No Response"))
 
-        # -----------------------------
-        # GAME CARD
-        # -----------------------------
-        st.markdown(
-            f"""
-            <div style="
-                padding:14px 16px;
-                background-color:var(--background-color);
-                border:1px solid var(--secondary-background-color);
-                border-radius:12px;
-                margin-bottom:12px;
-                color:var(--text-color);
-                line-height:1.4;
-            ">
-                <div style="font-weight:700; font-size:16px; margin-bottom:4px;">
-                    ⚽ {day_name}, {pretty_date}
-                </div>
-                <div style="font-size:15px; font-weight:600; margin-bottom:2px;">
-                    🕒 {pretty_time}
-                </div>
-                <div style="font-size:15px; font-weight:600; margin-bottom:2px;">
-                    🆚 {opponent}
-                </div>
-                <div style="font-size:14px; opacity:0.8; margin-bottom:8px;">
-                    📍 Field <strong>{field}</strong>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        # Background + text colors
+        bg = BG_COLORS[current_status]
+        tc = TEXT_COLORS[current_status]
 
-        st.markdown("**Choose your status:**")
+        # Compact row container
+        with st.container():
 
-        options = ["Yes", "No", "Maybe", "No Response"]
-
-        new_status = st.radio(
-            "",
-            options,
-            index=options.index(current_status),
-            key=f"player_{player_id}_{game_id}",
-            horizontal=True,
-        )
-
-        # ⭐ FIXED: No forced rerun — Streamlit already reruns automatically
-        if st.session_state.pending_updates.get((player_id, game_id)) != new_status:
-            st.session_state.pending_updates[(player_id, game_id)] = new_status
-
-        # ⭐ Improved color palette (soft, readable)
-        bg_color = {
-            "Yes": "#D0ECD2",        # soft green
-            "No": "#F4C7C3",         # soft red
-            "Maybe": "#FFE8C6",      # soft peach
-            "No Response": "#E6E6E6" # neutral gray
-        }[new_status]
-
-        text_color = {
-            "Yes": "#1E8E3E",        # strong green
-            "No": "#D93025",         # strong red
-            "Maybe": "#B46900",      # dark amber
-            "No Response": "#5F6368" # neutral gray
-        }[new_status]
-
-        # ⭐ Selected status box
-        st.markdown(
-            f"""
-            <div style="
-                background-color:{bg_color};
-                padding:12px;
-                border-radius:10px;
-                margin-top:6px;
-                margin-bottom:12px;
-                border:2px solid {text_color};
-            ">
-                <strong style="color:{text_color}; font-size:16px;">
-                    Selected: {new_status}
-                </strong>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-        # -----------------------------
-        # UNSAVED + SAVE
-        # -----------------------------
-        has_unsaved = (new_status != current_status)
-
-        if has_unsaved:
             st.markdown(
-                """
+                f"""
                 <div style="
-                    padding:6px 10px;
-                    background-color:var(--background-color);
-                    border:1px solid var(--secondary-background-color);
-                    border-radius:6px;
-                    margin-top:6px;
-                    margin-bottom:6px;
-                    color:var(--text-color);
-                    font-size:13px;
+                    background-color:{bg};
+                    padding:10px 12px;
+                    border-radius:8px;
+                    margin-bottom:8px;
+                    display:flex;
+                    flex-direction:column;
                 ">
-                    ⚠️ Unsaved changes
+                    <div style="
+                        font-size:14px;
+                        font-weight:600;
+                        color:{tc};
+                        margin-bottom:6px;
+                    ">
+                        {day_name} {pretty_date} • {pretty_time} • {opponent} • Field {field}
+                    </div>
                 </div>
                 """,
-                unsafe_allow_html=True,
+                unsafe_allow_html=True
             )
 
-            if st.button(f"💾 Save {pretty_date} {pretty_time}", key=f"save_player_{game_id}"):
-                _apply_player_update(player_id, game_id, new_status, attendance_df)
-                updated = commit_changes(attendance_df)
-                st.session_state.attendance_df = updated
-                _clear_player_pending(player_id, game_id)
-                st.success("Saved.")
-                st.rerun()
+            # Radio buttons ON the colored background
+            options = ["Yes", "No", "Maybe", "No Response"]
+            new_status = st.radio(
+                "",
+                options,
+                index=options.index(current_status),
+                key=f"player_{player_id}_{game_id}",
+                horizontal=True,
+                label_visibility="collapsed"
+            )
 
-        st.markdown("---")
+            # Track unsaved changes
+            if st.session_state.pending_updates.get((player_id, game_id)) != new_status:
+                st.session_state.pending_updates[(player_id, game_id)] = new_status
+
+            # Save button only if changed
+            if new_status != current_status:
+                if st.button(f"Save {pretty_date}", key=f"save_{game_id}"):
+                    _apply_player_update(player_id, game_id, new_status, attendance_df)
+                    updated = commit_changes(attendance_df)
+                    st.session_state.attendance_df = updated
+                    _clear_player_pending(player_id, game_id)
+                    st.success("Saved.")
+                    st.rerun()
 
 
 def _apply_player_update(player_id, game_id, status, attendance_df):
